@@ -10,11 +10,11 @@ public interface AocCommon {
     static final String dataPath = "data";
     
     public static enum KIND {
-        demo,
+        test,
         prod;
     }
     
-    static final KIND demo = KIND.demo;
+    static final KIND test = KIND.test;
     static final KIND prod = KIND.prod;
     
     default String challengeName() {

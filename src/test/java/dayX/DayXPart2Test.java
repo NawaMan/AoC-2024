@@ -1,13 +1,15 @@
-package day1;
+package dayX;
 
 import static org.junit.Assert.fail;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.AocCommon;
 import common.Testable;
 
-public class Day1Part2Test implements AocCommon, Testable {
+@Ignore
+public class DayXPart2Test implements AocCommon, Testable {
 
     
     //== Test ==
