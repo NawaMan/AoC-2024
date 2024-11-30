@@ -25,10 +25,12 @@ public interface AocCommon {
         return readAllLines(dataPath, kind, challenge);
     }
     
-    default FuncList<String> readAllLines(String path , KIND kind, String challenge) {
+    default FuncList<String> readAllLines(String inputBase , KIND kind, String challengeName) {
         try {
-            var inputFile = challenge + "-" + kind + ".txt";
-            var lines     = Files.readAllLines(Path.of(path, inputFile));
+            var inputFolder = challengeName.replaceAll("^Day([0-9]+).*$", "day$1");
+            var challenge   = challengeName.replaceAll("^Day([0-9]+)Part([0-9]+)$", "day$1-part$2");
+            var inputFile   = challenge + "-" + kind + ".txt";
+            var lines       = Files.readAllLines(Path.of(inputBase, inputFolder, inputFile));
             return FuncList.from(lines);
         } catch (Exception e) {
             throw new RuntimeException(e);
