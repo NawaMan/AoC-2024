@@ -18,7 +18,7 @@ public class Day1Part1Test implements AocCommon, Testable {
     @Test
     public void testExample() {
         var lines = readAllLines();
-        System.out.println(lines);
+        println(lines);
         
         var result = calulate(lines);
         
@@ -29,7 +29,7 @@ public class Day1Part1Test implements AocCommon, Testable {
     @Test
     public void testProd() {
         var lines = readAllLines();
-        System.out.println(lines);
+        println(lines);
         
         var result = calulate(lines);
         
