@@ -2,15 +2,16 @@ package day1;
 
 import org.junit.Test;
 
-import common.AocCommon;
-import common.Testable;
+import common.BaseTest;
 import functionalj.list.FuncList;
 
-public class Day1Part2Test implements AocCommon, Testable {
+public class Day1Part2Test extends BaseTest {
     
-    
-    Object calulate(FuncList<String> lines) {
-        return null;
+    int calulate(FuncList<String> lines) {
+        var pairs = lines.map(line -> line.split("[ ]+")).toFuncList();
+        var left  = pairs.map(pair -> pair[0]).mapToInt(Integer::parseInt);
+        var right = pairs.map(pair -> pair[1]).mapToInt(Integer::parseInt);
+        return left.map(i -> i * (int)right.filterIn(i).count()).sum();
     }
     
     //== Test ==
@@ -18,23 +19,19 @@ public class Day1Part2Test implements AocCommon, Testable {
     @Test
     public void testExample() {
         var lines = readAllLines();
-        System.out.println(lines);
+        lines.forEach(this::println);
         
         var result = calulate(lines);
-        
-        
-        assertAsString("", result);
+        assertAsString("31", result);
     }
     
     @Test
     public void testProd() {
         var lines = readAllLines();
-        System.out.println(lines);
+        lines.forEach(this::println);
         
         var result = calulate(lines);
-        
-        
-        assertAsString("", result);
+        assertAsString("21607792", result);
     }
     
 }
