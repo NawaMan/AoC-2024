@@ -3,12 +3,11 @@ package dayX;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import common.AocCommon;
-import common.Testable;
+import common.BaseTest;
 import functionalj.list.FuncList;
 
 @Ignore
-public class DayXPart2Test implements AocCommon, Testable {
+public class DayXPart2Test extends BaseTest {
     
     
     Object calulate(FuncList<String> lines) {
@@ -29,6 +28,7 @@ public class DayXPart2Test implements AocCommon, Testable {
         assertAsString("", result);
     }
     
+    @Ignore
     @Test
     public void testProd() {
         var lines = readAllLines();

@@ -1,4 +1,4 @@
-package dayX;
+package day3;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -7,7 +7,7 @@ import common.BaseTest;
 import functionalj.list.FuncList;
 
 @Ignore
-public class DayXPart1Test extends BaseTest {
+public class Day3Part1Test extends BaseTest {
     
     
     Object calulate(FuncList<String> lines) {
