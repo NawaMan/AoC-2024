@@ -20,22 +20,24 @@ public class DayXPart1Test implements AocCommon, Testable {
     @Test
     public void testExample() {
         var lines = readAllLines();
-        System.out.println(lines);
+        lines.forEach(this::println);
+        println();
         
         var result = calulate(lines);
-        
-        
+        println("result: " + result);
+        println();
         assertAsString("", result);
     }
     
     @Test
     public void testProd() {
         var lines = readAllLines();
-        System.out.println(lines);
+        lines.forEach(this::println);
+        println();
         
         var result = calulate(lines);
-        
-        
+        println("result: " + result);
+        println();
         assertAsString("", result);
     }
     
