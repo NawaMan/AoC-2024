@@ -1,17 +1,35 @@
 package day3;
 
-import org.junit.Ignore;
+import java.util.regex.Pattern;
+
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
 
-@Ignore
 public class Day3Part2Test extends BaseTest {
     
+    Pattern pattern = Pattern.compile("(mul\\([0-9]{1,3},[0-9]{1,3}\\)|do\\(\\)|don't\\(\\))");
     
-    Object calulate(FuncList<String> lines) {
-        return null;
+    int calulate(FuncList<String> lines) {
+        var code = lines.join();
+        
+        var total   = 0;
+        var enabled = true;
+        
+        var matcher = pattern.matcher(code);
+        while (matcher.find()) {
+            var match =  matcher.group();
+            if      (match.equals("do()"))    enabled = true;
+            else if (match.equals("don't()")) enabled = false;
+            else if (enabled) {
+                total += FuncList.of(match.replaceAll("[^,0-9]",  "").split(","))
+                        .mapToInt(Integer::parseInt)
+                        .product()
+                        .getAsInt();
+            }
+        }
+        return total;
     }
     
     //== Test ==
@@ -19,26 +37,17 @@ public class Day3Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
         var result = calulate(lines);
-        println("result: " + result);
-        println();
-        assertAsString("", result);
+        println(result);
+        assertAsString("48", result);
     }
     
-    @Ignore
     @Test
     public void testProd() {
         var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
         var result = calulate(lines);
-        println("result: " + result);
-        println();
-        assertAsString("", result);
+        println(result);
+        assertAsString("98729041", result);
     }
     
 }

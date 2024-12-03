@@ -1,17 +1,32 @@
 package day3;
 
-import org.junit.Ignore;
+import java.util.regex.Pattern;
+
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
 
-@Ignore
 public class Day3Part1Test extends BaseTest {
     
+    Pattern pattern = Pattern.compile("mul\\([0-9]{1,3},[0-9]{1,3}\\)");
     
-    Object calulate(FuncList<String> lines) {
-        return null;
+    int calulate(FuncList<String> lines) {
+        return lines.mapToInt(this::lineTotal).sum();
+    }
+    
+    int lineTotal(String line) {
+        var total = 0;
+        
+        var matcher = pattern.matcher(line);
+        while (matcher.find()) {
+            var match =  matcher.group();
+            total += FuncList.of(match.replaceAll("[^,0-9]",  "").split(","))
+                    .mapToInt(Integer::parseInt)
+                    .product()
+                    .getAsInt();
+        }
+        return total;
     }
     
     //== Test ==
@@ -19,26 +34,17 @@ public class Day3Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
         var result = calulate(lines);
-        println("result: " + result);
-        println();
-        assertAsString("", result);
+        println(result);
+        assertAsString("161", result);
     }
     
-    @Ignore
     @Test
     public void testProd() {
         var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
         var result = calulate(lines);
-        println("result: " + result);
-        println();
-        assertAsString("", result);
+        println(result);
+        assertAsString("181345830", result);
     }
     
 }
