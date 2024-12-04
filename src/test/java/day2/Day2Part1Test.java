@@ -1,6 +1,6 @@
 package day2;
 
-import java.util.function.IntBinaryOperator;
+import static functionalj.list.FuncList.AllOf;
 
 import org.junit.Test;
 
@@ -17,19 +17,14 @@ public class Day2Part1Test extends BaseTest {
     }
     
     IntFuncList extractReport(String line) {
-        var report = FuncList.from(line.split(" "));
-        return report.mapToInt(Integer::parseInt);
-    }
-    
-    IntFuncList calculateReportDiffs(IntFuncList report) {
-        return report.mapGroup(2, pair -> pair.reduce((IntBinaryOperator)(int a, int b) -> a - b).getAsInt());
+        return AllOf(line.split(" "))
+                .mapToInt(Integer::parseInt);
     }
     
     boolean isSafeReport(IntFuncList report) {
-        var diffs    = calculateReportDiffs(report);
-        var adjDiffs = (diffs.first().getAsInt() < 0) ? diffs.map(i -> -i) : diffs;
-        var isSafe   = adjDiffs.noneMatch(d -> d <= 0) && adjDiffs.noneMatch(d -> d  > 3);
-        return isSafe;
+        var diffs  = report.mapTwo((a, b) -> a - b);
+        var sign   = (diffs.get(0) < 0) ? -1 : 1;
+        return diffs.noneMatch(diff -> (sign*diff <= 0) || (sign*diff > 3));
     }
     
     //== Test ==

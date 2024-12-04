@@ -13,7 +13,7 @@ public class Day1Part2Test extends BaseTest {
         var pairs = lines.map(line -> line.split("[ ]+")).cache();
         var left  = pairs.mapToInt(pair -> parseInt(pair[0]));
         var right = pairs.mapToInt(pair -> parseInt(pair[1]));
-        return left.map(i -> i * (int)right.filterIn(i).count()).sum();
+        return left.map(i -> i * right.filterIn(i).size()).sum();
     }
     
     //== Test ==
