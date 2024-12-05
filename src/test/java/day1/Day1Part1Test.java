@@ -1,6 +1,5 @@
 package day1;
 
-import static java.lang.Integer.parseInt;
 import static java.lang.Math.abs;
 
 import org.junit.Test;
@@ -11,9 +10,9 @@ import functionalj.list.FuncList;
 public class Day1Part1Test extends BaseTest {
     
     int calulate(FuncList<String> lines) {
-        var pairs = lines.map(line -> line.split("[ ]+")).cache();
-        var left  = pairs.mapToInt(pair -> parseInt(pair[0])).sorted();
-        var right = pairs.mapToInt(pair -> parseInt(pair[1])).sorted();
+        var pairs = lines.map(line -> line.split("[ ]+"));
+        var left  = pairs.map(pair -> pair[0]).mapToInt(parseInt).sorted();
+        var right = pairs.map(pair -> pair[1]).mapToInt(parseInt).sorted();
         return left.zipWith(right, (a, b) -> abs(a - b)).sum();
     }
     

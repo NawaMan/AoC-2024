@@ -14,15 +14,11 @@ public abstract class BaseTest implements AocCommon, Testable {
     @Before
     public void before() {
         println("==| " + testName.getMethodName() + " |==");
-        println();
     }
     
     @After
     public void after() {
-        println();
         println("--| " + testName.getMethodName() + " |--");
-        println();
-        println();
         println();
     }
 
