@@ -62,10 +62,7 @@ public class Day4Part2Test extends BaseTest {
     
     @Test
     public void testExample() {
-        var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
         println();
@@ -74,13 +71,9 @@ public class Day4Part2Test extends BaseTest {
     
     @Test
     public void testProd() {
-        var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("1965", result);
     }
     

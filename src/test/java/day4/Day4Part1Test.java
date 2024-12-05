@@ -79,7 +79,6 @@ public class Day4Part1Test extends BaseTest {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("18", result);
     }
     
@@ -88,7 +87,6 @@ public class Day4Part1Test extends BaseTest {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("2603", result);
     }
     

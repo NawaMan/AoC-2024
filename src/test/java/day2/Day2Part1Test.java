@@ -31,25 +31,17 @@ public class Day2Part1Test extends BaseTest {
     
     @Test
     public void testExample() {
-        var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("2", result);
     }
     
     @Test
     public void testProd() {
-        var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("411", result);
     }
     

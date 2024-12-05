@@ -39,21 +39,17 @@ public class Day2Part2Test extends BaseTest {
     
     @Test
     public void testExample() {
-        var lines = readAllLines();
-        
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("4", result);
     }
     
     @Test
     public void testProd() {
-        var lines = readAllLines();
-        
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("465", result);
     }
     

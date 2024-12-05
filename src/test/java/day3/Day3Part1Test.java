@@ -35,7 +35,7 @@ public class Day3Part1Test extends BaseTest {
     
     @Test
     public void testExample() {
-        var lines = readAllLines();
+        var lines  = readAllLines();
         var result = calulate(lines);
         println(result);
         assertAsString("161", result);
@@ -43,7 +43,7 @@ public class Day3Part1Test extends BaseTest {
     
     @Test
     public void testProd() {
-        var lines = readAllLines();
+        var lines  = readAllLines();
         var result = calulate(lines);
         println(result);
         assertAsString("181345830", result);
