@@ -1,7 +1,5 @@
 package day2;
 
-import static functionalj.list.FuncList.AllOf;
-
 import org.junit.Test;
 
 import common.BaseTest;
@@ -17,8 +15,8 @@ public class Day2Part1Test extends BaseTest {
     }
     
     IntFuncList extractReport(String line) {
-        return AllOf(line.split(" "))
-                .mapToInt(Integer::parseInt);
+        return grab(regex("[0-9]+"), line)
+                .mapToInt(parseInt);
     }
     
     boolean isSafeReport(IntFuncList report) {

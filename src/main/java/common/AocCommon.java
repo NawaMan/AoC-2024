@@ -2,11 +2,17 @@ package common;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.IntPredicate;
+import java.util.regex.Pattern;
 
 import functionalj.function.Func;
 import functionalj.function.Func1;
 import functionalj.function.FuncUnit1;
+import functionalj.function.IntFunctionPrimitive;
+import functionalj.functions.StrFuncs;
+import functionalj.lens.lenses.BooleanAccessPrimitive;
 import functionalj.lens.lenses.IntegerAccessPrimitive;
+import functionalj.lens.lenses.IntegerToBooleanAccessPrimitive;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
 
@@ -41,6 +47,22 @@ public interface AocCommon {
             var trace = e.getStackTrace();
             return Kind.valueOf((trace[1 + offset] + "").replaceAll("^.*\\.test(.*)\\(.*$", "$1").toLowerCase());
         }
+    }
+    
+    default <TYPE> Func1<TYPE, TYPE> itself() {
+        return it -> it;
+    }
+    
+    default Pattern regex(String regex) {
+        return Pattern.compile(regex);
+    }
+    
+    default FuncList<String> grab(Pattern pattern, CharSequence strValue) {
+        return StrFuncs.grab(strValue, pattern);
+    }
+    
+    default Func1<String, FuncList<String>> grab(Pattern pattern) {
+        return strValue -> StrFuncs.grab(strValue, pattern);
     }
     
     default FuncList<String> split(String text) {
@@ -78,6 +100,46 @@ public interface AocCommon {
     
     default Func1<IntFuncList, IntFuncList> printInts() {
         return list -> list.peek(i -> println(i));
+    }
+    
+    default IntPredicate inspectTest(IntPredicate func) {
+        return input -> {
+            var output = func.test(input);
+            println(input + " -> " + output);
+            return output;
+        };
+    }
+    
+    default <O> IntFunctionPrimitive<O> inspect(IntFunctionPrimitive<O> func) {
+        return input -> {
+            var output = func.apply(input);
+            println(input + " -> " + output);
+            return output;
+        };
+    }
+    
+    default <I, O> Func1<I, O> inspect(Func1<I, O> func) {
+        return input -> {
+            var output = func.apply(input);
+            println(input + " -> " + output);
+            return output;
+        };
+    }
+    
+    default <I> BooleanAccessPrimitive<I> inspect(BooleanAccessPrimitive<I> func) {
+        return input -> {
+            var output = func.apply(input);
+            println(input + " -> " + output);
+            return output;
+        };
+    }
+    
+    default IntegerToBooleanAccessPrimitive inspect(IntegerToBooleanAccessPrimitive func) {
+        return input -> {
+            var output = func.apply(input);
+            println(input + " -> " + output);
+            return output;
+        };
     }
     
     default FuncList<String> readAllLines() {

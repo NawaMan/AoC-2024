@@ -5,7 +5,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
-public abstract class BaseTest implements AocCommon, Testable {
+import functionalj.lens.Access;
+
+public abstract class BaseTest implements AocCommon, Testable, Access {
     
     @Rule
     public TestName testName = new TestName();

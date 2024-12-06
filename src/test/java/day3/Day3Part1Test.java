@@ -1,7 +1,5 @@
 package day3;
 
-import static functionalj.functions.StrFuncs.grab;
-
 import java.util.regex.Pattern;
 
 import org.junit.Test;
@@ -11,22 +9,21 @@ import functionalj.list.FuncList;
 
 public class Day3Part1Test extends BaseTest {
     
-    Pattern mulPattern    = Pattern.compile("mul\\([0-9]{1,3},[0-9]{1,3}\\)");
-    Pattern numberPattern = Pattern.compile("[0-9]+");
+    Pattern mulPattern    = regex("mul\\([0-9]{1,3},[0-9]{1,3}\\)");
+    Pattern numberPattern = regex("[0-9]+");
     
     int calulate(FuncList<String> lines) {
         return lines.mapToInt(this::calculateTotal).sum();
     }
     
     int calculateTotal(String line) {
-        return grab(line, mulPattern)
-                .peek(this::println)
+        return grab(mulPattern, line)
                 .sumToInt(this::calculateMul);
     }
     
     private int calculateMul(String mul) {
-        return grab(mul, numberPattern)
-                .mapToInt(Integer::parseInt)
+        return grab(numberPattern, mul)
+                .mapToInt(parseInt)
                 .product()
                 .getAsInt();
     }

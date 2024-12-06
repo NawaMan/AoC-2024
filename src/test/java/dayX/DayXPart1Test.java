@@ -1,11 +1,14 @@
 package dayX;
 
+import static functionalj.functions.StrFuncs.*;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
 
+@SuppressWarnings("unused")
 @Ignore
 public class DayXPart1Test extends BaseTest {
     

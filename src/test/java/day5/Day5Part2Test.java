@@ -1,21 +1,19 @@
 package day5;
 
-import static functionalj.function.Func.itself;
-import static functionalj.functions.StrFuncs.grab;
-import static java.lang.Integer.parseInt;
-
 import org.junit.Test;
 
 import common.BaseTest;
+import functionalj.lens.lenses.IntegerAccessPrimitive;
 import functionalj.list.FuncList;
+import functionalj.stream.AsStreamPlus;
 
 public class Day5Part2Test extends BaseTest {
     
     Object calulate(FuncList<String> lines) {
         var firstSection = lines.acceptUntil(""::equals);
         var lastSection  = lines.skip       (firstSection.count() + 1);
-        var rules        = firstSection.map (grab("[0-9]+"));
-        var updates      = lastSection .map (grab("[0-9]+"));
+        var rules        = firstSection.map (grab(regex("[0-9]+")));
+        var updates      = lastSection .map (grab(regex("[0-9]+")));
         return updates
                 .filter  (update   -> incorrectUpdate(rules, update))
                 .map     (update   -> relevantRules  (rules, update))
@@ -27,7 +25,8 @@ public class Day5Part2Test extends BaseTest {
     boolean incorrectUpdate(FuncList<FuncList<String>> rules, FuncList<String> update) {
         return rules.anyMatch(rule -> {
             // update=75,47,61,53,29  intersect  rule=47|29  =>  matchOrder=[47,29]   <---  correct
-            // update=75,47,61,53,29  intersect  rule=61|13  =>  matchOrder=[61]      <---  incorrect
+            // update=75,47,61,53,29  intersect  rule=29|47  =>  matchOrder=[29,47]   <---  incorrect
+            // update=75,47,61,53,29  intersect  rule=61|13  =>  matchOrder=[61]      <---  irrelevant
             var matchOrder = update.filterIn(rule);
             return (matchOrder.size() == 2) 
                     && !matchOrder.toString().equals(rule.toString());
@@ -41,6 +40,10 @@ public class Day5Part2Test extends BaseTest {
             var matchOrder = update.filterIn(rule);
             return matchOrder.size() == 2;
         });
+    }
+    
+    <T> IntegerAccessPrimitive<AsStreamPlus<T>> theSize() {
+        return stream -> stream.size();
     }
     
     String findMiddlePage(FuncList<FuncList<String>> rules) {
@@ -80,7 +83,7 @@ public class Day5Part2Test extends BaseTest {
     
     @Test
     public void testExample() {
-        var lines  = readAllLines().toCache();
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
         assertAsString("123", result);
@@ -88,7 +91,7 @@ public class Day5Part2Test extends BaseTest {
     
     @Test
     public void testProd() {
-        var lines  = readAllLines().toCache();
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
         assertAsString("5502", result);

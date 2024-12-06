@@ -1,7 +1,5 @@
 package day3;
 
-import static functionalj.functions.StrFuncs.grab;
-
 import java.util.regex.Pattern;
 
 import org.junit.Test;
@@ -11,13 +9,13 @@ import functionalj.list.FuncList;
 
 public class Day3Part2Test extends BaseTest {
     
-    Pattern commandPattern = Pattern.compile("(mul\\([0-9]{1,3},[0-9]{1,3}\\)|do\\(\\)|don't\\(\\))");
-    Pattern numberPattern  = Pattern.compile("[0-9]+");
+    Pattern commandPattern = regex("(mul\\([0-9]{1,3},[0-9]{1,3}\\)|do\\(\\)|don't\\(\\))");
+    Pattern numberPattern  = regex("[0-9]+");
     
     int calulate(FuncList<String> lines) {
-        var code = lines.join();
+        var code = lines.join(" ");
         
-        return grab(code, commandPattern)
+        return grab(commandPattern, code)
                 .prepend    ("do()")
                 .segmentWhen(cmd     -> cmd.startsWith("do"))
                 .exclude    (segment -> segment.contains("don't()"))
@@ -32,8 +30,8 @@ public class Day3Part2Test extends BaseTest {
     }
     
     int calculateMul(String mul) {
-        return grab(mul, numberPattern)
-                .mapToInt(Integer::parseInt)
+        return grab(numberPattern, mul)
+                .mapToInt(parseInt)
                 .product()
                 .orElse(1);
     }
