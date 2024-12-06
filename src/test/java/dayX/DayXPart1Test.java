@@ -14,6 +14,9 @@ public class DayXPart1Test extends BaseTest {
     
     
     Object calulate(FuncList<String> lines) {
+        lines.forEach(this::println);
+        println();
+        
         return null;
     }
     
@@ -21,26 +24,18 @@ public class DayXPart1Test extends BaseTest {
     
     @Test
     public void testExample() {
-        var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("", result);
     }
     
     @Ignore
     @Test
     public void testProd() {
-        var lines = readAllLines();
-        lines.forEach(this::println);
-        println();
-        
+        var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        println();
         assertAsString("", result);
     }
     
