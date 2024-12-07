@@ -1,6 +1,5 @@
 package day2;
 
-import static functionalj.list.FuncList.AllOf;
 import static functionalj.stream.intstream.IntStreamPlus.range;
 
 import org.junit.Test;
@@ -18,15 +17,13 @@ public class Day2Part2Test extends BaseTest {
     }
     
     IntFuncList extractReport(String line) {
-        return AllOf(line.split(" "))
-                .mapToInt(Integer::parseInt);
+        return grab(regex("[0-9]+"), line)
+                .mapToInt(parseInt);
     }
     
     boolean isKindOfSafeReport(IntFuncList report) {
         return isSafeReport(report)
-                ? true
-                : range(0, report.size())
-                    .anyMatch(i -> isSafeReport(report.excludeAt(i)));
+                | range(0, report.size()).anyMatch(i -> isSafeReport(report.excludeAt(i)));
     }
     
     boolean isSafeReport(IntFuncList report) {

@@ -1,28 +1,28 @@
 package day5;
 
+import java.util.Map;
+
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.lens.lenses.IntegerAccessPrimitive;
 import functionalj.list.FuncList;
-import functionalj.stream.AsStreamPlus;
+import functionalj.list.intlist.IntFuncList;
 
 public class Day5Part2Test extends BaseTest {
     
     Object calulate(FuncList<String> lines) {
         var firstSection = lines.acceptUntil(""::equals);
         var lastSection  = lines.skip       (firstSection.count() + 1);
-        var rules        = firstSection.map (grab(regex("[0-9]+")));
-        var updates      = lastSection .map (grab(regex("[0-9]+")));
+        var rules        = firstSection.map (stringsToInts);
+        var updates      = lastSection .map (stringsToInts);
         return updates
                 .filter  (update   -> incorrectUpdate(rules, update))
                 .map     (update   -> relevantRules  (rules, update))
-                .map     (relRules -> findMiddlePage (relRules))
-                .mapToInt(middle   -> parseInt(middle))
+                .mapToInt(relRules -> findMiddlePage (relRules))
                 .sum();
     }
     
-    boolean incorrectUpdate(FuncList<FuncList<String>> rules, FuncList<String> update) {
+    boolean incorrectUpdate(FuncList<IntFuncList> rules, IntFuncList update) {
         return rules.anyMatch(rule -> {
             // update=75,47,61,53,29  intersect  rule=47|29  =>  matchOrder=[47,29]   <---  correct
             // update=75,47,61,53,29  intersect  rule=29|47  =>  matchOrder=[29,47]   <---  incorrect
@@ -33,7 +33,7 @@ public class Day5Part2Test extends BaseTest {
         });
     }
     
-    FuncList<FuncList<String>> relevantRules(FuncList<FuncList<String>> rules, FuncList<String> update) {
+    FuncList<IntFuncList> relevantRules(FuncList<IntFuncList> rules, IntFuncList update) {
         return rules.filter(rule -> {
             // update=75,47,61,53,29  intersect  rule=47|29  =>  matchOrder=[47,29]   <---  relevant
             // update=75,47,61,53,29  intersect  rule=61|13  =>  matchOrder=[61]      <---  irrelevant
@@ -42,14 +42,29 @@ public class Day5Part2Test extends BaseTest {
         });
     }
     
-    <T> IntegerAccessPrimitive<AsStreamPlus<T>> theSize() {
-        return stream -> stream.size();
+    /** Quick method to get the middle -- assume rules exists for all pairs */
+    int quickFindMiddle(FuncList<IntFuncList> rules) {
+        // rules        : [[47, 53], [97, 61], [97, 47], [75, 53], [61, 53], [97, 53], [75, 47], [97, 75], [47, 61], [75, 61]]
+        // first pages  : [47, 97, 97, 75, 61, 97, 75, 97, 47, 75]
+        // frequencyMap : {47:2, 97:4, 75:3, 61:1}
+        // sorted       : [61=1, 47=2, 75=3, 97=4]
+        // midPage      :         ^^
+        var firstPages   = rules.map(rule -> rule.get(0));
+        var frequencyMap = firstPages.groupingBy(itself(), list -> list.size());
+        return frequencyMap
+                .entries()
+                .sortedBy(Map.Entry::getValue)
+                .mapToInt(Map.Entry::getKey)
+                .pipe    (keys -> keys.get((keys.size() - 1) / 2));
     }
     
-    String findMiddlePage(FuncList<FuncList<String>> rules) {
+    int findMiddlePage(FuncList<IntFuncList> rules) {
         // All pages     : 61,13,29
         // Relevant rules: 61|13  29|13  61|29
         
+        return quickFindMiddle(rules);   /*     // Put line comment on this line to select the longer method.
+        
+        // Below are the longer way --- by finding first and last and remove them until the middle one left.
         // First pages: 61, 29, 61  ->  61,29
         // Last pages : 13, 13, 29  ->  13,29
         var firstPages = rules.map(rule -> rule.get(0));
@@ -63,20 +78,21 @@ public class Day5Part2Test extends BaseTest {
         // Middle Pages = [61,13,29] - [61] - [13]  ->  29
         var middlePages
                 = rules
-                .flatMap(itself())
+                .flatMapToInt(itself())
                 .exclude(firstPage)
                 .exclude(lastPage)
                 .distinct();
-        if (middlePages.size() == 1)
+        if (middlePages.size() == 1) {
             return middlePages.get(0);
+        }
         
         var reduceRules
                 = rules
-                .exclude(rule -> rule.get(0).equals(firstPage))
-                .exclude(rule -> rule.last().get().equals(lastPage));
+                .exclude(rule -> rule.get(0) == firstPage)
+                .exclude(rule -> rule.last().getAsInt() == lastPage);
         
         // Recursively reduce.
-        return findMiddlePage(reduceRules);
+        return findMiddlePage(reduceRules); /* */
     }
     
     //== Test ==

@@ -4,29 +4,29 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
+import functionalj.list.intlist.IntFuncList;
 
 public class Day5Part1Test extends BaseTest {
     
     Object calulate(FuncList<String> lines) {
         var firstSection = lines.acceptUntil(""::equals);
         var lastSection  = lines.skip       (firstSection.count() + 1);
-        var rules        = firstSection.map(grab(regex("[0-9]+")));
-        var updates      = lastSection .map(grab(regex("[0-9]+")));
+        var rules        = firstSection.map(stringsToInts);
+        var updates      = lastSection .map(stringsToInts);
         return updates
                 .filter  (update -> correctOrderUpdate(rules, update))
-                .map     (update -> update.get(update.size() / 2))
-                .mapToInt(middle -> parseInt(middle))
+                .mapToInt(update -> update.get(update.size() / 2))
                 .sum();
     }
     
-    private boolean correctOrderUpdate(FuncList<FuncList<String>> rules, FuncList<String> update) {
+    boolean correctOrderUpdate(FuncList<IntFuncList> rules, IntFuncList update) {
         return rules.allMatch(rule -> {
             // update=75,47,61,53,29  intersect  rule=47|29  =>  matchOrder=[47,29]   <---  correct
             // update=75,47,61,53,29  intersect  rule=29|47  =>  matchOrder=[29,47]   <---  incorrect
             // update=75,47,61,53,29  intersect  rule=61|13  =>  matchOrder=[61]      <---  irrelevant
             var matchOrder = update.filterIn(rule);
-            return (matchOrder.size() != 2)
-                    || matchOrder.equals(rule);
+            return (matchOrder.size() != 2)         // irrelevant?
+                    || matchOrder.equals(rule);     // correct?
         });
     }
     

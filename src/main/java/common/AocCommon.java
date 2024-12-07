@@ -32,6 +32,8 @@ public interface AocCommon {
     
     static final IntegerAccessPrimitive<String> parseInt = Integer::parseInt;
     
+    static final Func1<String, IntFuncList> stringsToInts = strValue -> StrFuncs.grab(strValue, Pattern.compile("[0-9]+")).mapToInt(parseInt).cache();
+    
     default String challengeName() {
         return  this.getClass().getSimpleName().replaceFirst("Test$", "");
     }

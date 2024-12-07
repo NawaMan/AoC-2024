@@ -2,13 +2,10 @@ package day4;
 
 import static functionalj.stream.intstream.IntStreamPlus.range;
 
-import java.util.function.IntBinaryOperator;
-
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.list.intlist.IntFuncList;
 
 public class Day4Part2Test extends BaseTest {
     
@@ -18,44 +15,28 @@ public class Day4Part2Test extends BaseTest {
             if ((c < 0) || (c >= lines.get(r).length())) return '.';
             return lines.get(r).charAt(c);
         }
-        IntFuncList loop(IntBinaryOperator operator) {
-            var rows = lines.size();
-            var cols = lines.get(0).length();
-            return range(0, rows).flatMapToInt(r -> {
-                        return range(0, cols).mapToInt(c -> {
-                            return operator.applyAsInt(r, c);
-                        });
-                    })
-                    .toFuncList();
-        }
-    }
-    record WordGrid(Grid grid) {
-        int wordX(String word) {
-            if (word.length() != 3)
-                throw new IllegalArgumentException("Only 3-character-long word is supported.");
-            
-            var mid    = word.charAt(1);
-            var before = word.charAt(0);
-            var after  = word.charAt(2);
-            return grid.loop((r, c) -> {
-                return (grid.charAt(r, c) != mid)
-                        ? 0
-                        : checkX(r, c, before, after) ? 1 : 0;
-            }).sum();
-        }
-        boolean checkX(int r, int c, char before, char after) {
-            if ((grid.charAt(r - 1, c - 1) == before && grid.charAt(r + 1, c + 1) == after)
-             || (grid.charAt(r - 1, c - 1) == after  && grid.charAt(r + 1, c + 1) == before)) {
-                return ((grid.charAt(r - 1, c + 1) == before && grid.charAt(r + 1, c - 1) == after)
-                     || (grid.charAt(r - 1, c + 1) == after  && grid.charAt(r + 1, c - 1) == before));
-            }
-            return false;
-        }
     }
     
     Object calulate(FuncList<String> lines) {
-        var wordGrid = new WordGrid(new Grid(lines));
-        return wordGrid.wordX("MAS");
+        var grid = new Grid(lines);
+        var rows = lines.size();
+        var cols = lines.get(0).length();
+        return range(0, rows).mapToInt(row -> {
+                    return range(0, cols).filter(col -> {
+                        return checkX(grid, row, col, 'M', 'A', 'S');
+                    }).size();
+                }).sum();
+    }
+    boolean checkX(Grid grid, int row, int col, char before, char mid, char after) {
+        if (grid.charAt(row, col) != mid)
+            return false;
+        
+        if ((grid.charAt(row - 1, col - 1) == before && grid.charAt(row + 1, col + 1) == after)
+         || (grid.charAt(row - 1, col - 1) == after  && grid.charAt(row + 1, col + 1) == before)) {
+            return ((grid.charAt(row - 1, col + 1) == before && grid.charAt(row + 1, col - 1) == after)
+                 || (grid.charAt(row - 1, col + 1) == after  && grid.charAt(row + 1, col - 1) == before));
+        }
+        return false;
     }
     
     //== Test ==

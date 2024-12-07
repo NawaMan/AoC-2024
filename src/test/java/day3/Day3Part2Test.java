@@ -16,17 +16,46 @@ public class Day3Part2Test extends BaseTest {
         var code = lines.join(" ");
         
         return grab(commandPattern, code)
-                .prepend    ("do()")
-                .segmentWhen(cmd     -> cmd.startsWith("do"))
-                .exclude    (segment -> segment.contains("don't()"))
-                .mapToInt   (segment -> segmentSum(segment))
-                .sum();
+                .prepend    ("do()")                                    // -- A
+                .segmentWhen(cmd     -> cmd.startsWith("do"))           // -- B
+                .exclude    (segment -> segment.contains("don't()"))    // -- C
+                .mapToInt   (segment -> segmentSum(segment))            // -- D
+                .sum();                                                 // -- E
+        
+        // == Input ==
+        // xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))
+        
+        // == A ==
+        //    do()
+        //    mul(2,4)
+        //    don't()
+        //    mul(5,5)
+        //    mul(11,8)
+        //    do()
+        //    mul(8,5)
+        
+        // == B ==
+        //    [do(), mul(2,4)]
+        //    [don't(), mul(5,5), mul(11,8)]
+        //    [do(), mul(8,5)]
+        
+        // == C ==
+        //    [do(), mul(2,4)]
+        //    [do(), mul(8,5)]
+        
+        // == D ==
+        //    8
+        //    40
+        
+        // == E ==
+        //    48
     }
     
     int segmentSum(FuncList<String> segment) {
         return segment
-                .skip(1)
-                .mapToInt(this::calculateMul).sum();
+                .skip(1)    // Skip the first `do()`
+                .mapToInt(this::calculateMul)
+                .sum();
     }
     
     int calculateMul(String mul) {
