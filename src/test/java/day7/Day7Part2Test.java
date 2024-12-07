@@ -3,7 +3,6 @@ package day7;
 import static java.lang.Math.pow;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.function.BinaryOperator;
 
 import org.junit.Test;
@@ -11,6 +10,30 @@ import org.junit.Test;
 import common.BaseTest;
 import functionalj.list.FuncList;
 
+/**
+ * --- Part Two ---
+ * 
+ * The engineers seem concerned; the total calibration result you gave them is nowhere close to being within safety 
+ *   tolerances. Just then, you spot your mistake: some well-hidden elephants are holding a third type of operator.
+ * 
+ * The concatenation operator (||) combines the digits from its left and right inputs into a single number. For example,
+ *   12 || 345 would become 12345. All operators are still evaluated left-to-right.
+ * 
+ * Now, apart from the three equations that could be made true using only addition and multiplication, the above example
+ *   has three more equations that can be made true by inserting operators:
+ * 
+ *     156: 15 6 can be made true through a single concatenation: 15 || 6 = 156.
+ *     7290: 6 8 6 15 can be made true using 6 * 8 || 6 * 15.
+ *     192: 17 8 14 can be made true using 17 || 8 + 14.
+ * 
+ * Adding up all six test values (the three that could be made before using only + and * plus the new three that can now
+ *   be made by also using ||) produces the new total calibration result of 11387.
+ * 
+ * Using your new knowledge of elephant hiding spots, determine which equations could possibly be true. What is their
+ *   total calibration result?
+ * 
+ * Your puzzle answer was 945341732469724.
+ */
 public class Day7Part2Test extends BaseTest {
     
     BinaryOperator<BigInteger> newOperator(String name, BinaryOperator<BigInteger> body) {
@@ -26,7 +49,7 @@ public class Day7Part2Test extends BaseTest {
             newOperator("||", (left, right) -> new BigInteger(left.toString() + right.toString()))
     );
     
-    Object calulate(FuncList<String> lines) {
+    BigInteger calulate(FuncList<String> lines) {
         return lines
             .map   (grab(regex("[0-9]+")))
             .map   (each -> each.map(BigInteger::new))
@@ -37,30 +60,24 @@ public class Day7Part2Test extends BaseTest {
     }
     
     boolean checkIfPossible(FuncList<BigInteger> each) {
-        var result = each.first().get();
-        var nums   = each.tail().cache();
-        
-        var caseCount = (int)pow(3, nums.size() - 1);
+        var result    = each.first().get();
+        var operands  = each.tail().cache();
+        var caseCount = (int)pow(3, operands.size() - 1);
         for (int thisCase = 0; thisCase < caseCount; thisCase++) {
-            if (result.equals(checkForBits(nums, thisCase)))
+            if (result.equals(calculate(operands, thisCase)))
                 return true;
         }
         return false;
     }
     
-    BigInteger checkForBits(FuncList<BigInteger> nums, int thisCase) {
-        var thisOperators = new ArrayList<BinaryOperator<BigInteger>>();
-        for (int operatorIndex = 0; operatorIndex < nums.size() - 1; operatorIndex++) {
-            var thisBit = thisCase % 3;
-            var thisOperator = operators.get(thisBit);
-            thisOperators.add(thisOperator);
-            thisCase /= 3;
-        }
-        BigInteger total = nums.get(0);
-        for (int operationIndex = 1; operationIndex < nums.size(); operationIndex++) {
-            var operator = thisOperators.get(operationIndex - 1);
-            var operand  = nums.get(operationIndex);
-            total = operator.apply(total, operand); 
+    BigInteger calculate(FuncList<BigInteger> operands, int thisCase) {
+        var total         = operands.get(0);
+        var operatorCount = operators.size();
+        for (int index = 0; index < operands.size() - 1; index++) {
+            var operator = operators.get  (thisCase % operatorCount);
+            var operand  = operands .get  (index + 1);
+            total        = operator .apply(total, operand);
+            thisCase /= operatorCount;
         }
         return total;
     }
