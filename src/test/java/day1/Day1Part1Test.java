@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
+import lombok.Data;
 
 /**
  * --- Day 1: Historian Hysteria ---
