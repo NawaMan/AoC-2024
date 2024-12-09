@@ -1,83 +1,72 @@
 package day8;
 
-import static functionalj.functions.StrFuncs.*;
+import static functionalj.functions.StrFuncs.matches;
+import static functionalj.stream.intstream.IntStreamPlus.infinite;
 
-import org.junit.Ignore;
+import java.util.function.IntFunction;
+
 import org.junit.Test;
 
 import common.BaseTest;
-import day8.Day8Part1Test.Antenna;
-import day8.Day8Part1Test.Position;
+import functionalj.function.Func1;
+import functionalj.functions.RegExMatchResult;
 import functionalj.list.FuncList;
+import functionalj.stream.StreamPlus;
 
 public class Day8Part2Test extends BaseTest {
     
-    record Position(int row, int col) {}
+    record Position(int row, int col) {
+        boolean isOutOfBound(int rowCount, int colCount) {
+            return (row < 0 || row >= rowCount)
+                || (col < 0 || col >= colCount);
+        }
+    }
     record Antenna(Position position, char symbol) {}
     
     Object calulate(FuncList<String> lines) {
         var rowCount = lines.size();
         var colCount = lines.get(0).length();
         
-        var antennaPattern = regex("[^\\.]");
-        var antennas = lines
-                .mapWithIndex((row, line) -> {
-                    return matches(line, antennaPattern)
-                            .map(result -> new Antenna(new Position(row, result.start()), result.group().charAt(0)))
-                            .toFuncList();
-                })
-                .exclude(FuncList::isEmpty)
-                .flatMap(itself())
-                .cache();
+        var antennas 
+                = lines
+                .mapWithIndex((row, line) -> matches(line, regex("[^\\.]")).map(extractAntenna(row)))
+                .flatMap     (StreamPlus::toFuncList)
+                .cache       ();
         
-        var amtennasPositions
-            = antennas
-            .map(Antenna::position)
-            .toSet();
-        
-        var antinodes = antennas
+        return antennas
                 .groupingBy(Antenna::symbol)
-                .values()
-                .flatMap(entry -> totalAntinodes(entry, rowCount, colCount))
-                .exclude(p -> p.row < 0 || p.row >= rowCount)
-                .exclude(p -> p.col < 0 || p.col >= colCount)
-                .appendAll(amtennasPositions)
-                .distinct()
-                .cache();
-        
-        return antinodes.size();
+                .values    ()
+                .map       (values -> values.map(Antenna.class::cast))
+                .flatMap   (entry  -> totalAntinodes(entry, rowCount, colCount))
+                .appendAll (antennas.map(Antenna::position).toSet())
+                .distinct  ()
+                .size      ();
     }
 
-    private FuncList<Position> totalAntinodes(FuncList<? super Antenna> antennas, int rowCount, int colCount) {
-        return antennas.flatMap(first  -> 
-               antennas.flatMap(second -> {
-                    if (first.equals(second))
-                        return FuncList.<Position>empty();
-                    
-                    var diffRow = ((Antenna)second).position.row - ((Antenna)first).position.row;
-                    var diffCol = ((Antenna)second).position.col - ((Antenna)first).position.col;
-                    return FuncList.of(
-                            createAntinodes(((Antenna)second).position, diffRow, diffCol,  1, rowCount, colCount),
-                            createAntinodes(((Antenna)first).position,  diffRow, diffCol, -1, rowCount, colCount))
-                            .flatMap(itself());
-               }));
+    Func1<RegExMatchResult, Antenna> extractAntenna(int row) {
+        return result -> {
+            return new Antenna(new Position(row, result.start()), result.group().charAt(0));
+        };
     }
     
-    private FuncList<Position> createAntinodes(Position position, int diffRow, int diffCol, int sign, int rowCount, int colCount) {
-        var builder = FuncList.<Position>newBuilder();
-        int posRow = position.row;
-        int posCol = position.col;        
-        while (true) {
-            posRow = posRow + sign*diffRow;
-            posCol = posCol + sign*diffCol;
-            builder.add(new Position(posRow, posCol));
-            
-            if ((posRow < 0) || (posRow >= rowCount))
-                break;
-            if ((posCol < 0) || (posCol >= colCount))
-                break;
-        }
-        return builder.build();
+    FuncList<Position> totalAntinodes(FuncList<Antenna> antennas, int rowCount, int colCount) {
+        return antennas.flatMap(first -> {
+            return antennas
+                    .filter (second -> !first.equals(second))
+                    .flatMap(second -> {
+                            return infinite()
+                                    .mapToObj   (createAntinode(first, second))
+                                    .acceptUntil(position -> position.isOutOfBound(rowCount, colCount))
+                                    .toFuncList();
+                        }
+                    );
+        });
+    }
+    
+    IntFunction<Position> createAntinode(Antenna first, Antenna second) {
+        return i -> new Position(
+                (i + 1)*second.position.row - i*first.position.row,
+                (i + 1)*second.position.col - i*first.position.col);
     }
     
     //== Test ==
