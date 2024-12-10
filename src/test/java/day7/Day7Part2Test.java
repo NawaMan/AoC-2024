@@ -49,7 +49,7 @@ public class Day7Part2Test extends BaseTest {
             newOperator("||", (left, right) -> new BigInteger(left.toString() + right.toString()))
     );
     
-    BigInteger calulate(FuncList<String> lines) {
+    BigInteger countValidExpression(FuncList<String> lines) {
         return lines
             .map   (grab(regex("[0-9]+")))
             .map   (each -> each.map(BigInteger::new))
@@ -87,7 +87,7 @@ public class Day7Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countValidExpression(lines);
         println("result: " + result);
         assertAsString("11387", result);
     }
@@ -95,7 +95,7 @@ public class Day7Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countValidExpression(lines);
         println("result: " + result);
         assertAsString("945341732469724", result);
     }

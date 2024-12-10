@@ -30,7 +30,7 @@ import functionalj.list.intlist.IntFuncList;
  */
 public class Day5Part2Test extends BaseTest {
     
-    Object calulate(FuncList<String> lines) {
+    int sumOfMiddlePages(FuncList<String> lines) {
         var firstSection = lines.acceptUntil(""::equals);
         var lastSection  = lines.skip       (firstSection.count() + 1);
         var rules        = firstSection.map (stringsToInts);
@@ -120,7 +120,7 @@ public class Day5Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = sumOfMiddlePages(lines);
         println("result: " + result);
         assertAsString("123", result);
     }
@@ -128,7 +128,7 @@ public class Day5Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = sumOfMiddlePages(lines);
         println("result: " + result);
         assertAsString("5502", result);
     }

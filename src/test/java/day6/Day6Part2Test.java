@@ -127,7 +127,7 @@ import functionalj.list.FuncList;
  */
 public class Day6Part2Test extends BaseTest {
     
-    Object calulate(FuncList<String> lines) {
+    int countPosibleLoop(FuncList<String> lines) {
         var startPosition  = findStartPosition(lines);
         var startDirection = Direction.of(lines.get(startPosition.row()).charAt(startPosition.col()));
         
@@ -164,7 +164,7 @@ public class Day6Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countPosibleLoop(lines);
         println("result: " + result);
         assertAsString("6", result);
     }
@@ -172,7 +172,7 @@ public class Day6Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countPosibleLoop(lines);
         println("result: " + result);
         assertAsString("1697", result);
     }

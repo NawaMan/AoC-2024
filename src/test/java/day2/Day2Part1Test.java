@@ -56,7 +56,7 @@ import functionalj.list.intlist.IntFuncList;
  */
 public class Day2Part1Test extends BaseTest {
     
-    int calulate(FuncList<String> lines) {
+    int countSafeReport(FuncList<String> lines) {
         var reports     = lines  .map   (line   -> extractReport(line));
         var safeReports = reports.filter(report -> isSafeReport(report));
         return safeReports.size();
@@ -78,7 +78,7 @@ public class Day2Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countSafeReport(lines);
         println("result: " + result);
         assertAsString("2", result);
     }
@@ -86,7 +86,7 @@ public class Day2Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countSafeReport(lines);
         println("result: " + result);
         assertAsString("411", result);
     }

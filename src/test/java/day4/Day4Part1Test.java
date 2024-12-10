@@ -87,7 +87,7 @@ public class Day4Part1Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines) {
+    int countXMas(FuncList<String> lines) {
         var grid = new Grid(lines);
         return grid.visitAll((r, c) -> {
             return (grid.charAt(r, c) == 'X')
@@ -111,7 +111,7 @@ public class Day4Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countXMas(lines);
         println("result: " + result);
         assertAsString("18", result);
     }
@@ -119,7 +119,7 @@ public class Day4Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countXMas(lines);
         println("result: " + result);
         assertAsString("2603", result);
     }

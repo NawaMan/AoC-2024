@@ -49,7 +49,7 @@ import functionalj.list.FuncList;
  */
 public class Day1Part2Test extends BaseTest {
     
-    int calulate(FuncList<String> lines) {
+    int calulateSimilarityScore(FuncList<String> lines) {
         var pairs = lines.map(line -> line.split("[ ]+"));
         var left  = pairs.map(pair -> pair[0]).mapToInt(parseInt);
         var right = pairs.map(pair -> pair[1]).mapToInt(parseInt);
@@ -61,7 +61,7 @@ public class Day1Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calulateSimilarityScore(lines);
         println("result: " + result);
         assertAsString("31", result);
     }
@@ -69,7 +69,7 @@ public class Day1Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calulateSimilarityScore(lines);
         println("result: " + result);
         assertAsString("21607792", result);
     }

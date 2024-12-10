@@ -6,7 +6,6 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import lombok.Data;
 
 /**
  * --- Day 1: Historian Hysteria ---
@@ -76,7 +75,7 @@ import lombok.Data;
  */
 public class Day1Part1Test extends BaseTest {
     
-    int calulate(FuncList<String> lines) {
+    int calulateTotalDistance(FuncList<String> lines) {
         var pairs = lines.map(line -> line.split("[ ]+"));
         var left  = pairs.map(pair -> pair[0]).mapToInt(parseInt).sorted();
         var right = pairs.map(pair -> pair[1]).mapToInt(parseInt).sorted();
@@ -88,7 +87,7 @@ public class Day1Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calulateTotalDistance(lines);
         println("result: " + result);
         println();
         assertAsString("11", result);
@@ -97,7 +96,7 @@ public class Day1Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calulateTotalDistance(lines);
         println("result: " + result);
         println();
         assertAsString("1834060", result);

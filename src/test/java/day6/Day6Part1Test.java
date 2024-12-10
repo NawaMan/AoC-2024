@@ -216,7 +216,7 @@ public class Day6Part1Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines) {
+    int countVisitedBlocks(FuncList<String> lines) {
         var start  = findStartPosition(lines);
         var grid   = new Grid(lines, start, null);
         var walker = new Walker(Direction.of(lines.get(start.row).charAt(start.col)), start);
@@ -248,7 +248,7 @@ public class Day6Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countVisitedBlocks(lines);
         println("result: " + result);
         assertAsString("41", result);
     }
@@ -256,7 +256,7 @@ public class Day6Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countVisitedBlocks(lines);
         println("result: " + result);
         assertAsString("4988", result);
     }

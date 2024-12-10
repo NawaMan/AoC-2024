@@ -13,6 +13,55 @@ import functionalj.functions.RegExMatchResult;
 import functionalj.list.FuncList;
 import functionalj.stream.StreamPlus;
 
+/**
+ * --- Part Two ---
+ * 
+ * Watching over your shoulder as you work, one of The Historians asks if you took the effects of resonant harmonics 
+ *   into your calculations.
+ * 
+ * Whoops!
+ * 
+ * After updating your model, it turns out that an antinode occurs at any grid position exactly in line with at least 
+ *   two antennas of the same frequency, regardless of distance. This means that some of the new antinodes will occur 
+ *   at the position of each antenna (unless that antenna is the only one of its frequency).
+ * 
+ * So, these three T-frequency antennas now create many antinodes:
+ * 
+ * T....#....
+ * ...T......
+ * .T....#...
+ * .........#
+ * ..#.......
+ * ..........
+ * ...#......
+ * ..........
+ * ....#.....
+ * ..........
+ * 
+ * In fact, the three T-frequency antennas are all exactly in line with two antennas, so they are all also antinodes! 
+ *   This brings the total number of antinodes in the above example to 9.
+ * 
+ * The original example now has 34 antinodes, including the antinodes that appear on every antenna:
+ * 
+ * ##....#....#
+ * .#.#....0...
+ * ..#.#0....#.
+ * ..##...0....
+ * ....0....#..
+ * .#...#A....#
+ * ...#..#.....
+ * #....#.#....
+ * ..#.....A...
+ * ....#....A..
+ * .#........#.
+ * ...#......##
+ * 
+ * Calculate the impact of the signal using this updated model. How many unique locations within the bounds of the map 
+ *   contain an antinode?
+ * 
+ * Your puzzle answer was 1229.
+ * 
+ */
 public class Day8Part2Test extends BaseTest {
     
     record Position(int row, int col) {
@@ -23,7 +72,7 @@ public class Day8Part2Test extends BaseTest {
     }
     record Antenna(Position position, char symbol) {}
     
-    Object calulate(FuncList<String> lines) {
+    int countAllNodes(FuncList<String> lines) {
         var rowCount = lines.size();
         var colCount = lines.get(0).length();
         
@@ -74,7 +123,7 @@ public class Day8Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countAllNodes(lines);
         println("result: " + result);
         assertAsString("34", result);
     }
@@ -82,7 +131,7 @@ public class Day8Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = countAllNodes(lines);
         println("result: " + result);
         assertAsString("1229", result);
     }
