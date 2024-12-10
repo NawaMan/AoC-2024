@@ -56,7 +56,7 @@ import functionalj.list.intlist.IntFuncList;
  */
 public class Day2Part1Test extends BaseTest {
     
-    int countSafeReport(FuncList<String> lines) {
+    int countSafeReports(FuncList<String> lines) {
         var reports     = lines  .map   (line   -> extractReport(line));
         var safeReports = reports.filter(report -> isSafeReport(report));
         return safeReports.size();
@@ -70,7 +70,13 @@ public class Day2Part1Test extends BaseTest {
     boolean isSafeReport(IntFuncList report) {
         var diffs  = report.mapTwo((a, b) -> a - b);
         var sign   = (diffs.get(0) < 0) ? -1 : 1;
-        return diffs.noneMatch(diff -> (sign*diff <= 0) || (sign*diff > 3));
+        return diffs
+                .map(diff -> sign*diff)
+                .noneMatch(this::unsafeCondition);
+    }
+
+    boolean unsafeCondition(int unsignedDiff) {
+        return (unsignedDiff <= 0) || (unsignedDiff > 3);
     }
     
     //== Test ==
@@ -78,7 +84,7 @@ public class Day2Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = countSafeReport(lines);
+        var result = countSafeReports(lines);
         println("result: " + result);
         assertAsString("2", result);
     }
@@ -86,7 +92,7 @@ public class Day2Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = countSafeReport(lines);
+        var result = countSafeReports(lines);
         println("result: " + result);
         assertAsString("411", result);
     }
