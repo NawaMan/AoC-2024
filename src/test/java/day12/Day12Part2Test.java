@@ -20,6 +20,8 @@ import functionalj.stream.StreamPlus;
 public class Day12Part2Test extends BaseTest {
     
     record Position(int row, int col) implements Comparable<Position> {
+        private static final Comparator<Position> COMPARATOR = comparingInt      (Position::row)
+                                                                .thenComparingInt(Position::col);
         FuncList<Position> neighbours() {
             return FuncList.of(
                         new Position(row + 1, col()    ),
@@ -36,13 +38,12 @@ public class Day12Part2Test extends BaseTest {
         }
         @Override
         public int compareTo(Position o) {
-            return comparingInt((Position p) -> p.row()).thenComparingInt((Position p) -> p.col()).compare(this, o);
+            return COMPARATOR
+                    .compare(this, o);
         }
     }
     
     record Grid(FuncList<String> lines) {
-        int height() { return lines.size(); }
-        int width()  { return lines.get(0).length(); }
         char charAt(Position position) {
             if (position.row < 0 || position.row >= lines.size())                     return ' ';
             if (position.col < 0 || position.col >= lines.get(position.row).length()) return ' ';
@@ -82,8 +83,9 @@ public class Day12Part2Test extends BaseTest {
             
             return position
                     .neighbours()
-                    .map(neighbour -> walk(forChar, neighbour, visiteds, groups))
-                    .streamPlus().flatMap(StreamPlus.class::cast)
+                    .map       (neighbour -> walk(forChar, neighbour, visiteds, groups))
+                    .streamPlus()
+                    .flatMap   (StreamPlus.class::cast)
                     .appendWith(StreamPlus.of(position));
         }
     }
@@ -92,13 +94,11 @@ public class Day12Part2Test extends BaseTest {
     
     record Alignment(EdgeDirection direction, int rowOrCol) {
         OptionalInt location(Edge edge) {
-            return this.equals(edge.alignment())
-                    ? OptionalInt.of((direction == Vertical) ? edge.pos1.row : edge.pos1.col)
-                    : OptionalInt.empty();
+            return OptionalInt.of((direction == Vertical) ? edge.pos1.row : edge.pos1.col);
         }
     }
     
-    record Edge(Position pos1, Position pos2) implements Comparable<Edge> {
+    record Edge(Position pos1, Position pos2) {
         Alignment alignment() {
             var direction = (pos1.row  == pos2.row) ? Vertical : Horizontal;
             var rowOrCol  = (direction == Vertical) ? pos1.col : pos1.row;
@@ -107,35 +107,31 @@ public class Day12Part2Test extends BaseTest {
         String identityFor(Grid grid, char ch) {
             return "(%s,%s)".formatted((grid.charAt(pos1) == ch ? ch : ' '), (grid.charAt(pos2) == ch ? ch : ' '));
         }
-        @Override
-        public int compareTo(Edge o) {
-            return Comparator.comparing(Edge::pos1).thenComparing(Edge::pos2).compare(this, o);
-        }
     }
     
     record Group(Grid grid, FuncList<Position> positions) implements Comparable<Group> {
         Position first() {
             return positions.stream().findFirst().get();
         }
-        int area() {
-            return positions.size();
+        int fencePrice() {
+            var area  = positions.size();
+            var sides = sides();
+            return area*sides;
         }
-        @SuppressWarnings("unchecked")
         int sides() {
-            var ch = grid.charAt(positions.getFirst());
-            return FuncList.from(positions)
+            var groupChar = grid.charAt(positions.getFirst());
+            var edgesByAlignments
+                    = FuncList.from(positions)
                     .flatMap(this::findEdges)
-                    .groupingBy(Edge::alignment).entries()
+                    .groupingBy(Edge::alignment);
+            return edgesByAlignments.entries()
                     .flatMapToInt(entry -> {
                         var alignment = entry.getKey();
-                        return entry.getValue().map(Edge.class::cast)
-                            .groupingBy(sideWith(ch))
-                            .values().mapToInt(es -> {
-                                var diffs = ((FuncList<Edge>)es)
-                                    .mapToInt(e -> alignment.location(e).getAsInt())
-                                    .mapTwo((a, b) -> b - a);                
-                                return diffs.filter(diff -> diff != 1).size() + 1;
-                            });
+                        var edgesByWideOfGroupChar = entry.getValue().map(Edge.class::cast)
+                            .groupingBy(sideWith(groupChar));
+                        return edgesByWideOfGroupChar
+                            .values()
+                            .mapToInt(edges -> continousSidesOnSameAlignment(alignment, edges));
                     })
                     .sum();
         }
@@ -148,6 +144,18 @@ public class Day12Part2Test extends BaseTest {
         Func1<Edge, String> sideWith(char ch) {
             return edge -> edge.identityFor(grid, ch);
         }
+        @SuppressWarnings("unchecked")
+        int continousSidesOnSameAlignment(Alignment alignment, FuncList<? super Edge> edges) {
+            // Edges that are on the same alignment but disconnected are considered a separated sides.
+            // +--+  +--+  <-- These four edges are on the same alignment.
+            // |AA+--+AA|
+            // |AAAAAAAA|
+            // +--------+
+            var diffs = ((FuncList<Edge>)edges)
+                .mapToInt(e -> alignment.location(e).getAsInt())
+                .mapTwo((a, b) -> b - a);                
+            return diffs.filter(diff -> diff != 1).size() + 1;
+        }
         @Override
         public int compareTo(Group o) {
             return Comparator.comparing(Group::first).compare(this, o);
@@ -156,7 +164,7 @@ public class Day12Part2Test extends BaseTest {
     
     Object calulate(FuncList<String> lines) {
         var grid = new Grid(lines);
-        return grid.groups().mapToInt(group -> group.area()*group.sides()).sum();
+        return grid.groups().sumToInt(Group::fencePrice);
     }
     
     //== Test ==
