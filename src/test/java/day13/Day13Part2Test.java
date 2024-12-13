@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.promise.DeferAction;
 
 public class Day13Part2Test extends BaseTest {
     
@@ -20,12 +19,11 @@ public class Day13Part2Test extends BaseTest {
     Object calulate(FuncList<String> lines) throws Exception {
         var buttonCost  = new AB(3, 1);
         var prizeAdjust = PRIZE_OFFSET;
-        var segments = lines.segment(4).map(FuncList::toCache).cache();
+        var segments    = lines.segment(4).map(FuncList::toCache).cache();
         return loop(segments.size())
                 .boxed()
                 .map(i -> newGame(segments.get((int)i), buttonCost, prizeAdjust))
-                .map(f(Game::minCost).defer())
-                .map(DeferAction::start)
+                .spawn(f(Game::minCost).defer())
                 .sumToLong(promise -> promise.getResult().get());
     }
     
@@ -34,10 +32,12 @@ public class Day13Part2Test extends BaseTest {
     @Ignore
     @Test
     public void testProd() throws Exception {
+        var start = System.currentTimeMillis();
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
         assertAsString("74478585072604", result);
+        println("Run for: " + (System.currentTimeMillis() - start) + "ms");
     }
     
 }

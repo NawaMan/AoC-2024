@@ -14,7 +14,6 @@ import common.BaseTest;
 import functionalj.functions.StrFuncs;
 import functionalj.lens.lenses.LongToLongAccessPrimitive;
 import functionalj.list.FuncList;
-import functionalj.promise.DeferAction;
 import functionalj.types.Struct;
 
 public class Day13Part1Test extends BaseTest {
@@ -75,12 +74,11 @@ public class Day13Part1Test extends BaseTest {
     Object calulate(FuncList<String> lines) throws Exception {
         var buttonCost  = new AB(3, 1);
         var prizeAdjust = 0L;
-        var segments = lines.segment(4).map(FuncList::toCache).cache();
+        var segments    = lines.segment(4).map(FuncList::toCache).cache();
         return loop(segments.size())
                 .boxed()
                 .map(i -> newGame(segments.get((int)i), buttonCost, prizeAdjust))
-                .map(f(Game::minCost).defer())
-                .map(DeferAction::start)
+                .spawn(f(Game::minCost).defer())
                 .sumToLong(promise -> promise.getResult().get());
     }
     
@@ -88,17 +86,21 @@ public class Day13Part1Test extends BaseTest {
     
     @Test
     public void testExample() throws Exception {
+        var start = System.currentTimeMillis();
         var lines  = readAllLines();
         var result = calulate(lines);
+        println("Run for: " + (System.currentTimeMillis() - start) + "ms");
         println("result: " + result);
         assertAsString("480", result);
     }
     
     @Test
     public void testProd() throws Exception {
+        var start = System.currentTimeMillis();
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
+        println("Run for: " + (System.currentTimeMillis() - start) + "ms");
         assertAsString("39748", result);
     }
     
