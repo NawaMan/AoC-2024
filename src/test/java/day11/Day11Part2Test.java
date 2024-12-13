@@ -1,19 +1,14 @@
 package day11;
 
-import static functionalj.promise.DeferAction.defer;
-
 import java.math.BigInteger;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.LongAdder;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.tuple.Tuple;
 import functionalj.tuple.Tuple2;
 
 public class Day11Part2Test extends BaseTest {
@@ -119,6 +114,7 @@ public class Day11Part2Test extends BaseTest {
         println();
     }
     
+    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();

@@ -1,5 +1,7 @@
 package common;
 
+import static functionalj.lens.Access.theLong;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.IntPredicate;
@@ -13,6 +15,7 @@ import functionalj.functions.StrFuncs;
 import functionalj.lens.lenses.BooleanAccessPrimitive;
 import functionalj.lens.lenses.IntegerAccessPrimitive;
 import functionalj.lens.lenses.IntegerToBooleanAccessPrimitive;
+import functionalj.lens.lenses.LongAccessPrimitive;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
 
@@ -32,7 +35,11 @@ public interface AocCommon {
     
     static final IntegerAccessPrimitive<String> parseInt = Integer::parseInt;
     
+    static final LongAccessPrimitive<String> parseLong = Long::parseLong;
+    
     static final Func1<String, IntFuncList> stringsToInts = strValue -> StrFuncs.grab(strValue, Pattern.compile("[0-9]+")).mapToInt(parseInt).cache();
+    
+    static final Func1<FuncList<Long>, Long> sumListOfLong = list -> list.sumToLong(theLong);
     
     default String challengeName() {
         return  this.getClass().getSimpleName().replaceFirst("Test$", "");
