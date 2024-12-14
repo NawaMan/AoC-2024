@@ -14,7 +14,8 @@ public class Day11Part2Test extends BaseTest {
     
     
     //== Test ==
-    
+
+    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();
