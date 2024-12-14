@@ -50,17 +50,24 @@ public class Day13Part1Test extends BaseTest {
             return ab.a*cost().a + ab.b*cost().b;
         }
         default Long minCost() {
-            return range(0, this.maxA())
-                    .mapToObj (this::guessAB)
-                    .filter   (this::isValidPlay)
-                    .mapToLong(this::costOf)
-                    .min()
-                    .orElse(0L);
+            var b = (buttonA().x*buttonB().y - buttonA().y*buttonB().x)
+                  / (buttonA().x*prize().y   - buttonA().y*prize().x);
+            var a = (prize().x - b*buttonB().x) / buttonA().x;
+            var valid = ((a*buttonA().x + b*buttonB().x) == prize().x)
+                     && ((a*buttonA().y + b*buttonB().y) == prize().y);
+            return valid ? costOf(new AB(a, b)) : 0L;
+            
+//            return range(0, this.maxA())
+//                    .mapToObj (this::guessAB)
+//                    .filter   (this::isValidPlay)
+//                    .mapToLong(this::costOf)
+//                    .min()
+//                    .orElse(0L);
         }
-        default boolean isValidPlay(AB ab) {
-            return (((ab.a*buttonA().x + ab.b*buttonB().x) == prize().x)
-                 && ((ab.a*buttonA().y + ab.b*buttonB().y) == prize().y));
-        }
+//        default boolean isValidPlay(AB ab) {
+//            return (((ab.a*buttonA().x + ab.b*buttonB().x) == prize().x)
+//                 && ((ab.a*buttonA().y + ab.b*buttonB().y) == prize().y));
+//        }
     }
 
     static Game newGame(FuncList<String> lines, AB cost, long prizeAdjust) {
