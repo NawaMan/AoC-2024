@@ -11,8 +11,8 @@ import common.BaseTest;
 import day6.Day6Part1Test.Direction;
 import day6.Day6Part1Test.Grid;
 import day6.Day6Part1Test.Position;
-import day6.Day6Part1Test.Walker;
 import day6.Day6Part1Test.State;
+import day6.Day6Part1Test.Walker;
 import functionalj.list.FuncList;
 
 /**
@@ -133,9 +133,6 @@ public class Day6Part2Test extends BaseTest {
         
         var total = 0;
         for(int row = 0; row < lines.size(); row++) {
-            if ((row != 0) &&((row % 10) == 0))
-                println("row: " + row);
-            
             for(int col = 0; col < lines.get(row).length(); col++) {
                 var block  = new Position(row, col);
                 var grid   = new Grid(lines, startPosition, block);

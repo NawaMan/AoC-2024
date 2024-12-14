@@ -139,7 +139,7 @@ public class Day10Part1Test extends BaseTest {
     //== Test ==
     
     @Test
-    public void Test() {
+    public void testExample() {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);

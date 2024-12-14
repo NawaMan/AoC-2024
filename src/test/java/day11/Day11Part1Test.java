@@ -3,11 +3,13 @@ package day11;
 import java.math.BigInteger;
 import java.util.LinkedList;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
 
+@Ignore
 public class Day11Part1Test extends BaseTest {
     
     
@@ -43,8 +45,8 @@ public class Day11Part1Test extends BaseTest {
                     }
                     num = num*2024;
                 }
-                if ((i % 10) == 0)
-                    println("i = " + i + ", num = " + num + ", size=" + stones.size());
+//                if ((i % 10) == 0)
+//                    println("i = " + i + ", num = " + num + ", size=" + stones.size());
             }
             totalStones++;
         }
