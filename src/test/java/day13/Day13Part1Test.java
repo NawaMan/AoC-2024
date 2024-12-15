@@ -1,9 +1,8 @@
 package day13;
 
-import static functionalj.function.Func.f;
 import static functionalj.stream.intstream.IntStreamPlus.loop;
-import static functionalj.stream.longstream.LongStreamPlus.range;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import java.util.function.LongUnaryOperator;
 import java.util.regex.Pattern;
@@ -49,25 +48,30 @@ public class Day13Part1Test extends BaseTest {
         default long costOf(AB ab) {
             return ab.a*cost().a + ab.b*cost().b;
         }
-        default Long minCost() {
-            var b = (buttonA().x*buttonB().y - buttonA().y*buttonB().x)
-                  / (buttonA().x*prize().y   - buttonA().y*prize().x);
-            var a = (prize().x - b*buttonB().x) / buttonA().x;
-            var valid = ((a*buttonA().x + b*buttonB().x) == prize().x)
-                     && ((a*buttonA().y + b*buttonB().y) == prize().y);
-            return valid ? costOf(new AB(a, b)) : 0L;
+        default long minCost1() {
+            var b = (buttonA().y()*prize().x()   - buttonA().x*prize().y())
+                  / (buttonA().y()*buttonB().x() - buttonA().x*buttonB().y());
+            var a = (prize().x() - buttonB().x()*b) / buttonA().x();
             
-//            return range(0, this.maxA())
-//                    .mapToObj (this::guessAB)
-//                    .filter   (this::isValidPlay)
-//                    .mapToLong(this::costOf)
-//                    .min()
-//                    .orElse(0L);
+            var isValid = isValid(b, a);
+            return isValid ? ((cost().a()*a + cost().b()*b)) : Long.MAX_VALUE;
         }
-//        default boolean isValidPlay(AB ab) {
-//            return (((ab.a*buttonA().x + ab.b*buttonB().x) == prize().x)
-//                 && ((ab.a*buttonA().y + ab.b*buttonB().y) == prize().y));
-//        }
+        default long minCost2() {
+            var a = (buttonB().y*prize().x   - buttonB().x*prize().y())
+                  / (buttonA().x*buttonB().y - buttonA().y*buttonB().x());
+            var b = (prize().x() - buttonA().x()*a) / buttonB().x();
+            
+            var isValid = isValid(b, a);
+            return isValid ? ((cost().a()*a + cost().b()*b)) : Long.MAX_VALUE;
+        }
+        default long minCost() {
+            var min = min(minCost1(), minCost2());
+            return (min == Long.MAX_VALUE) ? 0L : min;
+        }
+        default boolean isValid(long b, long a) {
+            return (buttonA().x()*a + buttonB().x()*b) == prize().x()
+                && (buttonA().y()*a + buttonB().y()*b) == prize().y();
+        }
     }
 
     static Game newGame(FuncList<String> lines, AB cost, long prizeAdjust) {
@@ -85,8 +89,7 @@ public class Day13Part1Test extends BaseTest {
         return loop(segments.size())
                 .boxed()
                 .map(i -> newGame(segments.get((int)i), buttonCost, prizeAdjust))
-                .spawn(f(Game::minCost).defer())
-                .sumToLong(promise -> promise.getResult().get());
+                .sumToLong(Game::minCost);
     }
     
     //== Test ==
