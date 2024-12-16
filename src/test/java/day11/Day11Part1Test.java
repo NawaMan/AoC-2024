@@ -2,16 +2,18 @@ package day11;
 
 import java.math.BigInteger;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
+import functionalj.list.FuncListBuilder;
 
-@Ignore
 public class Day11Part1Test extends BaseTest {
     
+    static final BigInteger _2024 = BigInteger.valueOf(2024);
     
     Object calulate(FuncList<String> lines) {
         var stones
@@ -26,7 +28,7 @@ public class Day11Part1Test extends BaseTest {
         while (stones.size() != 0) {
             var num0 = stones.poll();
             var num  = num0;
-            for (int i = 0; i < 75; i++) {
+            for (int i = 0; i < 25; i++) {
                 if (num == 0) {
                     num = 1;
                 } else if (hasEvenDigits(num)) {
@@ -45,8 +47,6 @@ public class Day11Part1Test extends BaseTest {
                     }
                     num = num*2024;
                 }
-//                if ((i % 10) == 0)
-//                    println("i = " + i + ", num = " + num + ", size=" + stones.size());
             }
             totalStones++;
         }
@@ -70,6 +70,52 @@ public class Day11Part1Test extends BaseTest {
 
     //== Test ==
     
+    // A chain is a series of changing number on the stop and ended when it split in two. 
+    record BlinkChain(
+            // list of singles in this chain
+            FuncList<BigInteger> singles,
+            // the starting index of this value
+            BigInteger end1,
+            // the second ending of the chain
+            BigInteger end2) {
+        
+    }
+    
+    BlinkChain blinkFull(BigInteger num) {
+        return null;
+    }
+    
+    ConcurrentHashMap<BigInteger, BlinkChain> chains = new ConcurrentHashMap<>();
+    
+    BlinkChain blinkChain(BigInteger num) {
+        chains.computeIfAbsent(num, __ -> {
+            while (true) {
+                var str = ("" + num);
+                var len = str.length();
+                if ((len % 2) == 0) {
+                    var str1 = str.substring(0, len / 2);
+                    var str2 = str.substring(len / 2);
+                    var end1 = new BigInteger(str1);
+                    var end2 = new BigInteger(str2);
+                    return new BlinkChain(FuncList.of(num), end1, end2);
+                }
+                
+                if (num.equals(BigInteger.ZERO)) {
+                    var chain = blinkChain(BigInteger.ONE);
+                    return new BlinkChain(FuncList.of(num).appendAll(chain.singles), chain.end1, chain.end2);
+                }
+            }
+        });
+        
+        return chains.get(num);
+    }
+    
+    @Test
+    public void testNew() {
+        var num = 0L;
+    }
+    
+    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();
@@ -78,6 +124,7 @@ public class Day11Part1Test extends BaseTest {
         assertAsString("55312", result);
     }
     
+    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();
