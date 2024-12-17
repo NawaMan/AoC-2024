@@ -1,5 +1,9 @@
 package day15;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -142,50 +146,59 @@ public class Day15Part2Test extends BaseTest {
             moveRight(robot, false);
         }
         
-        boolean moveUp(Position position, boolean isGood) {
-            if ((grid.charAt(position.r - 1, position.c) == '#') || (isGood && (grid.charAt(position.r - 1, position.c + 1) == '#')))
+        boolean moveUp(Position position, boolean isGood, boolean isCheckOnly) {
+            if (grid.charAt(position.r - 1, position.c) == '#')
                 return false;
             
             if (isGood && (grid.charAt(position.r - 1, position.c + 1) == '#'))
                 return false;
             
-            var front = goods.findFirst(g -> (g.r == position.r - 1) && (((g.c == position.c) || (g.c + 1 == position.c))
-                                                                       || (isGood && ((g.c == position.c + 1) || (g.c + 1 == position.c + 1)))));
-            if (front.isPresent()) {
-                var frontMoved = moveUp(front.get(), true);
+            var fronts = goods.filter(g -> (g.r == position.r - 1) && (          ((g.c == position.c    ) || (g.c + 1 == position.c    ))
+                                                                   || (isGood && ((g.c == position.c + 1) || (g.c + 1 == position.c + 1))))).cache();
+           if (fronts.size() != 0) {
+               var frontMoved = fronts.allMatch(front -> moveUp(front, true, true));
                 if (!frontMoved)
                     return false;
+                
+                fronts.forEach(front -> moveUp(front, true, false));
             }
 
-            position.r -= 1;
+            if (!isCheckOnly) {
+                position.r -= 1;
+            }
             return true;
         }
         
         void moveUp() {
-            moveUp(robot, false);
+            moveUp(robot, false, false);
         }
         
-        boolean moveDown(Position position, boolean isGood) {
+        boolean moveDown(Position position, boolean isGood, boolean isCheckOnly) {
             if (grid.charAt(position.r + 1, position.c) == '#')
                 return false;
             
             if (isGood && (grid.charAt(position.r + 1, position.c + 1) == '#'))
                 return false;
             
-            var front = goods.findFirst(g -> (g.r == position.r + 1) && (            ((g.c == position.c    ) || (g.c + 1 == position.c    ))
-                                                                       || (isGood && ((g.c == position.c + 1) || (g.c + 1 == position.c + 1)))));
-            if (front.isPresent()) {
-                var frontMoved = moveDown(front.get(), true);
+            var fronts = goods.filter(g -> (g.r == position.r + 1) && (          ((g.c == position.c    ) || (g.c + 1 == position.c    ))
+                                                                   || (isGood && ((g.c == position.c + 1) || (g.c + 1 == position.c + 1))))).cache();
+            if (fronts.size() != 0) {
+                var frontMoved = fronts.allMatch(front -> moveDown(front, true, true));
                 if (!frontMoved)
                     return false;
+                
+                fronts.forEach(front -> moveUp(front, true, false));
             }
 
-            position.r += 1;
+            if (!isCheckOnly) {
+                position.r += 1;
+            }
+            
             return true;
         }
         
         void moveDown() {
-            moveDown(robot, false);
+            moveDown(robot, false, false);
         }
 
         public long sumGPS() {
@@ -207,19 +220,39 @@ public class Day15Part2Test extends BaseTest {
         var sequence = lines.skipUntil(""::equals).reduce((a, b) -> a + b).get();
         println(sequence);
         
+        var map = new ConcurrentHashMap<Character, List<String>>();
+        
         for (int i = 0; i < sequence.length(); i++) {
+            if ((i==346) || (i==347) || (i==348)) {
+                println(warehouse.robot);
+                warehouse.goods.forEach(println);
+            }
+            
+            
             println(warehouse);
+            var start = warehouse.toString();
+            
+            var logs = new StringBuffer();
+            logs.append(warehouse.toString());
+            logs.append("\n");
             
             char ch = sequence.charAt(i);
             println("--| " + i + ": " + ch + " |--");
             switch (ch) {
-                case '^': { warehouse.moveUp();    continue; }
-                case 'v': { warehouse.moveDown();  continue; }
-                case '>': { warehouse.moveRight(); continue; }
-                case '<': { warehouse.moveLeft();  continue; }
+                case '^': { warehouse.moveUp();    map.putIfAbsent('^', new ArrayList<String>()); logs.append(warehouse.toString()); var end = warehouse.toString(); map.get('^').add(FuncList.from(start.split("\n")).zipWith(FuncList.from(end.split("\n")), (a, b) -> a + "    " + b).join("\n")); continue; }
+                case 'v': { warehouse.moveDown();  map.putIfAbsent('v', new ArrayList<String>()); logs.append(warehouse.toString()); var end = warehouse.toString(); map.get('v').add(FuncList.from(start.split("\n")).zipWith(FuncList.from(end.split("\n")), (a, b) -> a + "    " + b).join("\n")); continue; }
+                case '>': { warehouse.moveRight(); map.putIfAbsent('>', new ArrayList<String>()); logs.append(warehouse.toString()); var end = warehouse.toString(); map.get('>').add(FuncList.from(start.split("\n")).zipWith(FuncList.from(end.split("\n")), (a, b) -> a + "    " + b).join("\n")); continue; }
+                case '<': { warehouse.moveLeft();  map.putIfAbsent('<', new ArrayList<String>()); logs.append(warehouse.toString()); var end = warehouse.toString(); map.get('<').add(FuncList.from(start.split("\n")).zipWith(FuncList.from(end.split("\n")), (a, b) -> a + "    " + b).join("\n")); continue; }
             }
         }
-        println(warehouse);
+//        println(warehouse);
+//        
+//        for (var logs : map.get('>')) {
+//            println(logs);
+//            println();
+//            println("-------------------------------------------------------------------------------------------------");
+//            println();
+//        }
         
         return warehouse.sumGPS();
     }
