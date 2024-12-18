@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.list.FuncListBuilder;
 
 public class Day11Part1Test extends BaseTest {
     
@@ -108,11 +107,6 @@ public class Day11Part1Test extends BaseTest {
         });
         
         return chains.get(num);
-    }
-    
-    @Test
-    public void testNew() {
-        var num = 0L;
     }
     
     @Ignore

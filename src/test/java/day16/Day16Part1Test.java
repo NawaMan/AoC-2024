@@ -1,12 +1,13 @@
 package day16;
 
 import static functionalj.list.intlist.IntFuncList.range;
+import static java.lang.Long.MAX_VALUE;
 import static java.lang.Math.signum;
 import static java.util.Comparator.comparing;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.PriorityQueue;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntPredicate;
 
@@ -82,70 +83,78 @@ public class Day16Part1Test extends BaseTest {
         }
     }
     
-    record Graph(Grid grid, Dot start, Dot end, FuncList<Dot> dots, FuncMap<Dot, FuncList<Edge>> graphMap) {
-        Tuple2<Long, FuncList<Dot>> shortestPath() {
-            var seen = new HashSet<Dot>();
-
-            var current  = start;
-            var previous = current;
-            return shortestPath(previous, current, seen);
+    record Graph(Grid grid, Dot start, Dot end, FuncList<Dot> nodes, FuncMap<Dot, FuncList<Edge>> graphMap) {
+        record NodeInfo(Dot current, long distance, Dot previous) {
+            @Override
+            public String toString() {
+                return "(%d,%d) : %s (from (%s, %s))".formatted(
+                        current.row, 
+                        current.col, 
+                        distance, 
+                        (previous == null) ? "null" : previous.row, 
+                        (previous == null) ? "null" : previous.col);
+            }
         }
         
-        Tuple2<Long, FuncList<Dot>> shortestPath(Dot previous, Dot current, HashSet<Dot> seen) {
-            if (current.equals(end)) {
-                var path = FuncList.of(current);
-                return Tuple2.of(0L, path);
-            }
+        Tuple2<Long, FuncList<Dot>> shortestCostPath() {
+            var visiteds  = new HashSet<Dot>();
+            var nodeInfos = new LinkedHashMap<Dot, NodeInfo>();
+            var nextInfos = new PriorityQueue<NodeInfo>(comparing(NodeInfo::distance));
             
-            seen.add(current);
-            var choices = choicesFor(current);
-            var queue   = new PriorityQueue<Tuple2<Edge, Long>>(comparing(Tuple2::_2));;
-            for (var choice : choices) {
-                var to = choice.to(current);
-                if (seen.contains(to))
-                    continue;
+            var beforeStart = new Dot(start.row, start.col - 1, "");
+            nodes.forEach(node -> {
+                var nodeInfo
+                        = node.equals(start)
+                        ? new NodeInfo(node, 0L,        beforeStart)
+                        : new NodeInfo(node, MAX_VALUE, null);
+                nodeInfos.put(node, nodeInfo);
+                nextInfos.add(nodeInfo);
+            });
+            
+            var current      = start;
+            var previous     = beforeStart;
+            var currDistance = 0L;
+            
+            while (!current.equals(end)) {
+                var currNode = current;
+                var prevNode = previous;
+                var currDist = currDistance;
+                nextInfos.remove(nodeInfos.get(currNode));
+                visiteds.add(currNode);
                 
-                var distance = distance(previous, current, choice);
-                var pair     = Tuple2.of(choice, distance);
-                queue.add(pair);
+                System.out.println("Current: " + currNode);
+                
+                var nextNodes = graphMap.get(currNode);
+                nextNodes.forEach(next -> {
+                    var nextNode = next.to(currNode);
+                    if (visiteds.contains(nextNode))
+                        return;
+                    
+                    var currInfo = nodeInfos.get(nextNode);
+                    var distance = distance(prevNode, currNode, next);
+                    if (distance < currInfo.distance) {
+                        var nextInfo = new NodeInfo(nextNode, currDist + distance, currNode);
+                        nodeInfos.put(nextNode, nextInfo);
+                        nextInfos.remove(currInfo);
+                        nextInfos.add(nextInfo);
+                    }
+                });
+    
+                var nextInfo = nextInfos.poll();
+                previous = nextInfo.previous;
+                current  = nextInfo.current;
+                currDistance = nextInfo.distance;
             }
             
-            System.out.println();
-            System.out.println("Previous: " + previous);
-            System.out.println("Current:  " + current);
-            System.out.println("Queue: ");
-            queue.stream()
-            .map(String::valueOf)
-            .map("    "::concat)
-            .forEach(System.out::println);
-            System.out.println();
-            
-            long minDist = Long.MAX_VALUE;
-            var  minPath = (FuncList<Dot>)null;
-            for (var pair : queue) {
-                var edge      = pair._1();
-                var distance  = pair._2();
-                var to        = edge.to(current);
-                var shrstPath = shortestPath(current, to, seen);
-                if ((shrstPath != null) && (distance + shrstPath._1() < minDist)) {
-                    minDist = shrstPath._1() + distance;
-                    minPath = shrstPath._2();
-                }
-            }
-            if (minPath == null) {
-                return null;
+            System.out.println("Node: ");
+            var node = end;
+            while (node != start) {
+                System.out.println("  " + node);
+                node = nodeInfos.get(node).previous;
             }
             
-            return Tuple2.of(minDist, minPath.append(current));
-        }
-
-        private FuncList<Edge> choicesFor(Dot current) {
-            var choice = graphMap.get(current);
-            if (choice != null)
-                return choice;
-            
-            // TODO - Add choice for when the current is not a branch.
-            return FuncList.empty();
+            var shortestDistance = nodeInfos.get(end).distance;
+            return Tuple2.of(shortestDistance, FuncList.empty());
         }
         long distance(Dot previous, Dot current, Edge edge) {
             if (previous == current)
@@ -161,9 +170,6 @@ public class Day16Part1Test extends BaseTest {
             var notTurn = (diffRow1 == diffRow2) || (diffCol1 == diffCol2);
             var turn = !notTurn;
             var distance = (turn ? 1000L : 0L) + edge.distance + 1;
-            
-            System.out.println("previous: %s, \ncurrent : %s, \nto      : %s, \nturn    : %s, \ndistance: %d".formatted(previous, current, to, turn, distance));
-            
             return distance;
         }
     }
@@ -173,18 +179,8 @@ public class Day16Part1Test extends BaseTest {
         println();
         
         var graph = createGraph(lines);
-        
-        println("Graph: ");
-        new TreeMap<>(graph.graphMap).entrySet().forEach(println);
-        println(graph.graphMap.size());
-        println();
-        
-        println("Path: ");
-        var path = graph.shortestPath();
-        println(path._1());
-        path._2().forEach(println);
-        
-        return path._1() + 1000;
+        var path  = graph.shortestCostPath();
+        return path._1();
     }
 
     Graph createGraph(FuncList<String> lines) {
@@ -198,11 +194,6 @@ public class Day16Part1Test extends BaseTest {
         var banches  = dots.excludeIn(edges).cache();
         var sameRows = banches.groupingBy(node -> node.row);
         var sameCols = banches.groupingBy(node -> node.col);
-        
-        println("Banches: ");
-        banches.map(String::valueOf).map("  "::concat).forEach(println);
-        println();
-        
         sameRows.forEach((row, list) -> {
             list.mapTwo().map(pair -> {
                 var s = (Dot)pair._1();
@@ -250,7 +241,7 @@ public class Day16Part1Test extends BaseTest {
         var startDot = dots.findFirst(dot -> (start.row == dot.row) && (start.col == dot.col)).get();
         var endDot   = dots.findFirst(dot -> (end.row   == dot.row) && (end.col   == dot.col)).get();
         var map      = FuncMap.from(graphMap).mapValue(FuncListBuilder::build);
-        return new Graph(grid, startDot, endDot, dots, map);
+        return new Graph(grid, startDot, endDot, banches, map);
     }
     
     //== Test ==
@@ -268,7 +259,7 @@ public class Day16Part1Test extends BaseTest {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        assertAsString("438512", result);
+        assertAsString("72412", result);
     }
     
 }
