@@ -1,34 +1,27 @@
 package day11;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.list.FuncList;
 
 public class Day11Part2Test extends BaseTest {
     
-    Object calulate(FuncList<String> lines) {
-        return 0;
-    }
-    
+    static Day11Part1Test part1 = new Day11Part1Test();
     
     //== Test ==
 
-    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = part1.calulate(lines, 75);
         println("result: " + result);
-        assertAsString("", result);
+        assertAsString("65601038650482", result);
     }
     
-    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = part1.calulate(lines, 75);
         println("result: " + result);
         assertAsString("", result);
     }

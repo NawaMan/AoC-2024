@@ -1,7 +1,10 @@
 package day11;
 
+import static functionalj.stream.intstream.IntStreamPlus.range;
+
 import java.math.BigInteger;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.Ignore;
@@ -9,111 +12,147 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
+import lombok.EqualsAndHashCode;
 
 public class Day11Part1Test extends BaseTest {
     
     static final BigInteger _2024 = BigInteger.valueOf(2024);
     
-    Object calulate(FuncList<String> lines) {
-        var stones
-                = new LinkedList<>( 
-                lines
-                .toEager()
-                .flatMap(grab(regex("[0-9]+")))
-                .map    (parseInt));
+    @EqualsAndHashCode
+    static class BlinkChain {
+        List<BigInteger> singles = new ArrayList<BigInteger>();
+        BigInteger       end1;
+        BigInteger       end2;
+        public BlinkChain(BigInteger end1, BigInteger end2) {
+            this.end1 = end1;
+            this.end2 = end2;
+        }
+        int add(BigInteger number) {
+            singles.add(number);
+            return (singles.size() - 1);
+        }
+        String toString(int index) {
+            return "%s->(%s,%s)".formatted(
+                    range(0, index + 1).mapToObj(i -> singles.get(index - i)).join("->"),
+                    end1,
+                    end2);
+        }
+        @Override
+        public String toString() {
+            return toString(singles.size() - 1);
+        }
+    }
+    
+    static record Blink(BlinkChain chain, int index) {
         
+        private static ConcurrentHashMap<BigInteger, Blink> blinks = new ConcurrentHashMap<>();
         
-        var totalStones = 0;
-        while (stones.size() != 0) {
-            var num0 = stones.poll();
-            var num  = num0;
-            for (int i = 0; i < 25; i++) {
-                if (num == 0) {
-                    num = 1;
-                } else if (hasEvenDigits(num)) {
-                    var str  = ("" + num);
-                    var len  = str.length();
-                    var str1 = str.substring(0, len / 2);
-                    var str2 = str.substring(len / 2);
-                    var int1 = parseInt(str1);
-                    var int2 = parseInt(str2);
-                    stones.add(0, int2);
-                    
-                    num = int1;
-                } else {
-                    if ((num*2024 / 2024) != num) {
-                        throw new IllegalAccessError("Bad: " + num0);
-                    }
-                    num = num*2024;
-                }
-            }
-            totalStones++;
+        static Blink of(int number) {
+            return Blink.of(BigInteger.valueOf(number));
         }
         
-        return totalStones;
-    }
-
-    boolean hasEvenDigits(int num) {
-        return ("" + num).length() % 2 == 0;
-    }
-    
-    FuncList<BigInteger> splitNum(BigInteger num) {
-        var str  = ("" + num);
-        var len  = str.length();
-        var str1 = str.substring(0, len / 2);
-        var str2 = str.substring(len / 2);
-        var int1 = new BigInteger(str1);
-        var int2 = new BigInteger(str2);
-        return FuncList.of(int1, int2);
-    }
-
-    //== Test ==
-    
-    // A chain is a series of changing number on the stop and ended when it split in two. 
-    record BlinkChain(
-            // list of singles in this chain
-            FuncList<BigInteger> singles,
-            // the starting index of this value
-            BigInteger end1,
-            // the second ending of the chain
-            BigInteger end2) {
-        
-    }
-    
-    BlinkChain blinkFull(BigInteger num) {
-        return null;
-    }
-    
-    ConcurrentHashMap<BigInteger, BlinkChain> chains = new ConcurrentHashMap<>();
-    
-    BlinkChain blinkChain(BigInteger num) {
-        chains.computeIfAbsent(num, __ -> {
-            while (true) {
-                var str = ("" + num);
-                var len = str.length();
-                if ((len % 2) == 0) {
-                    var str1 = str.substring(0, len / 2);
-                    var str2 = str.substring(len / 2);
-                    var end1 = new BigInteger(str1);
-                    var end2 = new BigInteger(str2);
-                    return new BlinkChain(FuncList.of(num), end1, end2);
-                }
+        static Blink of(BigInteger number) {
+            var blink = blinks.get(number);
+            if (blink != null)
+                return blink;
+            
+            var str = ("" + number);
+            var len = str.length();
+            if ((len % 2) == 0) {
+                var end1  = new BigInteger(str.substring(0, len / 2));
+                var end2  = new BigInteger(str.substring(len / 2));
+                var chain = new BlinkChain(end1, end2);
+                var index = chain.add(number);
                 
-                if (num.equals(BigInteger.ZERO)) {
-                    var chain = blinkChain(BigInteger.ONE);
-                    return new BlinkChain(FuncList.of(num).appendAll(chain.singles), chain.end1, chain.end2);
-                }
+                var newBlink = new Blink(chain, index);
+                blinks.put(number, newBlink);
+                return newBlink;
             }
-        });
+            
+            if (number.equals(BigInteger.ZERO)) {
+                var oneBlink  = Blink.of(BigInteger.ONE);
+                var oneChain  = oneBlink.chain;
+                var zeroIndex = oneChain.add(BigInteger.ZERO);
+
+                var zeroBlink = new Blink(oneChain, zeroIndex);
+                blinks.put(number, zeroBlink);
+                return zeroBlink;
+            }
+            
+            var nextNumber = number.multiply(_2024);
+            var nextBlink  = Blink.of(nextNumber);
+            var nextChain  = nextBlink.chain;
+            var thisIndex  = nextChain.add(number);
+
+            var thisBlink = new Blink(nextChain, thisIndex);
+            blinks.put(number, thisBlink);
+            return thisBlink;
+        }
         
-        return chains.get(num);
+        @Override
+        public String toString() {
+            return chain.toString(index);
+        }
     }
     
-    @Ignore
+    private static ConcurrentHashMap<BigInteger, ConcurrentHashMap<Integer, Long>> counts = new ConcurrentHashMap<>();
+    
+    long stoneCount(int number, int times) {
+        var bigNumber = BigInteger.valueOf(number);
+        return stoneCount(bigNumber, times);
+    }
+    
+    long stoneCount(BigInteger number, int times) {
+        var numCounts = counts.computeIfAbsent(number, __ -> new ConcurrentHashMap<>());
+        var numCount  = numCounts.get(times);
+        if (numCount == null) {
+            numCount = determineStoneCount(number, times);
+            numCounts.put(times, numCount);
+        }
+        
+        return numCount;
+        
+    }
+
+    long determineStoneCount(BigInteger number, int times) {
+        var info  = Blink.of(number);
+        var index = info.index;
+        var chain = info.chain;
+        if (times <= index)
+            return 1L;
+        if (times == (index + 1))
+            return 2L;
+        
+        int left   = times - index - 1;
+        var count1 = stoneCount(chain.end1, left);
+        var count2 = stoneCount(chain.end2, left);
+        return count1 + count2;
+    }
+    
+    
+    Object calulate(FuncList<String> lines, int times) {
+        return grab(regex("[0-9]+"), lines.get(0))
+                .map(BigInteger::new)
+                .sumToLong(num -> stoneCount(show("num: ", num), times));
+    }
+    
+    void showBlink(int number) {
+        showBlink(number, 5);
+    }
+
+    void showBlink(int number, int times) {
+        println(number);
+        println(Blink.of(number));
+        for (int i = 0; i <= times; i++) {
+            println(i + " times: " + stoneCount(number, i));
+        }
+        println();
+    }
+    
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calulate(lines, 25);
         println("result: " + result);
         assertAsString("55312", result);
     }
@@ -122,7 +161,7 @@ public class Day11Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calulate(lines, 25);
         println("result: " + result);
         assertAsString("194482", result);
     }
