@@ -8,7 +8,6 @@ import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntPredicate;
@@ -237,7 +236,6 @@ public class Day18Part2Test extends BaseTest {
     
     //== Test ==
     
-    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();
@@ -880,6 +878,7 @@ public class Day18Part2Test extends BaseTest {
                   (1, 0)
               """;
     
+    @Ignore
     @Test
     public void testProd() {
         var lines = readAllLines();
