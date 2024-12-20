@@ -12,26 +12,28 @@ public class Day17Part1Test extends BaseTest {
     
     static class Context {
         
-        long A;
-        long B;
-        long C;
+        int A;
+        int B;
+        int C;
         int instructionPointer = 0;
         StringBuilder outputBuffer = new StringBuilder();
         
         Context() {}
-        Context(long A, long B, long C) {
+        Context(int A, int B, int C) {
             this.A = A;
             this.B = B;
             this.C = C;
         }
         
-        long value(long operand) {
+        int value(int operand) {
+            if ((operand >= 0) && (operand <= 3))
+                return operand;
             switch ((int)operand) {
                 case 4: return A;
                 case 5: return B;
                 case 6: return C;
             }
-            return operand;
+            throw new IllegalArgumentException("operand: " + operand);
         }
         
         @Override
@@ -48,7 +50,7 @@ public class Day17Part1Test extends BaseTest {
     }
     
     static interface OperatorBody {
-        void work(Context context, long operand);
+        void work(Context context, int operand);
     }
     
     static class Operator implements OperatorBody {
@@ -59,7 +61,7 @@ public class Day17Part1Test extends BaseTest {
             this.operator = operator;
         }
         @Override
-        public void work(Context context, long operand) {
+        public void work(Context context, int operand) {
             operator.work(context, operand);
         }
         @Override
@@ -75,7 +77,6 @@ public class Day17Part1Test extends BaseTest {
     });
 
     static OperatorBody Bxl = new Operator("Bxl#1", (context, operand) -> {
-        operand   = context.value(operand);
         context.B = context.B ^ operand;
         context.instructionPointer += 2;
     });
@@ -87,7 +88,6 @@ public class Day17Part1Test extends BaseTest {
     });
 
     static OperatorBody Jnz = new Operator("Jnz#3", (context, operand) -> {
-        operand   = context.value(operand);
         if (context.A != 0) {
             context.instructionPointer = (int)operand;
         } else {
@@ -96,14 +96,13 @@ public class Day17Part1Test extends BaseTest {
     });
 
     static OperatorBody Bxc = new Operator("Bxc#4", (context, operand) -> {
-        operand   = context.value(operand);
         context.B = context.B ^ context.C; // Operand is ignored
         context.instructionPointer += 2;
     });
 
     static OperatorBody Out = new Operator("Out#5", (context, operand) -> {
-        operand    = context.value(operand);
-        long value = operand & 7;
+        operand   = context.value(operand);
+        var value = operand & 7;
         if (context.outputBuffer.length() > 0) {
             context.outputBuffer.append(",");
         }
@@ -183,7 +182,7 @@ public class Day17Part1Test extends BaseTest {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        assertAsString("3,0,4,4,1,5,3,0,1", result);
+        assertAsString("6,2,7,2,3,1,6,0,5", result);
     }
     
 }
