@@ -9,12 +9,10 @@ import static java.util.Comparator.comparing;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntPredicate;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -200,7 +198,7 @@ public class Day16Part1Test extends BaseTest {
                 nextInfos.remove(currInfo);
                 visiteds.add(currNode);
                 
-                System.out.println("Current: " + currNode);
+//                System.out.println("Current: " + currNode);
                 var nextNodes = graphMap.get(currNode);
                 if (nextNodes != null) {
                     nextNodes.forEach(next -> {
@@ -208,7 +206,7 @@ public class Day16Part1Test extends BaseTest {
                         if (visiteds.contains(nextNode))
                             return;
                         
-                        System.out.println("Next: " + nextNode);
+//                        System.out.println("Next: " + nextNode);
                         if (currInfo.previous == null)
                             System.out.print("");
                         
@@ -234,10 +232,12 @@ public class Day16Part1Test extends BaseTest {
 //            System.out.println("Node: ");
 //            nodeInfos.entrySet().forEach(println);
             
+            var path    = new FuncListBuilder<Position>();
             var display = grid.clone();
             var node = end;
             var i    = 0;
             while (node != start) {
+                path.add(node);
                 display.data[node.row][node.col] = BOLD + BLUE + "#" + RESET;
                 System.out.print("  (%2d, %2d)".formatted((node == null) ? -1 : node.row, (node == null) ? -1 : node.col));
                 i++;
@@ -253,6 +253,7 @@ public class Day16Part1Test extends BaseTest {
                 node = nodeInfo.previous;
             }
             if (node == start) {
+                path.add(start);
                 display.data[node.row][node.col] = BOLD + BLUE + "#" + RESET;
             }
             System.out.println();
@@ -260,7 +261,7 @@ public class Day16Part1Test extends BaseTest {
             System.out.println(display);
             
             var shortestDistance = nodeInfos.get(end).distance;
-            return Tuple2.of(shortestDistance, FuncList.empty());
+            return Tuple2.of(shortestDistance, path.build().reverse());
         }
         long distance(Position previous, Position current, Edge edge) {
             var diffRow1 = signum(current.row - previous.row);

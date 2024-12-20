@@ -82,7 +82,7 @@ public class Day17Part1Test extends BaseTest {
 
     static OperatorBody Bst = new Operator("Bst#2", (context, operand) -> {
         operand   = context.value(operand);
-        context.B = operand % 8;
+        context.B = operand & 7;
         context.instructionPointer += 2;
     });
 
@@ -103,7 +103,7 @@ public class Day17Part1Test extends BaseTest {
 
     static OperatorBody Out = new Operator("Out#5", (context, operand) -> {
         operand    = context.value(operand);
-        long value = operand % 8;
+        long value = operand & 7;
         if (context.outputBuffer.length() > 0) {
             context.outputBuffer.append(",");
         }
