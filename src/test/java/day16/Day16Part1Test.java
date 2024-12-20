@@ -2,11 +2,14 @@ package day16;
 
 import static functionalj.list.intlist.IntFuncList.range;
 import static java.lang.Long.MAX_VALUE;
+import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 import static java.util.Comparator.comparing;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntPredicate;
@@ -21,8 +24,12 @@ import functionalj.map.FuncMap;
 import functionalj.tuple.Tuple2;
 
 public class Day16Part1Test extends BaseTest {
+
+    public static final String BOLD = "\033[1m";
+    public static final String BLUE  = "\033[34m";
+    public static final String RESET = "\033[0m"; // Reset to default color
     
-    record Position(int row, int col) {
+    record Position(int row, int col) implements Comparable<Position> {
         FuncList<Position> neighbours() {
             return FuncList.of(
                         new Position(row + 1, col()    ),
@@ -30,49 +37,96 @@ public class Day16Part1Test extends BaseTest {
                         new Position(row - 1, col()    ),
                         new Position(row    , col() - 1));
         }
-    }
-    
-    record Dot(int row, int col, String neighbours) implements Comparable<Dot> {
         @Override
-        public int compareTo(Dot o) {
-            return comparing(Dot::row)
-                    .thenComparing(Dot::col)
+        public String toString() {
+            return "(%d, %d)".formatted(row, col);
+        }
+        @Override
+        public int compareTo(Position o) {
+            return comparing(Position::row)
+                    .thenComparing(Position::col)
                     .compare(this, o);
         }
     }
 
-    record Grid(FuncList<String> lines) {
+    record Grid(String[][] data, Position start, Position end) {
+        
+        static Grid from(FuncList<String> lines) {
+            var data = lines
+                     .map    (line -> line.chars())
+                     .map    (line -> line.mapToObj(i -> "" + (char)i))
+                     .map    (line -> line.toArray (String[]::new))
+                     .toArray(String[][]::new);
+            var start = (Position)null;
+            var end   = (Position)null;
+            for (int r = 0; r < data.length; r++) {
+                for (int c = 0; c < data[r].length; c++) {
+                    var ch = data[r][c].charAt(0);
+                    if (ch == 'S') { start = new Position(r, c); data[r][c] = "."; }
+                    if (ch == 'E') { end   = new Position(r, c); data[r][c] = "."; }
+                }
+            }
+            
+            return new Grid(data, start, end);
+        }
+        
+        int width() {
+            return data.length;
+        }
+        
+        int height() {
+            return data[0].length;
+        }
+        
+        String at(Position position) {
+            return at(position.row, position.col);
+        }
+        String at(int row, int col) {
+            if (row < 0 || row >= data.length)      return "#";
+            if (col < 0 || col >= data[row].length) return "#";
+            return data[row][col];
+        }
         char charAt(Position position) {
-            return charAt(position.row, position.col);
+            return at(position).charAt(0);
         }
         char charAt(int row, int col) {
-            if (row < 0 || row >= lines.size())            return '#';
-            if (col < 0 || col >= lines.get(row).length()) return '#';
-            return lines.get(row).charAt(col);
+            return at(row, col).charAt(0);
         }
-        FuncList<Dot> selectDots() {
-            return range(0, lines.size()).toCache().flatMapToObj(row -> {
-                return range(0, lines.get(0).length())
+        FuncList<Position> positions() {
+            return range(0, data.length).toCache().flatMapToObj(row -> {
+                return range(0, data[0].length)
                         .toCache ()
                         .mapToObj(col -> new Position(row, col))
-                        .filter  (pos -> charAt(pos) != '#')
-                        .map     (pos -> new Dot(pos.row, pos.col, pos.neighbours().map(n -> charAt(n) != '#' ? '.' : ' ').join() + pos.neighbours().map(n -> charAt(n) != '#' ? '.' : ' ').join()))
+                        .filter  (pos -> '.' == charAt(pos))
                         ;
             });
         }
         FuncList<Position> select(IntPredicate charSelector) {
-            return range(0, lines.size()).toCache().flatMapToObj(row -> {
-                return range(0, lines.get(0).length())
+            return range(0, data.length).toCache().flatMapToObj(row -> {
+                return range(0, data[0].length)
                         .toCache ()
                         .filter  (col -> charSelector.test((int)charAt(row, col)))
                         .mapToObj(col -> new Position(row, col))
                         ;
             });
         }
+        
+        protected Grid clone() {
+            var clone = new String[data.length][];
+            for (int i = 0; i < clone.length; i++) {
+                clone[i] = data[i].clone();
+            }
+            return new Grid(clone, start, end);
+        }
+        
+        @Override
+        public String toString() {
+            return FuncList.of(data).map(chs -> FuncList.of(chs).join()).join("\n");
+        }
     }
     
-    record Edge(Dot start, Dot end, int distance) {
-        Dot to(Dot from) {
+    record Edge(Position start, Position end, int distance) {
+        Position to(Position from) {
             return from.equals(start) ? end   :
                    from.equals(end)   ? start : null; 
         }
@@ -83,8 +137,8 @@ public class Day16Part1Test extends BaseTest {
         }
     }
     
-    record Graph(Grid grid, Dot start, Dot end, FuncList<Dot> nodes, FuncMap<Dot, FuncList<Edge>> graphMap) {
-        record NodeInfo(Dot current, long distance, Dot previous) {
+    record Graph(Grid grid, Position start, Position end, FuncList<Position> nodes, FuncMap<Position, FuncList<Edge>> graphMap) {
+        record NodeInfo(Position current, long distance, Position previous) {
             @Override
             public String toString() {
                 return "(%d,%d) : %s (from (%s, %s))".formatted(
@@ -95,13 +149,35 @@ public class Day16Part1Test extends BaseTest {
                         (previous == null) ? "null" : previous.col);
             }
         }
-        
-        Tuple2<Long, FuncList<Dot>> shortestCostPath() {
-            var visiteds  = new HashSet<Dot>();
-            var nodeInfos = new LinkedHashMap<Dot, NodeInfo>();
-            var nextInfos = new PriorityQueue<NodeInfo>(comparing(NodeInfo::distance));
+
+        static Graph from(Grid grid) {
+            var graphMap = new ConcurrentHashMap<Position, FuncListBuilder<Edge>>();
+            var banches  = grid.positions().cache();
+            banches.forEach(pos -> {
+                pos
+                .neighbours()
+                .filter(n -> grid.charAt(n) == '.')
+                .forEach(n -> {
+                    var edge = new Edge(pos, n, abs(n.col - pos.col) + abs(n.row - pos.row));
+                    graphMap.putIfAbsent(pos, new FuncListBuilder<Edge>());
+                    graphMap.get(pos).add(edge);
+                });
+            });
             
-            var beforeStart = new Dot(start.row, start.col - 1, "");
+            var map = FuncMap.from(graphMap).mapValue(FuncListBuilder::build);
+//            map.entries().sortedBy(Map.Entry::getKey).forEach(println);
+            return new Graph(grid, grid.start, grid.end, banches, map);
+        }
+        
+        Tuple2<Long, FuncList<Position>> shortestCostPath() {
+            var visiteds  = new HashSet<Position>();
+            var nodeInfos = new LinkedHashMap<Position, NodeInfo>();
+            var nextInfos = new PriorityQueue<NodeInfo>(comparing(n -> n.distance));
+            
+//            System.out.println("nodes: ");
+//            nodes.stream().map(String::valueOf).map("  "::concat).forEach(println);
+            
+            var beforeStart = new Position(start.row, start.col - 1);
             nodes.forEach(node -> {
                 var nodeInfo
                         = node.equals(start)
@@ -111,55 +187,82 @@ public class Day16Part1Test extends BaseTest {
                 nextInfos.add(nodeInfo);
             });
             
+//            System.out.println("nextInfos: ");
+//            nextInfos.stream().map(String::valueOf).map("  "::concat).forEach(println);
+            
             var current      = start;
-            var previous     = beforeStart;
             var currDistance = 0L;
             
             while (!current.equals(end)) {
                 var currNode = current;
-                var prevNode = previous;
                 var currDist = currDistance;
-                nextInfos.remove(nodeInfos.get(currNode));
+                var currInfo = nodeInfos.get(currNode);
+                nextInfos.remove(currInfo);
                 visiteds.add(currNode);
                 
                 System.out.println("Current: " + currNode);
-                
                 var nextNodes = graphMap.get(currNode);
-                nextNodes.forEach(next -> {
-                    var nextNode = next.to(currNode);
-                    if (visiteds.contains(nextNode))
-                        return;
-                    
-                    var currInfo = nodeInfos.get(nextNode);
-                    var distance = distance(prevNode, currNode, next);
-                    if (distance < currInfo.distance) {
-                        var nextInfo = new NodeInfo(nextNode, currDist + distance, currNode);
-                        nodeInfos.put(nextNode, nextInfo);
-                        nextInfos.remove(currInfo);
-                        nextInfos.add(nextInfo);
-                    }
-                });
+                if (nextNodes != null) {
+                    nextNodes.forEach(next -> {
+                        var nextNode = next.to(currNode);
+                        if (visiteds.contains(nextNode))
+                            return;
+                        
+                        System.out.println("Next: " + nextNode);
+                        if (currInfo.previous == null)
+                            System.out.print("");
+                        
+                        var nextInfo = nodeInfos.get(nextNode);
+                        var distance = distance(currInfo.previous, currInfo.current, next);
+                        if (distance < nextInfo.distance) {
+                            nextInfo = new NodeInfo(nextNode, currDist + distance, currNode);
+                            nodeInfos.put(nextNode, nextInfo);
+                            nextInfos.remove(currInfo);
+                            nextInfos.add(nextInfo);
+                        }
+                    });
+                }
     
                 var nextInfo = nextInfos.poll();
-                previous = nextInfo.previous;
-                current  = nextInfo.current;
+                if (nextInfo == null)
+                    break;
+                
+                current      = nextInfo.current;
                 currDistance = nextInfo.distance;
             }
             
-            System.out.println("Node: ");
+//            System.out.println("Node: ");
+//            nodeInfos.entrySet().forEach(println);
+            
+            var display = grid.clone();
             var node = end;
+            var i    = 0;
             while (node != start) {
-                System.out.println("  " + node);
-                node = nodeInfos.get(node).previous;
+                display.data[node.row][node.col] = BOLD + BLUE + "#" + RESET;
+                System.out.print("  (%2d, %2d)".formatted((node == null) ? -1 : node.row, (node == null) ? -1 : node.col));
+                i++;
+                if (i == 10) {
+                    i = 0;
+                    System.out.println();
+                }
+                
+                var nodeInfo = nodeInfos.get(node);
+                if (nodeInfo == null)
+                    break;
+                
+                node = nodeInfo.previous;
             }
+            if (node == start) {
+                display.data[node.row][node.col] = BOLD + BLUE + "#" + RESET;
+            }
+            System.out.println();
+            
+            System.out.println(display);
             
             var shortestDistance = nodeInfos.get(end).distance;
             return Tuple2.of(shortestDistance, FuncList.empty());
         }
-        long distance(Dot previous, Dot current, Edge edge) {
-            if (previous == current)
-                return edge.distance + 1;
-            
+        long distance(Position previous, Position current, Edge edge) {
             var diffRow1 = signum(current.row - previous.row);
             var diffCol1 = signum(current.col - previous.col);
             
@@ -169,79 +272,23 @@ public class Day16Part1Test extends BaseTest {
             
             var notTurn = (diffRow1 == diffRow2) || (diffCol1 == diffCol2);
             var turn = !notTurn;
-            var distance = (turn ? 1000L : 0L) + edge.distance + 1;
+            var distance = (turn ? 1000L : 0L) + edge.distance;
             return distance;
         }
     }
     
     Object calulate(FuncList<String> lines) {
-        lines.forEach(this::println);
-        println();
+        var grid = Grid.from(lines);
         
-        var graph = createGraph(lines);
-        var path  = graph.shortestCostPath();
-        return path._1();
-    }
-
-    Graph createGraph(FuncList<String> lines) {
-        var grid  = new Grid(lines);
-        var start = grid.select(i -> i == (int)'S').findFirst().get();
-        var end   = grid.select(i -> i == (int)'E').findFirst().get();
+        fillDeadEnds(grid);
+        println(grid);
         
-        var graphMap = new ConcurrentHashMap<Dot, FuncListBuilder<Edge>>();
-        var dots     = grid.selectDots().cache();
-        var edges    = dots.filter(node -> !node.neighbours.contains("..") && node.neighbours.contains(". .")).cache();
-        var banches  = dots.excludeIn(edges).cache();
-        var sameRows = banches.groupingBy(node -> node.row);
-        var sameCols = banches.groupingBy(node -> node.col);
-        sameRows.forEach((row, list) -> {
-            list.mapTwo().map(pair -> {
-                var s = (Dot)pair._1();
-                var e = (Dot)pair._2();
-                var connections = edges.filter(edge -> (edge.row == s.row) && (edge.col >= s.col) && (edge.col <= e.col));
-                var connCount   = connections.size();
-                var distance    = e.col - s.col;
-                
-                var edge = ((connCount == 0) || (connCount < (distance - 1)))
-                         ? (Edge)null
-                         : new Edge(s, e, connCount);
-                return edge;
-            })
-            .excludeNull()
-            .forEach(edge -> {
-                graphMap.computeIfAbsent(edge.start, __ -> new FuncListBuilder<Edge>());
-                graphMap.computeIfAbsent(edge.end,   __ -> new FuncListBuilder<Edge>());
-                graphMap.get(edge.start).add(edge);
-                graphMap.get(edge.end).add(edge);
-            });
-        });
+        var graph = Graph.from(grid);
+//        graph.graphMap.entries().sortedBy(Map.Entry::getKey).forEach(println);;
+        var shortestPath = graph.shortestCostPath();
+        println(shortestPath);
         
-        sameCols.forEach((col, list) -> {
-            list.mapTwo().map(pair -> {
-                var s = (Dot)pair._1();
-                var e = (Dot)pair._2();
-                var connections = edges.filter(edge -> (edge.col == s.col) && (edge.row >= s.row) && (edge.row <= e.row));
-                var connCount   = connections.size();
-                var distance    = e.row - s.row;
-                
-                var edge = ((connCount == 0) || (connCount < (distance - 1)))
-                         ? (Edge)null
-                         : new Edge(s, e, connCount);
-                return edge;
-            })
-            .excludeNull()
-            .forEach(edge -> {
-                graphMap.computeIfAbsent(edge.start, __ -> new FuncListBuilder<Edge>());
-                graphMap.computeIfAbsent(edge.end,   __ -> new FuncListBuilder<Edge>());
-                graphMap.get(edge.start).add(edge);
-                graphMap.get(edge.end).add(edge);
-            });
-        });
-
-        var startDot = dots.findFirst(dot -> (start.row == dot.row) && (start.col == dot.col)).get();
-        var endDot   = dots.findFirst(dot -> (end.row   == dot.row) && (end.col   == dot.col)).get();
-        var map      = FuncMap.from(graphMap).mapValue(FuncListBuilder::build);
-        return new Graph(grid, startDot, endDot, banches, map);
+        return shortestPath._1();
     }
     
     //== Test ==
@@ -253,13 +300,32 @@ public class Day16Part1Test extends BaseTest {
         println("result: " + result);
         assertAsString("7036", result);
     }
-    
+
     @Test
     public void testProd() {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        assertAsString("72412", result);
+        assertAsString("66404", result);
+    }
+    
+    void fillDeadEnds(Grid grid) {
+        var seens = new LinkedHashSet<Position>();
+        var nodes = new LinkedHashSet<Position>(grid.positions());
+        while (nodes.size() != 0) {
+            var node = nodes.removeFirst();
+            if (node.equals(grid.start) || node.equals(grid.end))
+                continue;
+            
+            int count = node.neighbours().filter(n -> grid.charAt(n) == '.').size();
+            if (count <= 1) {
+                grid.data[node.row][node.col] = "#";
+                seens.add(node);
+                
+                var freeNeighbors = node.neighbours().toCache().filter(n -> grid.charAt(n) == '.').excludeIn(seens);
+                nodes.addAll(freeNeighbors);
+            }
+        }
     }
     
 }

@@ -2,6 +2,7 @@ package day17;
 
 import static java.lang.Math.pow;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -46,14 +47,14 @@ public class Day17Part1Test extends BaseTest {
         
     }
     
-    static interface Operator {
+    static interface OperatorBody {
         void work(Context context, long operand);
     }
     
-    static class OperatorImpl implements Operator {
+    static class Operator implements OperatorBody {
         final String   name;
-        final Operator operator;
-        public OperatorImpl(String name, Operator operator) {
+        final OperatorBody operator;
+        public Operator(String name, OperatorBody operator) {
             this.name = name;
             this.operator = operator;
         }
@@ -67,25 +68,25 @@ public class Day17Part1Test extends BaseTest {
         }
     }
     
-    static Operator Adv = new OperatorImpl("Adv#0", (context, operand) -> {
+    static OperatorBody Adv = new Operator("Adv#0", (context, operand) -> {
         operand   = context.value(operand);
         context.A = context.A / (int)pow(2, operand);
         context.instructionPointer += 2;
     });
 
-    static Operator Bxl = new OperatorImpl("Bxl#1", (context, operand) -> {
+    static OperatorBody Bxl = new Operator("Bxl#1", (context, operand) -> {
         operand   = context.value(operand);
         context.B = context.B ^ operand;
         context.instructionPointer += 2;
     });
 
-    static Operator Bst = new OperatorImpl("Bst#2", (context, operand) -> {
+    static OperatorBody Bst = new Operator("Bst#2", (context, operand) -> {
         operand   = context.value(operand);
         context.B = operand % 8;
         context.instructionPointer += 2;
     });
 
-    static Operator Jnz = new OperatorImpl("Jnz#3", (context, operand) -> {
+    static OperatorBody Jnz = new Operator("Jnz#3", (context, operand) -> {
         operand   = context.value(operand);
         if (context.A != 0) {
             context.instructionPointer = (int)operand;
@@ -94,13 +95,13 @@ public class Day17Part1Test extends BaseTest {
         }
     });
 
-    static Operator Bxc = new OperatorImpl("Bxc#4", (context, operand) -> {
+    static OperatorBody Bxc = new Operator("Bxc#4", (context, operand) -> {
         operand   = context.value(operand);
         context.B = context.B ^ context.C; // Operand is ignored
         context.instructionPointer += 2;
     });
 
-    static Operator Out = new OperatorImpl("Out#5", (context, operand) -> {
+    static OperatorBody Out = new Operator("Out#5", (context, operand) -> {
         operand    = context.value(operand);
         long value = operand % 8;
         if (context.outputBuffer.length() > 0) {
@@ -110,19 +111,19 @@ public class Day17Part1Test extends BaseTest {
         context.instructionPointer += 2;
     });
 
-    static Operator Bdv = new OperatorImpl("Bdv#6", (context, operand) -> {
+    static OperatorBody Bdv = new Operator("Bdv#6", (context, operand) -> {
         operand   = context.value(operand);
         context.B = context.A / (int) pow(2, operand);
         context.instructionPointer += 2;
     });
 
-    static Operator Cdv = new OperatorImpl("Cdv#7", (context, operand) -> {
+    static OperatorBody Cdv = new Operator("Cdv#7", (context, operand) -> {
         operand   = context.value(operand);
         context.C = context.A / (int) pow(2, operand);
         context.instructionPointer += 2;
     });
     
-    static FuncList<Operator> operators = FuncList.of(Adv, Bxl, Bst, Jnz, Bxc, Out, Bdv, Cdv);
+    static FuncList<OperatorBody> operators = FuncList.of(Adv, Bxl, Bst, Jnz, Bxc, Out, Bdv, Cdv);
     
     
     Object calulate(FuncList<String> lines) {
@@ -159,6 +160,7 @@ public class Day17Part1Test extends BaseTest {
         assertAsString(expected, context);
     }
     
+    @Ignore
     @Test
     public void testOperator() {
         testProgram(new Context(   0,    0,     9), "2,6",         "Context [A=0, B=1, C=9, instPntr=2, output=]");

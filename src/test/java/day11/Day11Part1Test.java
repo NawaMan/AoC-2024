@@ -1,7 +1,5 @@
 package day11;
 
-import static functionalj.stream.intstream.IntStreamPlus.range;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,44 +10,26 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 
 public class Day11Part1Test extends BaseTest {
     
     static final BigInteger _2024 = BigInteger.valueOf(2024);
     
-    @EqualsAndHashCode
+    @RequiredArgsConstructor
     static class BlinkChain {
-        List<BigInteger> singles = new ArrayList<BigInteger>();
-        BigInteger       end1;
-        BigInteger       end2;
-        public BlinkChain(BigInteger end1, BigInteger end2) {
-            this.end1 = end1;
-            this.end2 = end2;
-        }
+        final List<BigInteger> singles = new ArrayList<BigInteger>();
+        final BigInteger       end1;
+        final BigInteger       end2;
         int add(BigInteger number) {
             singles.add(number);
             return (singles.size() - 1);
-        }
-        String toString(int index) {
-            return "%s->(%s,%s)".formatted(
-                    range(0, index + 1).mapToObj(i -> singles.get(index - i)).join("->"),
-                    end1,
-                    end2);
-        }
-        @Override
-        public String toString() {
-            return toString(singles.size() - 1);
         }
     }
     
     static record Blink(BlinkChain chain, int index) {
         
         private static ConcurrentHashMap<BigInteger, Blink> blinks = new ConcurrentHashMap<>();
-        
-        static Blink of(int number) {
-            return Blink.of(BigInteger.valueOf(number));
-        }
         
         static Blink of(BigInteger number) {
             var blink = blinks.get(number);
@@ -88,19 +68,9 @@ public class Day11Part1Test extends BaseTest {
             blinks.put(number, thisBlink);
             return thisBlink;
         }
-        
-        @Override
-        public String toString() {
-            return chain.toString(index);
-        }
     }
     
     private static ConcurrentHashMap<BigInteger, ConcurrentHashMap<Integer, Long>> counts = new ConcurrentHashMap<>();
-    
-    long stoneCount(int number, int times) {
-        var bigNumber = BigInteger.valueOf(number);
-        return stoneCount(bigNumber, times);
-    }
     
     long stoneCount(BigInteger number, int times) {
         var numCounts = counts.computeIfAbsent(number, __ -> new ConcurrentHashMap<>());
@@ -109,7 +79,6 @@ public class Day11Part1Test extends BaseTest {
             numCount = determineStoneCount(number, times);
             numCounts.put(times, numCount);
         }
-        
         return numCount;
         
     }
@@ -134,19 +103,6 @@ public class Day11Part1Test extends BaseTest {
         return grab(regex("[0-9]+"), lines.get(0))
                 .map(BigInteger::new)
                 .sumToLong(num -> stoneCount(show("num: ", num), times));
-    }
-    
-    void showBlink(int number) {
-        showBlink(number, 5);
-    }
-
-    void showBlink(int number, int times) {
-        println(number);
-        println(Blink.of(number));
-        for (int i = 0; i <= times; i++) {
-            println(i + " times: " + stoneCount(number, i));
-        }
-        println();
     }
     
     @Test
