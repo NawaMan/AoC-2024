@@ -3,7 +3,6 @@ package day17;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.LongPredicate;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -13,10 +12,12 @@ import functionalj.list.intlist.IntFuncList;
 
 public class Day17Part2Test extends BaseTest {
     
+    static final long START = 11781491000L;
+    
     long calulate(FuncList<String> lines) {
         var code = grab(regex("[0-9]+"), lines.get(4)).mapToInt(parseInt).cache();
         
-        for (long a = 0; a < Long.MAX_VALUE; a++) {
+        for (long a = START; a < Long.MAX_VALUE; a++) {
             if (a % 1000 == 999)
                 println("a: " + a);
             if (calculate(a, code)) {

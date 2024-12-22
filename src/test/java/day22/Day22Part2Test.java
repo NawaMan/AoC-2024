@@ -21,20 +21,18 @@ public class Day22Part2Test extends BaseTest {
     
     Object calulate(FuncList<String> lines) {
         var loop = 2000;
-        var combined
-                = lines
+        return lines
                 .map(Long::parseLong)
+                // Create map of the 4-prior-changes -> the value
                 .map(n -> firstFoundByPattern(n, loop))
-                .reduce((a, b) -> a.zipWith(b, AllowUnpaired, sumNullableLongs()))
-                .get()
-                .toImmutableMap();
-
-        return combined
+                // Combine all the map by summing all the values (the banana)
+                .reduce((a, b) -> a.zipWith(b, AllowUnpaired, sumNullableLongs())).get()
+                // Get the key that has the max value
                 .sortedByValue((a, b) -> Long.compare(b, a))
                 .entries()
                 .map(Map.Entry::getValue)
-                .findFirst()
-                .get();
+                // ... only pick one from the top
+                .findFirst().get();
     }
 
     FuncMap<String, Long> firstFoundByPattern(long orgNumber, int loop) {
