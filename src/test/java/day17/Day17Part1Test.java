@@ -2,40 +2,40 @@ package day17;
 
 import static java.lang.Math.pow;
 
-import java.util.function.IntConsumer;
-import java.util.function.IntPredicate;
+import java.util.function.LongConsumer;
+import java.util.function.LongPredicate;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.list.intlist.IntFuncListBuilder;
+import functionalj.list.longlist.LongFuncListBuilder;
 
 public class Day17Part1Test extends BaseTest {
     
     static class Context {
         
-        int A;
-        int B;
-        int C;
-        int instructionPointer = 0;
-        final IntPredicate output;
+        long A;
+        long B;
+        long C;
+        long instructionPointer = 0;
+        final LongPredicate output;
         
-        Context(int a, int b, int c, IntConsumer output) {
+        Context(long a, long b, long c, LongConsumer output) {
             this(a, b, c, 
                 (output == null)
                     ? (i -> {                   return true; })
                     : (i -> { output.accept(i); return true; }));
         }
-        Context(int a, int b, int c, IntPredicate output) {
+        Context(long a, long b, long c, LongPredicate output) {
             this.A = a;
             this.B = b;
             this.C = c;
             this.output = (output != null) ? output : i -> true;
         }
         
-        int value(int operand) {
+        long value(long operand) {
             if ((operand >= 0) && (operand <= 3))
                 return operand;
             
@@ -60,7 +60,7 @@ public class Day17Part1Test extends BaseTest {
     }
     
     static interface OperatorBody {
-        boolean work(Context context, int operand);
+        boolean work(Context context, long operand);
     }
     
     static class Operator implements OperatorBody {
@@ -71,7 +71,7 @@ public class Day17Part1Test extends BaseTest {
             this.operator = operator;
         }
         @Override
-        public boolean work(Context context, int operand) {
+        public boolean work(Context context, long operand) {
             return operator.work(context, operand);
         }
         @Override
@@ -134,7 +134,7 @@ public class Day17Part1Test extends BaseTest {
         lines.forEach(this::println);
         println();
         
-        var output  = new IntFuncListBuilder();
+        var output  = new LongFuncListBuilder();
         var context = new Context(0, 0, 0, out -> { output.add(out); });
         context.A = grab(regex("[0-9]+"), lines.get(0)).map(parseInt).get(0);
         context.B = grab(regex("[0-9]+"), lines.get(1)).map(parseInt).get(0);
@@ -147,10 +147,10 @@ public class Day17Part1Test extends BaseTest {
     }
 
     boolean runProgram(Context context, String code, boolean isDebug) {
-        var programs = grab(regex("[0-9]+"), code).map(parseInt).cache();
+        var programs = grab(regex("[0-9]+"), code).map(Long::parseLong).cache();
         while (context.instructionPointer < programs.size()) {
-            var operator = operators.get(programs.get(context.instructionPointer));
-            var operand  = programs.get(context.instructionPointer + 1).intValue();
+            var operator = operators.get((Integer)programs.get((int)context.instructionPointer).intValue());
+            var operand  = programs.get((int)context.instructionPointer + 1).intValue();
             
             if (isDebug) System.out.print(operator + "(" + operand + "): ");
             
@@ -167,8 +167,8 @@ public class Day17Part1Test extends BaseTest {
     
     //== Test ==
     
-    public void testProgram(int a, int b, int c, String program, String expectedContext, String expectedOutput) {
-        var output  = new IntFuncListBuilder();
+    public void testProgram(long a, long b, long c, String program, String expectedContext, String expectedOutput) {
+        var output  = new LongFuncListBuilder();
         var context = new Context(a, b, c, out -> { output.add(out); });
         runProgram(context, program, true);
         assertAsString(expectedContext, context);

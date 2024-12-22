@@ -1,8 +1,9 @@
 package day17;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.IntPredicate;
+import java.util.function.LongPredicate;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -12,19 +13,29 @@ import functionalj.list.intlist.IntFuncList;
 
 public class Day17Part2Test extends BaseTest {
     
-    Object calulate(FuncList<String> lines) {
-        lines.forEach(this::println);
-        println();
+    long calulate(FuncList<String> lines) {
+        var code = grab(regex("[0-9]+"), lines.get(4)).mapToInt(parseInt).cache();
         
-        return null;
+        for (long a = 0; a < Long.MAX_VALUE; a++) {
+            if (a % 1000 == 999)
+                println("a: " + a);
+            if (calculate(a, code)) {
+                return a;
+            }
+        }
+        return -1;
     }
     
-    long calculate(int a, IntFuncList code) {
+    boolean calculate(long a, IntFuncList code) {
         var checkDigit = new AtomicInteger(0);
-        var output = (IntPredicate)((int num) -> {
-//            if (code.get(checkDigit.get())) {
-//                
-//            }
+        var output = (LongPredicate)((long num) -> {
+            int digit = checkDigit.get();
+            if (digit >= code.size())
+                return false;
+            if (num != code.get(digit)) {
+                return false;
+            }
+            checkDigit.incrementAndGet();
             return true;
         });
         
@@ -35,22 +46,10 @@ public class Day17Part2Test extends BaseTest {
         context.C = 0;
         
         var codeString = code.toString().replaceAll(" ", "");
-        new Day17Part1Test().runProgram(context, codeString, false);
-        
-        return 0;
+        return new Day17Part1Test().runProgram(context, codeString, false)
+                && checkDigit.get() == code.size();
         
     }
-
-//    void runProgram(Context context, String code) {
-//        var programs = grab(regex("[0-9]+"), code).map(parseInt).cache();
-//        while (context.instructionPointer < programs.size()) {
-//            var operator = operators.get(programs.get(context.instructionPointer));
-//            var operand  = programs.get(context.instructionPointer + 1).intValue();
-//            System.out.print(operator + "(" + operand + "): ");
-//            operator.work(context, operand);
-//            System.out.println(" = " + context);
-//        }
-//    }
     
     //== Test ==
     
@@ -59,7 +58,7 @@ public class Day17Part2Test extends BaseTest {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        assertAsString(lines.last().get().replaceAll("Program: ", ""), result);
+        assertAsString("117440", result);
     }
     
     @Test
@@ -67,7 +66,7 @@ public class Day17Part2Test extends BaseTest {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        assertAsString(lines.last().get().replaceAll("Program: ", ""), result);
+        assertAsString("", result);
     }
     
 }

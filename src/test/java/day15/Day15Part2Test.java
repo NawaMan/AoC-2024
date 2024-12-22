@@ -210,49 +210,25 @@ public class Day15Part2Test extends BaseTest {
     Object calulate(FuncList<String> lines) {
         var warehouse = new Warehouse(lines);
         println(warehouse);
-
-        println();
-        println();
-        lines.skipUntil(""::equals).forEach(println);
-        println();
         println();
         
         var sequence = lines.skipUntil(""::equals).reduce((a, b) -> a + b).get();
-        println(sequence);
-        
-        var map = new ConcurrentHashMap<Character, List<String>>();
         
         for (int i = 0; i < sequence.length(); i++) {
-            if ((i==346) || (i==347) || (i==348)) {
-                println(warehouse.robot);
-                warehouse.goods.forEach(println);
-            }
-            
-            
             println(warehouse);
-            var start = warehouse.toString();
-            
-            var logs = new StringBuffer();
-            logs.append(warehouse.toString());
-            logs.append("\n");
             
             char ch = sequence.charAt(i);
             println("--| " + i + ": " + ch + " |--");
             switch (ch) {
-                case '^': { warehouse.moveUp();    map.putIfAbsent('^', new ArrayList<String>()); logs.append(warehouse.toString()); var end = warehouse.toString(); map.get('^').add(FuncList.from(start.split("\n")).zipWith(FuncList.from(end.split("\n")), (a, b) -> a + "    " + b).join("\n")); continue; }
-                case 'v': { warehouse.moveDown();  map.putIfAbsent('v', new ArrayList<String>()); logs.append(warehouse.toString()); var end = warehouse.toString(); map.get('v').add(FuncList.from(start.split("\n")).zipWith(FuncList.from(end.split("\n")), (a, b) -> a + "    " + b).join("\n")); continue; }
-                case '>': { warehouse.moveRight(); map.putIfAbsent('>', new ArrayList<String>()); logs.append(warehouse.toString()); var end = warehouse.toString(); map.get('>').add(FuncList.from(start.split("\n")).zipWith(FuncList.from(end.split("\n")), (a, b) -> a + "    " + b).join("\n")); continue; }
-                case '<': { warehouse.moveLeft();  map.putIfAbsent('<', new ArrayList<String>()); logs.append(warehouse.toString()); var end = warehouse.toString(); map.get('<').add(FuncList.from(start.split("\n")).zipWith(FuncList.from(end.split("\n")), (a, b) -> a + "    " + b).join("\n")); continue; }
+                case '^': { warehouse.moveUp();    continue; }
+                case 'v': { warehouse.moveDown();  continue; }
+                case '>': { warehouse.moveRight(); continue; }
+                case '<': { warehouse.moveLeft();  continue; }
             }
         }
-//        println(warehouse);
-//        
-//        for (var logs : map.get('>')) {
-//            println(logs);
-//            println();
-//            println("-------------------------------------------------------------------------------------------------");
-//            println();
-//        }
+        
+        println(warehouse);
+        println();
         
         return warehouse.sumGPS();
     }
