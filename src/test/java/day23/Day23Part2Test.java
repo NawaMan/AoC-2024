@@ -112,7 +112,7 @@ public class Day23Part2Test extends BaseTest {
         }
         
         public List<String> findLargestClique() {
-            List<String> largestClique = new ArrayList<>();
+            List<String> largestClique = new ArrayList<String>();
             Set<String> currentClique = new HashSet<>();
 
             // Backtracking to find all maximal cliques
