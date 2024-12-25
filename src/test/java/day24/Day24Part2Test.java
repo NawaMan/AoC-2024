@@ -3,7 +3,9 @@ package day24;
 import static day24.Node.theNode;
 import static day24.Node.Eval.theEval;
 import static functionalj.stream.intstream.IntStreamPlus.range;
+import static java.util.Comparator.comparing;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,6 +57,7 @@ public class Day24Part2Test extends BaseTest {
         //  Cn = (An AND Bn) OR (Cn_1 AND (An_1 XOR Bn_1))
         
         // An XOR Bn ... is known as partial adder
+        // An AND Bn ... will be known now as "has carry"
         
         // So,
         // Any XOR with an input is always for the same digit of the input.
@@ -91,8 +94,6 @@ public class Day24Part2Test extends BaseTest {
         aliases.entrySet().forEach(println);
         println();
         
-        var invertAliases = FuncMap.from(aliases).entries().toMap(Map.Entry::getValue, Map.Entry::getKey);
-        
         // TO-CHECK: z00 must be the same with p00
         
         // For everything but 00, pXX will be operated XOR with cYY where YY is one less than XX.
@@ -127,6 +128,46 @@ public class Day24Part2Test extends BaseTest {
         expectedOutputNodes
         .entries()
         .forEach(println);
+        println();
+        
+        var outputExprPrevious
+                = evals
+                .filter(t -> t._1.equals(Operator.XOR))
+                .filter(t -> t._3.anyMatch(s -> aliases.containsKey(s)))
+                .map   (t -> FuncList.of(aliases.getOrDefault(t._3.get(0), t._3.get(0)),
+                                         aliases.getOrDefault(t._3.get(1), t._3.get(1)))
+                                     .sorted(comparing(name -> (name.matches("^p[0-9]+") ? 1 : 2))))
+                .cache ();
+        
+        outputExprPrevious
+        .forEach(pair -> {
+            var partialAdder  = pair.get(0);
+            var previousCarry = pair.get(1);
+            
+            var previous = parseInt(partialAdder.replaceAll("p", "")) - 1;
+            aliases.put(previousCarry, "c%02d".formatted(previous));
+        });
+        
+        println("Output Expr Previous: ");
+        outputExprPrevious
+        .forEach(println);
+        println();
+        
+        println("Aliases: ");
+        aliases.entrySet().forEach(println);
+        println();
+        
+        var hasCarries
+                = evals
+                .filter(t -> t._1.equals(Operator.AND))
+                .filter(t -> t._3.allMatch(s -> s.matches("^[xy][0-9]+$")))
+                .cache();
+        hasCarries
+        .forEach(println);
+        println();
+        
+        // Any of the name (that is not pXX) are carry of the previous digit.
+        // And they must be a result of an OR operation of the previous digit
         
         
 //        
