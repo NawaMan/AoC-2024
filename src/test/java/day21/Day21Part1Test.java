@@ -2,10 +2,15 @@ package day21;
 
 import static functionalj.stream.StreamPlus.repeat;
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -14,7 +19,7 @@ import common.BaseTest;
 import functionalj.list.FuncList;
 import functionalj.map.FuncMap;
 import functionalj.map.FuncMapBuilder;
-import functionalj.stream.StreamPlus;
+import functionalj.pipeable.Pipeable;
 
 public class Day21Part1Test extends BaseTest {
 
@@ -23,26 +28,28 @@ public class Day21Part1Test extends BaseTest {
     public static final String RESET = "\033[0m"; // Reset to default color
     
     record Position(int row, int col) {}
+    record Movement(int row, int col) {}
     
-    static int walk(Position from, Position to) {
-        return abs(to.row  - from.row) + abs(to.col  - from.col);
-    }
-    static int walk(Position from, Position mid, Position to) {
-        return walk(from, mid) + walk(mid, to);
-    }
-    static String shortestWalk(int diffRow, int diffCol) {
-        var upOrDown    = (diffRow < 0) ? "^" : "v";
-        var leftOrRight = (diffCol < 0) ? "<" : ">";
-        var goUpDown    = repeat(upOrDown).limit(abs(diffRow)).join();
-        var goLeftRight = repeat(leftOrRight).limit(abs(diffCol)).join();
-        return goUpDown + goLeftRight;
+    static Movement walk(Position from, Position to) {
+        return new Movement(to.row - from.row, to.col - from.col);
     }
     
     interface Pad {
-        String   walkTo(String next);
-        void     moveTo(String direction, Consumer<String> action);
+        boolean  moveTo(String direction, Consumer<String> action);
         String   currentKey();
         Position currentPosition();
+        Position positionOf(String key);
+        
+        default boolean walkTo(String step, Consumer<String> action) {
+            return FuncList.of(step.split(""))
+                    .allMatch(each -> moveTo(each, action));
+        }
+        
+        String toString(int lineIndex);
+        
+        default Movement movementTo(String key) {
+            return walk(currentPosition(), positionOf(key));
+        }
     }
     
     class NumberPad implements Pad {
@@ -70,38 +77,16 @@ public class Day21Part1Test extends BaseTest {
             this.current = start;
         }
         
-        @Override public String   currentKey()      { return current; }
-        @Override public Position currentPosition() { return numberPad.get(current); }
-        
-        @Override
-        public String walkTo(String next) {
-            var curPos = currentPosition();
-            var nxtPos = numberPad.get(next);
-            var diffRow = nxtPos.row - curPos.row;
-            var diffCol = nxtPos.col - curPos.col;
-            
-            current = next;
+        @Override public String   currentKey()           { return current; }
+        @Override public Position currentPosition()      { return numberPad.get(current); }
+        @Override public Position positionOf(String key) { return numberPad.get(key);     }
 
-            // To avoid walking into the empty space.
-            // Go up+right or down+left does not matter
-            // Go up+left,    should go up first
-            // Go down+right, should go right right
-//            var isUpLeft = (diffRow < 0) && (diffCol < 0);
-//            if (isUpLeft) {
-//                return repeat("^").limit(abs(diffRow)).join() + repeat("<").limit(abs(diffCol)).join() + "A";
-//            }
-//            var isDownRight = (diffRow > 0) && (diffCol > 0);
-//            if (isDownRight) {
-//                return repeat(">").limit(abs(diffCol)).join() + repeat("v").limit(abs(diffRow)).join() + "A";
-//            }
-            
-            return shortestWalk(diffRow, diffCol) + "A";
-        }
-        
-        public void moveTo(String direction, Consumer<String> action) {
+        @Override
+        public boolean moveTo(String direction, Consumer<String> action) {
             if (direction.equals("A")) {
-                action.accept(current);
-                return;
+                if (action != null)
+                    action.accept(current);
+                return true;
             }
             
             int diffRow = 0;
@@ -112,11 +97,22 @@ public class Day21Part1Test extends BaseTest {
             else if (direction.equals("<")) diffCol--;
             
             var curPos = numberPad.get(current);
-            var newPos = new Position(curPos.row + diffRow, curPos.col + diffCol);
-            System.out.println(name + ": direction: " + direction + ", curPos: " + curPos + ", newPos: " + newPos);
-            current = numberPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey()).get(0);
+            int newRow = curPos.row + diffRow;
+            int newCol = curPos.col + diffCol;
+            if ((newRow == 3) && (newCol == 0))
+                return false;
+            
+            var newPos = new Position(newRow, newCol);
+            var keyPoses = numberPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey());
+            if (keyPoses.isEmpty())
+                println("newPos: " + newPos);
+            
+            current = keyPoses.get(0);
+            
+            return true;
         }
-        
+
+        @Override
         public String toString(int lineIndex) {
             var text = """
                     +---+---+---+
@@ -134,9 +130,9 @@ public class Day21Part1Test extends BaseTest {
         }
     }
 
-    class DirectionPad implements Pad {
+    class ArrowPad implements Pad {
     
-        static FuncMap<String, Position> directionalPad
+        static FuncMap<String, Position> arrowPad
                 = new FuncMapBuilder<String, Position>()
                 .with("^", new Position(0, 1))
                 .with("A", new Position(0, 2))
@@ -148,42 +144,20 @@ public class Day21Part1Test extends BaseTest {
         private String name;
         private String current;
         
-        public DirectionPad(String name, String start) {
+        public ArrowPad(String name, String start) {
             this.name    = name;
             this.current = start;
         }
         
-        @Override public String   currentKey()      { return current; }
-        @Override public Position currentPosition() { return directionalPad.get(current); }
+        @Override public String   currentKey()           { return current; }
+        @Override public Position currentPosition()      { return arrowPad.get(current); }
+        @Override public Position positionOf(String key) { return arrowPad.get(key);     }
         
         @Override
-        public String walkTo(String next) {
-            var curPos = currentPosition();
-            var nxtPos = directionalPad.get(next);
-            var diffRow = nxtPos.row - curPos.row;
-            var diffCol = nxtPos.col - curPos.col;
-            
-            current = next;
-            
-            // To avoid walking into the empty space.
-            // Go down+left, should go down first
-            // Go up+right, should go right right
-//            var isDownLeft = (diffRow > 0) && (diffCol < 0);
-//            if (isDownLeft) {
-//                return repeat("v").limit(abs(diffRow)).join() + repeat("<").limit(abs(diffCol)).join() + "A";
-//            }
-//            var isUpRight = (diffRow < 0) && (diffCol > 0);
-//            if (isUpRight) {
-//                return repeat(">").limit(abs(diffCol)).join() + repeat("^").limit(abs(diffRow)).join() + "A";
-//            }
-            
-            return shortestWalk(diffRow, diffCol) + "A";
-        }
-        
-        public void moveTo(String direction, Consumer<String> action) {
+        public boolean moveTo(String direction, Consumer<String> action) {
             if (direction.equals("A")) {
                 action.accept(current);
-                return;
+                return true;
             }
             
             int diffRow = 0;
@@ -193,12 +167,19 @@ public class Day21Part1Test extends BaseTest {
             else if (direction.equals(">")) diffCol++;
             else if (direction.equals("<")) diffCol--;
             
-            var curPos = directionalPad.get(current);
-            var newPos = new Position(curPos.row + diffRow, curPos.col + diffCol);
-            System.out.println(name + ": direction: " + direction + ", curPos: " + curPos + ", newPos: " + newPos);
-            current = directionalPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey()).get(0);
+            var curPos = arrowPad.get(current);
+            int newRow = curPos.row + diffRow;
+            int newCol = curPos.col + diffCol;
+            if ((newRow == 0) && (newCol == 0))
+                return false;
+            
+            var newPos = new Position(newRow, newCol);
+            current = arrowPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey()).get(0);
+            
+            return true;
         }
-        
+
+        @Override
         public String toString(int lineIndex) {
             var text = """
                         +---+---+
@@ -213,46 +194,158 @@ public class Day21Part1Test extends BaseTest {
     }
     
     Object calulate(FuncList<String> lines) {
-        lines.forEach(this::println);
-        return lines.sumToLong(this::calulate);
+        var doorPad   = new NumberPad("    DoorPad", "A");
+        var robot1Pad = new ArrowPad ("  Rbt1Pad", "A");
+        var robot2Pad = new ArrowPad ("Rbt1Pad", "A");
+        
+        return lines
+                .mapToLong(target -> {
+                    var shotestLenght = shortestPathForKey(doorPad, robot1Pad, robot2Pad, target);
+                    var numberPart    = Long.parseLong(target.replaceAll("[^0-9]+", ""));
+                    println(target + ": " + shotestLenght + " -- " + numberPart);
+                    return shotestLenght*numberPart;
+                })
+                .sum();
     }
     
-    long calulate(String doorPress) {
-        var doorPad   = new NumberPad(   "DoorPad", "A");
-        var robot1Pad = new DirectionPad("Rbt1Pad", "A");
-        var robot2Pad = new DirectionPad("Rbt2Pad", "A");
+    static String shortestWalk(int diffRow, int diffCol) {
+        var upOrDown    = (diffRow < 0) ? "^" : "v";
+        var leftOrRight = (diffCol < 0) ? "<" : ">";
         
-        var robot1Log = new StringBuilder();
-        var robot2Log = new StringBuilder();
-        var humanLog  = new StringBuilder();
+        
+        var goUpDown    = repeat(upOrDown).limit(abs(diffRow)).join();
+        var goLeftRight = repeat(leftOrRight).limit(abs(diffCol)).join();
+        return goUpDown + goLeftRight;
+    }
+    
+    // Method to generate all combinations
+    public static FuncList<String> generateCombinations(Movement movement) {
+        return generateCombinations(movement.row, movement.col);
+    }
+    
+    // Method to generate all combinations
+    public static FuncList<String> generateCombinations(int up, int left) {
+        return generateCombinations(max(-up, 0), max(left, 0), max(up, 0), max(-left, 0));
+    }
+    // Method to generate all combinations
+    public static FuncList<String> generateCombinations(int up, int left, int down, int right) {
+        if ((up == 0) && (left == 0) && (down == 0) && (right == 0))
+            return FuncList.of("");
+        
+        // Create a list with the specified number of steps for each direction
+        List<Character> steps = new ArrayList<>();
+        for (int i = 0; i < up; i++) {
+            steps.add('^'); // Up
+        }
+        for (int i = 0; i < left; i++) {
+            steps.add('>'); // Left
+        }
+        for (int i = 0; i < down; i++) {
+            steps.add('v'); // Down
+        }
+        for (int i = 0; i < right; i++) {
+            steps.add('<'); // Right
+        }
 
-        FuncList.of(doorPress.split("")).forEach(doorEach -> {
-            var robot1Press = doorPad.walkTo(doorEach);
-//            System.out.println("  for: " + doorEach + ", robot1Press: " + robot1Press);
-            robot1Log.append(robot1Press);
-            FuncList.of(robot1Press.split("")).forEach(rb1Each -> {
-                var robot2Press = robot1Pad.walkTo(rb1Each);
-//                System.out.println("    for: " + rb1Each + ", robot2Press: " + robot2Press);
-                robot2Log.append(robot2Press);
-                FuncList.of(robot2Press.split("")).forEach(rb2Each -> {
-                    var humanPress = robot2Pad.walkTo(rb2Each);
-//                    System.out.println("      for: " + rb2Each + ", humanPress: " + humanPress);
-                    humanLog.append(humanPress);
-                });
-            });
-        });
-//        System.out.println("doorPress:   " + doorPress + "(%d)".formatted(doorPress.length()));
-//        System.out.println("robot1Press: " + robot1Log + "(%d)".formatted(robot1Log.length()));
-//        System.out.println("robot2Press: " + robot2Log + "(%d)".formatted(robot2Log.length()));
-//        System.out.println("humanLog:    " + humanLog  + "(%d)".formatted(humanLog.length()));
-//        
-        var doorNum    = (long)grab(regex("[0-9]+"), doorPress).map(parseInt).getFirst();
-        var humanPress = (long)humanLog.length();
-        System.out.println("humanPress: " + humanPress + ", doorNum: " + doorNum);
-        return doorNum * humanPress;
+        // Use a set to store unique combinations
+        Set<String> uniqueCombinations = new HashSet<>();
+        generatePermutations(steps, 0, uniqueCombinations);
+
+        // Convert the set to a list and return
+        return FuncList.from(uniqueCombinations);
+    }
+
+    // Helper method to generate permutations
+    private static void generatePermutations(List<Character> steps, int start, Set<String> result) {
+        if (start == steps.size() - 1) {
+            // Add the current permutation as a string to the set
+            result.add(listToString(steps));
+            return;
+        }
+
+        for (int i = start; i < steps.size(); i++) {
+            // Swap characters at `start` and `i`
+            Collections.swap(steps, start, i);
+            // Recurse for the next position
+            generatePermutations(steps, start + 1, result);
+            // Swap back to restore the original list
+            Collections.swap(steps, start, i);
+        }
+    }
+
+    // Helper method to convert a list of characters to a string
+    private static String listToString(List<Character> list) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : list) {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    public FuncList<FuncList<String>> cartesianProduct(FuncList<FuncList<String>> lists) {
+        FuncList<List<String>> list = FuncList.from(lists.stream().reduce(
+            List.of(List.of()), // Start with a list containing an empty list
+            (acc, nextList) -> acc.stream()
+                .flatMap(existing -> nextList.stream()
+                    .map(item -> {
+                        List<String> newCombination = new ArrayList<>(existing);
+                        newCombination.add(item);
+                        return newCombination;
+                    })
+                )
+                .collect(Collectors.toList()),
+            (list1, list2) -> {
+                // Combine results in case of parallel streams (not used here but needed for reduce)
+                List<List<String>> combined = new ArrayList<>(list1);
+                combined.addAll(list2);
+                return FuncList.from(combined);
+            }
+        ));
+        return list.map(FuncList::from);
     }
     
     //== Test ==
+//    
+//    @Test
+//    public void testManual() {
+//        var doorPad   = new NumberPad("    DoorPad", "A");
+//        var robot1Pad = new ArrowPad ("  Rbt1Pad", "A");
+//        var robot2Pad = new ArrowPad ("Rbt1Pad", "A");
+////        
+////        for (int i = 0; i < 10; i++) {
+////            System.out.println(robot1Pad.toString(i) + "    " + doorPad.toString(i));
+////        }
+//        var target = "379A";
+//
+//        println("Presses: ");
+//        var minLength = shortestPathForKey(doorPad, robot1Pad, robot2Pad, target);
+//        
+//        println(minLength);
+//    }
+
+    private long shortestPathForKey(NumberPad doorPad, ArrowPad robot1Pad, ArrowPad robot2Pad, String target) {
+        var shorest
+                = Pipeable.of(target)
+                .pipeTo (k -> determineKeyPressed(k, doorPad))
+                .flatMap(k -> determineKeyPressed(k, robot1Pad))
+                .flatMap(k -> determineKeyPressed(k, robot2Pad))
+                .minBy(String::length)
+                ;
+        var minLength = shorest.get().length();
+        println(shorest + ": " + minLength);
+        return (long)minLength;
+    }
+
+    private FuncList<String> determineKeyPressed(String target, Pad keypad) {
+        return FuncList.of(target.split(""))
+        .map (key -> keypad.movementTo(key))
+        .map (mov -> generateCombinations(mov))
+        .map (cmb -> cmb.map(p -> p + "A"))
+        .map (cmd -> cmd.filter(step -> keypad.walkTo(step, null)).cache())
+        .pipe(this::cartesianProduct)
+        .map (FuncList::join)
+        .cache();
+    }
     
     @Test
     public void testExample() {
@@ -260,30 +353,6 @@ public class Day21Part1Test extends BaseTest {
         var result = calulate(lines);
         println("result: " + result);
         assertAsString("126384", result);
-//
-//        var doorPad   = new NumberPad(   "    DoorPad", "A");
-//        var robot1Pad = new DirectionPad("  Rbt1Pad", "A");
-//        var robot2Pad = new DirectionPad("Rbt2Pad", "A");
-//        
-////        var humanPress = "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A";
-//        var humanPress = "v<<A>>^AvA^Av<<A>>^AAv<A<A>>^AAvAA^<A>Av<A>^AA<A>Av<A<A>>^AAAvA^<A>A";
-//        var step = new AtomicInteger();
-//        for (var humanKey : humanPress.split("")) {
-//            println("move: " + humanKey);
-//            robot2Pad.moveTo(humanKey, key1 -> 
-//                robot1Pad.moveTo(key1, keyDoor -> 
-//                    doorPad.moveTo(keyDoor, num -> {
-//                        println();
-//                        println("Step: " + step);
-//                        println("Door pressed: " + num);
-//                        println();
-//                    })));
-//            
-//            for (int i = 0; i < 10; i++) {
-//                System.out.println(robot2Pad.toString(i) + "    " + robot1Pad.toString(i) + "    " + doorPad.toString(i));
-//            }
-//            step.incrementAndGet();
-//        }
     }
     
     @Test
