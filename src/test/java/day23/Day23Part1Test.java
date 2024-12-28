@@ -11,7 +11,7 @@ import functionalj.list.FuncList;
 public class Day23Part1Test extends BaseTest {
     
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var links = 
                 lines
                 .map(grab(regex("[a-z]+")))
@@ -50,7 +50,7 @@ public class Day23Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("7", result);
     }
@@ -58,7 +58,7 @@ public class Day23Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("1238", result);
     }

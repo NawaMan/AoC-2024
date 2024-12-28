@@ -24,7 +24,7 @@ public class Day25Part1Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var inputs = lines.prepend("");
         
         var locksOrKeys
@@ -70,7 +70,7 @@ public class Day25Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("3", result);
     }
@@ -78,7 +78,7 @@ public class Day25Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("2933", result);
     }

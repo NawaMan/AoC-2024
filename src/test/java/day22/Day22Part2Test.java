@@ -19,7 +19,7 @@ public class Day22Part2Test extends BaseTest {
     
     private static final int MODULO = 16777216; // 2^24
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var loop = 2000;
         return lines
                 .map(Long::parseLong)
@@ -82,7 +82,7 @@ public class Day22Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("23", result);
     }
@@ -91,7 +91,7 @@ public class Day22Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("1667", result);
     }

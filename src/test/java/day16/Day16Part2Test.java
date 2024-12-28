@@ -22,7 +22,7 @@ import functionalj.tuple.Tuple2;
 public class Day16Part2Test extends BaseTest {
     
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var grid = Grid.from(lines);
         println(grid);
         
@@ -42,7 +42,7 @@ public class Day16Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("", result);
     }
@@ -51,7 +51,7 @@ public class Day16Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("", result);
     }

@@ -9,7 +9,7 @@ import functionalj.map.FuncMap;
 public class Day19Part1Test extends BaseTest {
     
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var availables
                 = grab(regex("[a-z]+"), lines.get(0))
                 .groupingBy(available -> (Character)available.charAt(0))
@@ -43,7 +43,7 @@ public class Day19Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("6", result);
     }
@@ -51,7 +51,7 @@ public class Day19Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("209", result);
     }

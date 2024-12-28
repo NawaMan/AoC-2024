@@ -147,7 +147,7 @@ public class Day24Part1Test extends BaseTest {
         
     }
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var inputs 
                 = lines
                 .acceptWhile(line -> !line.isEmpty())
@@ -167,7 +167,7 @@ public class Day24Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("2024", result);
     }
@@ -175,7 +175,7 @@ public class Day24Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("57344080719736", result);
     }

@@ -17,7 +17,7 @@ public class Day14Part1Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines, int wide, int tall, int step) {
+    Object calculate(FuncList<String> lines, int wide, int tall, int step) {
         var robots = moveRobots(lines, wide, tall, step);
         draw(wide, tall, robots);
         return robots
@@ -60,7 +60,7 @@ public class Day14Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines, 11, 7, 100);
+        var result = calculate(lines, 11, 7, 100);
         println("result: " + result);
         assertAsString("12", result);
     }
@@ -68,7 +68,7 @@ public class Day14Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines, 101, 103, 100);
+        var result = calculate(lines, 101, 103, 100);
         println("result: " + result);
         assertAsString("226548000", result);
     }

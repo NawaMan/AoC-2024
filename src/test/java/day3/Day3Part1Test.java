@@ -45,7 +45,7 @@ public class Day3Part1Test extends BaseTest {
     Pattern mulPattern    = regex("mul\\([0-9]{1,3},[0-9]{1,3}\\)");
     Pattern numberPattern = regex("[0-9]+");
     
-    int calulate(FuncList<String> lines) {
+    int calculate(FuncList<String> lines) {
         return lines.mapToInt(this::calculateTotal).sum();
     }
     
@@ -66,7 +66,7 @@ public class Day3Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println(result);
         assertAsString("161", result);
     }
@@ -74,7 +74,7 @@ public class Day3Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println(result);
         assertAsString("181345830", result);
     }

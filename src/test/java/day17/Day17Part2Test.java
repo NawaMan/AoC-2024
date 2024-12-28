@@ -14,7 +14,7 @@ public class Day17Part2Test extends BaseTest {
     
     static final long START = 11781491000L;
     
-    long calulate(FuncList<String> lines) {
+    long calculate(FuncList<String> lines) {
         var code = grab(regex("[0-9]+"), lines.get(4)).mapToInt(parseInt).cache();
         
         for (long a = START; a < Long.MAX_VALUE; a++) {
@@ -57,7 +57,7 @@ public class Day17Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("117440", result);
     }
@@ -65,7 +65,7 @@ public class Day17Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("", result);
     }

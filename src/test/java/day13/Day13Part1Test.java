@@ -82,7 +82,7 @@ public class Day13Part1Test extends BaseTest {
                     cost);
     }
     
-    Object calulate(FuncList<String> lines) throws Exception {
+    Object calculate(FuncList<String> lines) throws Exception {
         var buttonCost  = new AB(3, 1);
         var prizeAdjust = 0L;
         var segments    = lines.segment(4).map(FuncList::toCache).cache();
@@ -98,7 +98,7 @@ public class Day13Part1Test extends BaseTest {
     public void testExample() throws Exception {
         var start = System.currentTimeMillis();
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("Run for: " + (System.currentTimeMillis() - start) + "ms");
         println("result: " + result);
         assertAsString("480", result);
@@ -108,7 +108,7 @@ public class Day13Part1Test extends BaseTest {
     public void testProd() throws Exception {
         var start = System.currentTimeMillis();
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         println("Run for: " + (System.currentTimeMillis() - start) + "ms");
         assertAsString("39748", result);

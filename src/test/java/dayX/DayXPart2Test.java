@@ -13,7 +13,7 @@ import functionalj.list.FuncList;
 public class DayXPart2Test extends BaseTest {
     
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         lines.forEach(this::println);
         println();
         
@@ -25,7 +25,7 @@ public class DayXPart2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("", result);
     }
@@ -34,7 +34,7 @@ public class DayXPart2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("", result);
     }

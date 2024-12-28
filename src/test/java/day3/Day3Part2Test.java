@@ -41,7 +41,7 @@ public class Day3Part2Test extends BaseTest {
     Pattern commandPattern = regex("(mul\\([0-9]{1,3},[0-9]{1,3}\\)|do\\(\\)|don't\\(\\))");
     Pattern numberPattern  = regex("[0-9]+");
     
-    int calulate(FuncList<String> lines) {
+    int calculate(FuncList<String> lines) {
         var code = lines.join(" ");
         
         return grab(commandPattern, code)
@@ -99,7 +99,7 @@ public class Day3Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println(result);
         assertAsString("48", result);
     }
@@ -107,7 +107,7 @@ public class Day3Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println(result);
         assertAsString("98729041", result);
     }

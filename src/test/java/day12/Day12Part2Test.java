@@ -162,7 +162,7 @@ public class Day12Part2Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var grid = new Grid(lines);
         return grid.groups().sumToInt(Group::fencePrice);
     }
@@ -172,7 +172,7 @@ public class Day12Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("1206", result);
     }
@@ -180,7 +180,7 @@ public class Day12Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("851994", result);
     }

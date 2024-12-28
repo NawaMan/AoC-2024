@@ -11,7 +11,7 @@ import functionalj.map.FuncMap;
 
 public class Day19Part2Test extends BaseTest {
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var availables = grab(regex("[a-z]+"), lines.get(0))
                        .groupingBy (line -> (Character)line.charAt(0))
                        .mapValue   (list -> list.map(String.class::cast))
@@ -60,7 +60,7 @@ public class Day19Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("16", result);
     }
@@ -68,7 +68,7 @@ public class Day19Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("777669668613191", result);
     }

@@ -22,7 +22,7 @@ import functionalj.tuple.Tuple3;
 
 public class Day24Part2Test extends BaseTest {
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         // Input of any expression is always right and output may be wrong.
         
         var logicCode
@@ -217,7 +217,7 @@ public class Day24Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("z00,z01,z02,z05", result);
     }
@@ -225,7 +225,7 @@ public class Day24Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("", result);
     }

@@ -99,7 +99,7 @@ public class Day11Part1Test extends BaseTest {
     }
     
     
-    Object calulate(FuncList<String> lines, int times) {
+    Object calculate(FuncList<String> lines, int times) {
         return grab(regex("[0-9]+"), lines.get(0))
                 .map(BigInteger::new)
                 .sumToLong(num -> stoneCount(show("num: ", num), times));
@@ -108,7 +108,7 @@ public class Day11Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines, 25);
+        var result = calculate(lines, 25);
         println("result: " + result);
         assertAsString("55312", result);
     }
@@ -117,7 +117,7 @@ public class Day11Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines, 25);
+        var result = calculate(lines, 25);
         println("result: " + result);
         assertAsString("194482", result);
     }

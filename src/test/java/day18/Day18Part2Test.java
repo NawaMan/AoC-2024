@@ -201,7 +201,7 @@ public class Day18Part2Test extends BaseTest {
         return new Graph(grid, start, end, banches, map);
     }
     
-    long calulate(int width, int height, int firstBytes, FuncList<String> input, boolean showGrid) {
+    long calculate(int width, int height, int firstBytes, FuncList<String> input, boolean showGrid) {
         var inputByRow
                 = input
                 .limit     (firstBytes)
@@ -240,7 +240,7 @@ public class Day18Part2Test extends BaseTest {
     public void testExample() {
         var lines  = readAllLines();
         for (int i = 12; i < lines.size(); i++) {
-            var result = calulate(7, 7, i, lines, true);
+            var result = calculate(7, 7, i, lines, true);
             println("result: " + result);
             
             if (Math.abs(result) > 23372036854775799L) {
@@ -907,7 +907,7 @@ public class Day18Part2Test extends BaseTest {
 //        
         for (int i = 2914; i < 2916/*lines.size()*/; i++) {
             println("Drop at: " + lines.get(i));
-            var result = calulate(71, 71, i, lines, i == 2914);
+            var result = calculate(71, 71, i, lines, i == 2914);
             println();
             println("index: " + i + ", result:" + result);
             

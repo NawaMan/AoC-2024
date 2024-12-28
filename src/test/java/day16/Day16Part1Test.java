@@ -278,7 +278,7 @@ public class Day16Part1Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var grid = Grid.from(lines);
         
         fillDeadEnds(grid);
@@ -297,7 +297,7 @@ public class Day16Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("7036", result);
     }
@@ -305,7 +305,7 @@ public class Day16Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("66404", result);
     }

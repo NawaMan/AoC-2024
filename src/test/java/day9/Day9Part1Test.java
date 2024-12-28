@@ -86,7 +86,7 @@ import functionalj.list.intlist.IntFuncList;
 public class Day9Part1Test extends BaseTest {
     
     
-    BigInteger calulateChecksum(FuncList<String> lines) {
+    BigInteger calculateChecksum(FuncList<String> lines) {
         // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
         var line = IntFuncList.from(lines.get(0).chars()).map(i -> i - '0').cache();
         
@@ -122,7 +122,7 @@ public class Day9Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulateChecksum(lines);
+        var result = calculateChecksum(lines);
         println("result: " + result);
         assertAsString("1928", result);
     }
@@ -130,7 +130,7 @@ public class Day9Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulateChecksum(lines);
+        var result = calculateChecksum(lines);
         println("result: " + result);
         assertAsString("6216544403458", result);
     }

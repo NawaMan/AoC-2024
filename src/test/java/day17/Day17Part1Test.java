@@ -130,7 +130,7 @@ public class Day17Part1Test extends BaseTest {
     static FuncList<OperatorBody> operators = FuncList.of(Adv, Bxl, Bst, Jnz, Bxc, Out, Bdv, Cdv);
     
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         lines.forEach(this::println);
         println();
         
@@ -188,7 +188,7 @@ public class Day17Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("4,6,3,5,6,3,5,2,1,0", result);
     }
@@ -196,7 +196,7 @@ public class Day17Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("6,2,7,2,3,1,6,0,5", result);
     }

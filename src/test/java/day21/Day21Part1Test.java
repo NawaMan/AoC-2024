@@ -24,10 +24,10 @@ public class Day21Part1Test extends BaseTest {
     static Func1<FuncList<FuncList<String>>, FuncList<FuncList<String>>> 
             cartesianProduct = f(Day21Part1Test::cartesianProduct);
     
-    record Position(int row, int col) {}
-    record Movement(int row, int col) {}
+    static record Position(int row, int col) {}
+    static record Movement(int row, int col) {}
     
-    abstract class KeyPad {
+    static abstract class KeyPad {
         
         private final FuncMap<String, Position> keyToPos;
          
@@ -84,7 +84,7 @@ public class Day21Part1Test extends BaseTest {
         }
     }
     
-    class NumberPad extends KeyPad {
+    static class NumberPad extends KeyPad {
         
         static FuncMap<String, Position> keyToPos
                 = new FuncMapBuilder<String, Position>()
@@ -101,7 +101,7 @@ public class Day21Part1Test extends BaseTest {
         }
     }
     
-    class ArrowPad extends KeyPad {
+    static class ArrowPad extends KeyPad {
         
         static FuncMap<String, Position> keyToPos
                 = new FuncMapBuilder<String, Position>()
@@ -180,11 +180,11 @@ public class Day21Part1Test extends BaseTest {
         return list.map(FuncList::from);
     }
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var doorPad   = new NumberPad();
         var robot1Pad = new ArrowPad ();
         var robot2Pad = new ArrowPad ();
-        var calulate  = f((String target) -> {
+        var calculate  = f((String target) -> {
             doorPad.reset();
             robot1Pad.reset();
             robot2Pad.reset();
@@ -199,7 +199,7 @@ public class Day21Part1Test extends BaseTest {
             println(target + ": " + (long)shorest.get().length() + " -- " + numberPart);
             return numberPart * (long)shorest.get().length();
         });
-        return lines.sumToLong(calulate::apply);
+        return lines.sumToLong(calculate::apply);
     }
     
     //== Test ==
@@ -207,7 +207,7 @@ public class Day21Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("126384", result);
     }
@@ -215,7 +215,7 @@ public class Day21Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("188384", result);
     }

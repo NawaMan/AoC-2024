@@ -16,7 +16,7 @@ public class Day13Part2Test extends BaseTest {
     
     // Must of the code is in part 1 : Day13Part1Test
     
-    Object calulate(FuncList<String> lines) throws Exception {
+    Object calculate(FuncList<String> lines) throws Exception {
         var buttonCost  = new AB(3, 1);
         var prizeAdjust = PRIZE_OFFSET;
         var segments    = lines.segment(4).map(FuncList::toCache).cache();
@@ -34,7 +34,7 @@ public class Day13Part2Test extends BaseTest {
     public void testProd() throws Exception {
         var start = System.currentTimeMillis();
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("74478585072604", result);
         println("Run for: " + (System.currentTimeMillis() - start) + "ms");

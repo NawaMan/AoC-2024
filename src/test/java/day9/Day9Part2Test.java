@@ -46,7 +46,7 @@ import functionalj.tuple.IntIntTuple;
  */
 public class Day9Part2Test extends BaseTest {
     
-    BigInteger calulate(FuncList<String> lines) {
+    BigInteger calculate(FuncList<String> lines) {
         var diskMap
                 = IntFuncList.from(lines.get(0).chars())
                 .map(i -> i - '0')
@@ -110,7 +110,7 @@ public class Day9Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("2858", result);
     }
@@ -118,7 +118,7 @@ public class Day9Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("6237075041489", result);
     }

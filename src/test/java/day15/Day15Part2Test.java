@@ -207,7 +207,7 @@ public class Day15Part2Test extends BaseTest {
     }
     
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var warehouse = new Warehouse(lines);
         println(warehouse);
         println();
@@ -238,7 +238,7 @@ public class Day15Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("9021", result);
     }
@@ -247,7 +247,7 @@ public class Day15Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("", result);
     }

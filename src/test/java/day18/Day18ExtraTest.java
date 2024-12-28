@@ -326,7 +326,7 @@ public class Day18ExtraTest implements AocCommon {
         return new Graph(grid, start, end, banches, map);
     }
 //    
-//    long calulate(int width, int height, int firstBytes, FuncList<String> input, boolean showGrid) {
+//    long calculate(int width, int height, int firstBytes, FuncList<String> input, boolean showGrid) {
 //        var inputByRow
 //                = input
 //                .limit     (firstBytes)

@@ -32,7 +32,7 @@ public class Day22Part1Test extends BaseTest {
         return secret;
     }
     
-    Object calulate(FuncList<String> lines, int loop) {
+    Object calculate(FuncList<String> lines, int loop) {
         lines.forEach(this::println);
         println();
         
@@ -44,7 +44,7 @@ public class Day22Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines, 2000);
+        var result = calculate(lines, 2000);
         println("result: " + result);
         assertAsString("37327623", result);
     }
@@ -52,7 +52,7 @@ public class Day22Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines, 2000);
+        var result = calculate(lines, 2000);
         println("result: " + result);
         assertAsString("14273043166", result);
     }

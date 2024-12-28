@@ -145,7 +145,7 @@ public class Day20Part1Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines, int allowCheat, int atLeastSaved) {
+    Object calculate(FuncList<String> lines, int allowCheat, int atLeastSaved) {
         var grid  = Grid.from(lines);
         var graph = Graph.from(grid);
         
@@ -170,7 +170,7 @@ public class Day20Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines, 2, 100);
+        var result = calculate(lines, 2, 100);
         println("result: " + result);
         assertAsString("0", result);
     }
@@ -178,7 +178,7 @@ public class Day20Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines, 2, 100);
+        var result = calculate(lines, 2, 100);
         println("result: " + result);
         assertAsString("1317", result);
     }

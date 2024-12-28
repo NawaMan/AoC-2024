@@ -116,7 +116,7 @@ public class Day10Part1Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var grid   = new Grid(lines);
         var starts = grid.allPositions((r, c, ch) -> (ch == 0) ? new Position(r, c): null);
         return starts.mapToInt(start -> seachForTails(grid, start, 0, 0, 0).distinct().size()).sum();
@@ -141,7 +141,7 @@ public class Day10Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("36", result);
     }
@@ -149,7 +149,7 @@ public class Day10Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("430", result);
     }

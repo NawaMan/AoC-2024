@@ -193,7 +193,7 @@ public class Day18Part1Test extends BaseTest {
         return new Graph(grid, start, end, banches, map);
     }
     
-    Object calulate(int width, int height, int firstBytes, FuncList<String> input) {
+    Object calculate(int width, int height, int firstBytes, FuncList<String> input) {
         var inputByRow
                 = input
                 .limit     (firstBytes)
@@ -230,7 +230,7 @@ public class Day18Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(7, 7, 12, lines);
+        var result = calculate(7, 7, 12, lines);
         println("result: " + result);
         assertAsString("22", result);
     }
@@ -238,7 +238,7 @@ public class Day18Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(71, 71, 1024, lines);
+        var result = calculate(71, 71, 1024, lines);
         println("result: " + result);
         assertAsString("340", result);
     }

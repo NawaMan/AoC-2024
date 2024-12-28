@@ -152,7 +152,7 @@ public class Day15Part1Test extends BaseTest {
         }
     }
     
-    Object calulate(FuncList<String> lines) {
+    Object calculate(FuncList<String> lines) {
         var grid      = new Grid(lines.acceptUntil(""::equals));
         var warehouse = new Warehouse(grid);
         println(warehouse);
@@ -179,7 +179,7 @@ public class Day15Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("10092", result);
     }
@@ -187,7 +187,7 @@ public class Day15Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calulate(lines);
+        var result = calculate(lines);
         println("result: " + result);
         assertAsString("1463512", result);
     }
