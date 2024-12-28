@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -35,20 +36,66 @@ public class Day21Part1Test extends BaseTest {
     }
     
     interface Pad {
-        boolean  moveTo(String direction, Consumer<String> action);
+        boolean  moveTo(char direction, Consumer<String> action);
         String   currentKey();
+        void     currentKey(String key);
         Position currentPosition();
         Position positionOf(String key);
         
         default boolean walkTo(String step, Consumer<String> action) {
             return FuncList.of(step.split(""))
-                    .allMatch(each -> moveTo(each, action));
+                    .allMatch(each -> moveTo(each.charAt(0), action));
         }
         
         String toString(int lineIndex);
         
         default Movement movementTo(String key) {
-            return walk(currentPosition(), positionOf(key));
+            var currentPos = currentPosition();
+            var targetPos  = positionOf(key);
+            return walk(currentPos, targetPos);
+        }
+        
+        boolean isValidPosition(int row, int col);
+        
+        default boolean validateStep(String startKey, String step) {
+            var savedCurrent = currentKey();
+            var currPostion  = positionOf(startKey);
+            var currRow = currPostion.row;
+            var currCol = currPostion.col;
+            
+            var isValid = true;
+            for (var walk : step.split("")) {
+                var direction = walk.charAt(0);
+                if (direction == 'A') {
+                    return true;
+                }
+                
+                int diffRow = 0;
+                int diffCol = 0;
+                if      (direction == '^') diffRow--;
+                else if (direction == 'v') diffRow++;
+                else if (direction == '>') diffCol++;
+                else if (direction == '<') diffCol--;
+                
+                int newRow = currRow + diffRow;
+                int newCol = currCol + diffCol;
+                if (!isValidPosition(newRow, newCol)) {
+//                    System.out.println("Not valid from curr(" + currRow + "," + currCol + ") new(" + newRow + "," + newCol + ") via direction:" + direction + " step:" + step);
+                    
+                    isValid = false;
+                    break;
+                }   
+                currRow = newRow;
+                currCol = newCol;
+            }
+            
+            currentKey(savedCurrent);
+            
+            if (!isValid) {
+//                System.out.println("Invalid step: startKey=" + startKey + ", step=" + step);
+            }
+            
+            return isValid;
         }
     }
     
@@ -81,34 +128,84 @@ public class Day21Part1Test extends BaseTest {
         @Override public Position currentPosition()      { return numberPad.get(current); }
         @Override public Position positionOf(String key) { return numberPad.get(key);     }
 
+        @Override public void currentKey(String key) {
+            this.current = key;
+        }
+        
+        @Override public boolean isValidPosition(int row, int col) {
+            var isValid = true;
+            if ((row < 0) || (row >= 4))
+                isValid = false;
+            else if ((col < 0) || (col >= 3))
+                isValid = false;
+            else if ((row == 3) && (col == 0))
+                isValid = false;
+            else isValid = true;
+            
+            return isValid;
+        }
+
+//        @Override
+//        public boolean moveTo(char direction, Consumer<String> action) {
+//            System.out.print("direction: " + direction);
+//            
+//            if (direction == 'A') {
+//                if (action != null)
+//                    action.accept(current);
+//                System.out.println();
+//                return true;
+//            }
+//            
+//            int diffRow = 0;
+//            int diffCol = 0;
+//            if      (direction == '^') diffRow--;
+//            else if (direction == 'v') diffRow++;
+//            else if (direction == '>') diffCol++;
+//            else if (direction == '<') diffCol--;
+//            
+//            var curPos = numberPad.get(current);
+//            int newRow = curPos.row + diffRow;
+//            int newCol = curPos.col + diffCol;
+//            if ((newRow == 3) && (newCol == 0))
+//                return false;
+//            
+//            var newPos = new Position(newRow, newCol);
+//            System.out.print(", new position: " + newPos);
+//            
+//            var keyPoses = numberPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey());
+//            System.out.print(", key position: " + keyPoses);
+//            if (keyPoses.isEmpty())
+//                println(", newPos: " + newPos);
+//            
+//            current = keyPoses.get(0);
+//            System.out.println(", current position: " + current);
+//            
+//            return true;
+//        }
+        
         @Override
-        public boolean moveTo(String direction, Consumer<String> action) {
-            if (direction.equals("A")) {
-                if (action != null)
-                    action.accept(current);
+        public boolean moveTo(char direction, Consumer<String> action) {
+            if (direction == 'A') {
+                action.accept(current);
                 return true;
             }
             
             int diffRow = 0;
             int diffCol = 0;
-            if      (direction.equals("^")) diffRow--;
-            else if (direction.equals("v")) diffRow++;
-            else if (direction.equals(">")) diffCol++;
-            else if (direction.equals("<")) diffCol--;
+            if      (direction == '^') diffRow--;
+            else if (direction == 'v') diffRow++;
+            else if (direction == '>') diffCol++;
+            else if (direction == '<') diffCol--;
             
             var curPos = numberPad.get(current);
-            int newRow = curPos.row + diffRow;
-            int newCol = curPos.col + diffCol;
-            if ((newRow == 3) && (newCol == 0))
-                return false;
+            var newPos = new Position(curPos.row + diffRow, curPos.col + diffCol);
+//            System.out.println(name + ": direction: " + direction + ", curPos: " + curPos + ", newPos: " + newPos);
             
-            var newPos = new Position(newRow, newCol);
-            var keyPoses = numberPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey());
-            if (keyPoses.isEmpty())
-                println("newPos: " + newPos);
+            var filtered = numberPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey());
+//            if (filtered.isEmpty())
+//                println("New position key is missing for position: " + newPos);
             
-            current = keyPoses.get(0);
-            
+            current = filtered.get(0);
             return true;
         }
 
@@ -127,6 +224,11 @@ public class Day21Part1Test extends BaseTest {
                     """;
             var lines = FuncList.of(text.split("\n"));
             return lines.orElse(lineIndex, "             ").replaceAll("\\Q" + current + "\\E", BOLD + BLUE + current + RESET);
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
     }
 
@@ -152,30 +254,71 @@ public class Day21Part1Test extends BaseTest {
         @Override public String   currentKey()           { return current; }
         @Override public Position currentPosition()      { return arrowPad.get(current); }
         @Override public Position positionOf(String key) { return arrowPad.get(key);     }
+
+        @Override public void currentKey(String key) {
+            this.current = key;
+        }
         
+        @Override public boolean isValidPosition(int row, int col) {
+            var isValid = true;
+            if ((row < 0) || (row >= 2))
+                isValid = false;
+            else if ((col < 0) || (col >= 3))
+                isValid = false;
+            else if ((row == 0) && (col == 0))
+                isValid = false;
+            else isValid = true;
+            
+            return isValid;
+        }
+        
+//        @Override
+//        public boolean moveTo(char direction, Consumer<String> action) {
+//            if (direction == 'A') {
+//                action.accept(current);
+//                return true;
+//            }
+//            
+//            int diffRow = 0;
+//            int diffCol = 0;
+//            if      (direction == '^') diffRow--;
+//            else if (direction == 'v') diffRow++;
+//            else if (direction == '>') diffCol++;
+//            else if (direction == '<') diffCol--;
+//            
+//            var curPos = arrowPad.get(current);
+//            int newRow = curPos.row + diffRow;
+//            int newCol = curPos.col + diffCol;
+//            if ((newRow == 0) && (newCol == 0))
+//                return false;
+//            
+//            var newPos = new Position(newRow, newCol);
+//            current = arrowPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey()).get(0);
+//            
+//            return true;
+//        }
         @Override
-        public boolean moveTo(String direction, Consumer<String> action) {
-            if (direction.equals("A")) {
+        public boolean moveTo(char direction, Consumer<String> action) {
+            if (direction == 'A') {
                 action.accept(current);
                 return true;
             }
             
             int diffRow = 0;
             int diffCol = 0;
-            if      (direction.equals("^")) diffRow--;
-            else if (direction.equals("v")) diffRow++;
-            else if (direction.equals(">")) diffCol++;
-            else if (direction.equals("<")) diffCol--;
+            if      (direction == '^') diffRow--;
+            else if (direction == 'v') diffRow++;
+            else if (direction == '>') diffCol++;
+            else if (direction == '<') diffCol--;
             
             var curPos = arrowPad.get(current);
-            int newRow = curPos.row + diffRow;
-            int newCol = curPos.col + diffCol;
-            if ((newRow == 0) && (newCol == 0))
-                return false;
+            var newPos = new Position(curPos.row + diffRow, curPos.col + diffCol);
+//            System.out.println(name + ": direction: " + direction + ", curPos: " + curPos + ", newPos: " + newPos);
+            var filtered = arrowPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey());
+//            if (filtered.isEmpty())
+//                println("New position key is missing for position: " + newPos);
             
-            var newPos = new Position(newRow, newCol);
-            current = arrowPad.entries().filter(e -> e.getValue().equals(newPos)).map(e -> e.getKey()).get(0);
-            
+            current = filtered.get(0);
             return true;
         }
 
@@ -191,6 +334,11 @@ public class Day21Part1Test extends BaseTest {
             var lines = FuncList.of(text.split("\n"));
             return lines.orElse(lineIndex, "             ").replaceAll("\\Q" + current + "\\E", BOLD + BLUE + current + RESET);
         }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
     
     Object calulate(FuncList<String> lines) {
@@ -200,6 +348,9 @@ public class Day21Part1Test extends BaseTest {
         
         return lines
                 .mapToLong(target -> {
+                    doorPad.current   = "A";
+                    robot1Pad.current = "A";
+                    robot2Pad.current = "A";
                     var shotestLenght = shortestPathForKey(doorPad, robot1Pad, robot2Pad, target);
                     var numberPart    = Long.parseLong(target.replaceAll("[^0-9]+", ""));
                     println(target + ": " + shotestLenght + " -- " + numberPart);
@@ -327,10 +478,29 @@ public class Day21Part1Test extends BaseTest {
         var shorest
                 = Pipeable.of(target)
                 .pipeTo (k -> determineKeyPressed(k, doorPad))
+                .pipe   (p -> {
+                    if (p.isEmpty())
+                        println("No path at the door for : " + target);
+                    return p;
+                })
                 .flatMap(k -> determineKeyPressed(k, robot1Pad))
+                .pipe   (p -> {
+                    if (p.isEmpty())
+                        println("No path at robot1 for : " + target);
+                    return p;
+                })
                 .flatMap(k -> determineKeyPressed(k, robot2Pad))
+                .pipe   (p -> {
+                    if (p.isEmpty())
+                        println("No path at robot2 for : " + target);
+                    return p;
+                })
                 .minBy(String::length)
                 ;
+        if (shorest.isEmpty()) {
+            println("No path for : " + target);
+        }
+        
         var minLength = shorest.get().length();
         println(shorest + ": " + minLength);
         return (long)minLength;
@@ -338,10 +508,20 @@ public class Day21Part1Test extends BaseTest {
 
     private FuncList<String> determineKeyPressed(String target, Pad keypad) {
         return FuncList.of(target.split(""))
-        .map (key -> keypad.movementTo(key))
-        .map (mov -> generateCombinations(mov))
-        .map (cmb -> cmb.map(p -> p + "A"))
-        .map (cmd -> cmd.filter(step -> keypad.walkTo(step, null)).cache())
+        .map(key -> {
+            var str = keypad.currentKey();
+            var mov = keypad.movementTo(key);
+            var cmb = generateCombinations(mov);
+//            println("keypad: " + keypad + ", key: " + key + ", cmb" + cmb);
+            var seq = cmb
+                    .map   (stp -> stp + "A")
+                    .filter(stp -> {
+                        var valid = keypad.validateStep(str, stp);
+                        return valid;
+                    });
+            keypad.currentKey(key);
+            return seq;
+        })
         .pipe(this::cartesianProduct)
         .map (FuncList::join)
         .cache();
@@ -349,10 +529,144 @@ public class Day21Part1Test extends BaseTest {
     
     @Test
     public void testExample() {
+//        Optional[<v<AA>A^>AvAA<^A>A<v<A>^>AvA^Av<A^>A<v<A^>A>AAvA^Av<A<A>^>AAA<A>vA^A]: 68
+//        029A: 68 -- 29
+//        Optional[<v<A>^>AAAvA^A<v<AA>A^>AvAA<^A>Av<A<A>^>AAA<A>vA^Av<A^>A<A>A]: 60
+//        980A: 60 -- 980
+//        Optional[<v<AA>A^>AA<A>vA^AvA^A<v<A>^>AAvA^Av<A^>AA<A>Av<A<A>^>AAA<A>vA^A]: 64
+//        179A: 64 -- 179
+//        Optional[<v<AA>A^>AA<A>vA^AAvA^Av<A^>A<A>Av<A^>A<A>Av<A<A>^>AA<A>vA^A]: 60
+//        456A: 60 -- 456
+//        Optional[<v<A>^>AvA^A<v<AA>A^>AA<A>vA^AAvA^Av<A^>AA<A>Av<A<A>^>AAA<A>vA^A]: 64
+//        379A: 64 -- 379
+
+//      Optional[<v<AA>A^>AvAA<^A>A<v<A>^>AvA^Av<A^>A<v<A^>A>AAvA^Av<A<A>^>AAA<A>vA^A]: 68
+//      029A: 68 -- 29
+//      Optional[<v<A>^>AAAvA^A<v<AA>A^>AvAA<^A>Av<A<A>^>AAA<A>vA^Av<A^>A<A>A]: 60
+//      980A: 60 -- 980
+//      Optional[<v<AA>A^>AA<A>vA^AvA^A<v<A>^>AAvA^Av<A^>AA<A>Av<A<A>^>AAA<A>vA^A]: 64
+//      179A: 64 -- 179
+//      Optional[<v<AA>A^>AA<A>vA^AAvA^Av<A^>A<A>Av<A^>A<A>Av<A<A>^>AA<A>vA^A]: 60
+//      456A: 60 -- 456
+//      Optional[<v<A>^>AvA^A<v<AA>A^>AA<A>vA^AAvA^Av<A^>AA<A>Av<A<A>^>AAA<A>vA^A]: 64
+//      379A: 64 -- 379
+        
+//      var doorPad   = new NumberPad(   "    DoorPad", "A");
+//      var robot1Pad = new ArrowPad ("  Rbt1Pad", "A");
+//      var robot2Pad = new ArrowPad ("Rbt2Pad", "A");
+      
+//      var humanPress = "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A";
+//      var humanPress = "v<<A>>^AvA^Av<<A>>^AAv<A<A>>^AAvAA^<A>Av<A>^AA<A>Av<A<A>>^AAAvA^<A>A";
+      
+//      var humanPress = "<v<AA>A^>AA<A>vA^AvA^A<v<A>^>AAvA^Av<A^>AA<A>Av<A<A>^>AAA<A>vA^A";
+//      var step = new AtomicInteger();
+//      for (var humanKey : humanPress.split("")) {
+//          println("move: " + humanKey);
+//          robot2Pad.moveTo(humanKey.charAt(0), key1 -> 
+//              robot1Pad.moveTo(key1.charAt(0), keyDoor -> 
+//                  doorPad.moveTo(keyDoor.charAt(0), num -> {
+//                      println();
+//                      println("Step: " + step);
+//                      println("Door pressed: " + num);
+//                      println();
+//                  })));
+//          
+//          for (int i = 0; i < 10; i++) {
+//              System.out.println(robot2Pad.toString(i) + "    " + robot1Pad.toString(i) + "    " + doorPad.toString(i));
+//          }
+//          step.incrementAndGet();
+//      }
+        
+//        ==| testExample |==
+//        Optional[<A^A>^^AvvvA]: 12
+//        029A: 12 -- 29
+//        Optional[^^^A<AvvvA>A]: 12
+//        980A: 12 -- 980
+//        Optional[<^<A^^A>>AvvvA]: 14
+//        179A: 14 -- 179
+//        Optional[^<^<A>A>AvvA]: 12
+//        456A: 12 -- 456
+//        Optional[^A^<^<A>>AvvvA]: 14
+//        379A: 14 -- 379
+//        result: 25392
+//        --| testExample |--
+      
+//          ==| testExample |==
+//          Optional[<v<A>^>A<A>AvA<^AA>Av<AAA^>A]: 28
+//          029A: 28 -- 29
+//          Optional[<AAA>A<v<A>^>Av<AAA^>AvA^A]: 26
+//          980A: 26 -- 980
+//          Optional[<v<AA^>A>A<AA>AvAA^Av<AAA^>A]: 28
+//          179A: 28 -- 179
+//          Optional[<Av<AA^>A>AvA^AvA^Av<AA^>A]: 26
+//          456A: 26 -- 456
+//          Optional[<A>A<Av<AA^>A>AvAA^Av<AAA^>A]: 28
+//          379A: 28 -- 379
+//          result: 53772
+//          --| testExample |--
+        
+        
+        
+//        var robot1Press = "<v<AA^>A>A<AA>AvAA^Av<AAA^>A]";
+//        var step = new AtomicInteger();
+//        var logs = new ArrayList<String>();
+//        for (var robot1Key : robot1Press.split("")) {
+//            robot1Pad.moveTo(robot1Key.charAt(0), doorKey -> 
+//                doorPad.moveTo(doorKey.charAt(0), num -> {
+//                    println();
+//                    println("Step: " + step);
+//                    println("Door pressed: " + num);
+//                    println();
+//                    logs.add("#" + step + ": " + num);
+//                }));
+//            
+//            for (int i = 0; i < 10; i++) {
+//                System.out.println(doorPad.toString(i));
+//            }
+//            step.incrementAndGet();
+//        }
+//        
+//        for (var log : logs) {
+//            println(log);
+//        }
+        
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
         assertAsString("126384", result);
+        
+//        var doorPad   = new NumberPad("    DoorPad", "A");
+////        var robot1Pad = new ArrowPad ("  Rbt1Pad", "A");
+////        var robot2Pad = new ArrowPad ("Rbt1Pad", "A");
+//        
+//        var target = "379A";
+//        var keypad = doorPad;
+//        
+//        var options
+//            = Pipeable.of(target)
+//            .pipeTo (k -> determineKeyPressed(k, doorPad))
+//            .cache();
+//        
+//        options
+//            .forEach(println);
+//        
+////        println(doorPad.currentKey());
+////        
+////        println(doorPad.walkTo(options.get(0), null));
+////        
+////        FuncList.of(target.split(""))
+////        .map(key -> {
+////            var mov = keypad.movementTo(key);
+////            var cmb = generateCombinations(mov);
+////            var seq = cmb.map(p -> p + "A");
+////            keypad.current = key;
+////            return seq;
+////        })
+////        .pipe(this::cartesianProduct)
+////        .map (FuncList::join)
+////        .cache()
+////        .forEach(println);
+        
     }
     
     @Test
@@ -360,7 +674,7 @@ public class Day21Part1Test extends BaseTest {
         var lines  = readAllLines();
         var result = calulate(lines);
         println("result: " + result);
-        assertAsString("187808", result);
+        assertAsString("188384", result);
     }
     
 }
