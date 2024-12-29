@@ -5,6 +5,17 @@ import org.junit.Test;
 import common.BaseTest;
 import functionalj.list.FuncList;
 
+/**
+ * --- Part Two ---
+ * 
+ * During the bathroom break, someone notices that these robots seem awfully similar to ones built and used at 
+ *   the North Pole. If they're the same type of robots, they should have a hard-coded Easter egg: very rarely, most of 
+ *   the robots should arrange themselves into a picture of a Christmas tree.
+ * 
+ * What is the fewest number of seconds that must elapse for the robots to display the Easter egg?
+ * 
+ * Your puzzle answer was 7753.
+ */
 public class Day14Part2Test extends BaseTest {
     
     record Robot(int x, int y, int vx, int vy) {
@@ -16,7 +27,7 @@ public class Day14Part2Test extends BaseTest {
             return new Robot(newX, newY, vx, vy);
         }
     }
-
+    
     FuncList<Robot> moveRobots(FuncList<String> lines, int wide, int tall, int step) {
         return lines
                 .map  (line  -> grab(regex("-?[0-9]+"), line).map(parseInt))
@@ -24,7 +35,7 @@ public class Day14Part2Test extends BaseTest {
                 .map  (robot -> robot.move(step, wide, tall))
                 .cache();
     }
-
+    
     void draw(int wide, int tall, FuncList<Robot> robots) {
         for (int j = 0; j < tall; j++) {
             for (int i = 0; i < wide; i++) {

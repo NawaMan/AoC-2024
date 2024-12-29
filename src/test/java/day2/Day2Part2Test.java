@@ -62,7 +62,7 @@ public class Day2Part2Test extends BaseTest {
                 .map(diff -> sign*diff)
                 .noneMatch(this::unsafeCondition);
     }
-
+    
     boolean unsafeCondition(int unsignedDiff) {
         return (unsignedDiff <= 0) || (unsignedDiff > 3);
     }

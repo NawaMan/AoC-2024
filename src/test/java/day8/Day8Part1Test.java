@@ -134,11 +134,11 @@ public class Day8Part1Test extends BaseTest {
                 .excludeIn (antennas.map(Antenna::position).toSet())
                 .size      ();
     }
-
+    
     Antenna extractAntenna(int row, RegExMatchResult result) {
         return new Antenna(new Position(row, result.start()), result.group().charAt(0));
     }
-
+    
     FuncList<Position> totalAntinodes(FuncList<Antenna> antennas) {
         return antennas.flatMap(first -> 
                antennas
@@ -147,9 +147,9 @@ public class Day8Part1Test extends BaseTest {
                                        2*second.position.row - first.position.row,
                                        2*second.position.col - first.position.col)));
     }
-
+    
     //== Test ==
-
+    
     @Test
     public void testExample() {
         var lines  = readAllLines();

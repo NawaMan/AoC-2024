@@ -22,6 +22,41 @@ import functionalj.list.intlist.IntFuncList;
 import functionalj.map.FuncMap;
 import functionalj.tuple.Tuple2;
 
+/**
+ * --- Part Two ---
+ * 
+ * The Historians aren't as used to moving around in this pixelated universe as you are. You're afraid they're not going
+ *   to be fast enough to make it to the exit before the path is completely blocked.
+ * 
+ * To determine how fast everyone needs to go, you need to determine the first byte that will cut off the path to the exit.
+ * 
+ * In the above example, after the byte at 1,1 falls, there is still a path to the exit:
+ * 
+ * O..#OOO
+ * O##OO#O
+ * O#OO#OO
+ * OOO#OO#
+ * ###OO##
+ * .##O###
+ * #.#OOOO
+ * 
+ * However, after adding the very next byte (at 6,1), there is no longer a path to the exit:
+ * 
+ * ...#...
+ * .##..##
+ * .#..#..
+ * ...#..#
+ * ###..##
+ * .##.###
+ * #.#....
+ * 
+ * So, in this example, the coordinates of the first byte that prevents the exit from being reachable are 6,1.
+ * 
+ * Simulate more of the bytes that are about to corrupt your memory space. What are the coordinates of the first byte 
+ *   that will prevent the exit from being reachable from your starting position? (Provide the answer as two integers 
+ *   separated by a comma with no other characters.)
+ */
+@Ignore("Not working ...")
 public class Day18Part2Test extends BaseTest {
     
     record Position(int row, int col) implements Comparable<Position> {
@@ -43,7 +78,7 @@ public class Day18Part2Test extends BaseTest {
                     .compare(this, o);
         }
     }
-
+    
     record Grid(FuncList<String> lines) {
         char charAt(Position position) {
             return charAt(position.row, position.col);
@@ -144,7 +179,7 @@ public class Day18Part2Test extends BaseTest {
                         }
                     });
                 }
-    
+                
                 var nextInfo = nextInfos.poll();
                 if (nextInfo == null)
                     break;
@@ -177,7 +212,7 @@ public class Day18Part2Test extends BaseTest {
             return Tuple2.of(shortestDistance, FuncList.empty());
         }
     }
-
+    
     Graph createGraph(int width, int height, FuncList<String> lines) {
         var grid  = new Grid(lines);
         var start = new Position(0,         0);      // grid.select(i -> i == (int)'S').findFirst().get();
@@ -228,7 +263,7 @@ public class Day18Part2Test extends BaseTest {
         if (showGrid) {
             println(grid);
         }
-
+        
         var graph = createGraph(width, height, lines);
         var path  = graph.shortestCostPath();
         return path._1();

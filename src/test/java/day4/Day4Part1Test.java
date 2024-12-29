@@ -67,8 +67,7 @@ public class Day4Part1Test extends BaseTest {
             new RC( 0,  1),                 new RC( 0, -1), 
             new RC( 1,  1), new RC( 1,  0), new RC( 1, -1));
     
-    static record RC(int r, int c) {
-    }
+    static record RC(int r, int c) {}
     
     static record Grid(FuncList<String> lines) {
         char charAt(int r, int c) {

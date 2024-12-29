@@ -3,16 +3,12 @@ package day18;
 import static functionalj.list.intlist.IntFuncList.range;
 import static java.lang.Long.MAX_VALUE;
 import static java.lang.Math.abs;
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
 import static java.util.Comparator.comparing;
 
 import java.util.HashSet;
-import java.util.IllegalFormatWidthException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntPredicate;
 
@@ -21,8 +17,6 @@ import org.junit.Test;
 import common.AocCommon;
 import functionalj.list.FuncList;
 import functionalj.list.FuncListBuilder;
-import functionalj.list.ImmutableFuncList;
-import functionalj.list.intlist.IntFuncList;
 import functionalj.map.FuncMap;
 import functionalj.tuple.Tuple2;
 
@@ -124,7 +118,7 @@ public class Day18ExtraTest implements AocCommon {
     
     static int WIDTH  = 71;
     static int HEIGHT = 71;
-
+    
     /* */
     
     record Position(int row, int col) implements Comparable<Position> {
@@ -146,7 +140,7 @@ public class Day18ExtraTest implements AocCommon {
                     .compare(this, o);
         }
     }
-
+    
     record Grid(String[][] data) {
         String at(Position position) {
             return at(position.row, position.col);
@@ -262,7 +256,7 @@ public class Day18ExtraTest implements AocCommon {
                         }
                     });
                 }
-    
+                
                 var nextInfo = nextInfos.poll();
                 if (nextInfo == null)
                     break;
@@ -303,7 +297,7 @@ public class Day18ExtraTest implements AocCommon {
             return Tuple2.of(shortestDistance, FuncList.empty());
         }
     }
-
+    
     Graph createGraph(Grid grid) {
         var start = new Position(0,         0);      // grid.select(i -> i == (int)'S').findFirst().get();
         var end   = new Position(WIDTH - 1, HEIGHT - 1); //grid.select(i -> i == (int)'E').findFirst().get();
