@@ -42,9 +42,6 @@ public class Day23Part2Test extends BaseTest {
             .distinct()
             .sorted()
             .cache();
-            
-        println(nodes);
-        
         var connections
             = lines
             .map(grab(regex("[a-z]+")))
@@ -53,46 +50,9 @@ public class Day23Part2Test extends BaseTest {
         var links
             = connections
             .groupingBy (pair -> pair.get(0), s -> s.streamPlus().map(pair -> pair.get(1)).sorted().toFuncList());
-        
-        links
-        .entries()
-        .sortedBy(String::valueOf)
-        .forEach(this::println);
-        println();
-        
-//        return links
-//                .entries()
-//                .flatMap(entry -> {
-//                    var key   = entry.getKey();
-//                    var value = entry.getValue();
-//                    return value
-//                            .filter(v -> links.containsKey(v))
-//                            .flatMap(v -> {
-//                                var nexts = links.get(v);
-//                                return nexts
-//                                            .filter(next -> value.contains(next))
-//                                            .map(next -> FuncList.of(key, v, next));
-//                            });
-//                })
-//                .filter(v -> ("," + v.join(",")).contains(",t"))
-//                .distinct()
-//                .sortedBy(String::valueOf)
-//                .peek(v -> println(v))
-//                .size();
-        
-//        var keys = links.keys().cache();
-//        
-////        keys
-////        .map(key -> {
             
-            var graph = new Graph(nodes, links);
-            
-            return links.keys().map(key -> graph.findLargest(key)).sortedBy(g -> -g.size()).findFirst().get().join(",");
-            
-////            return null;
-////        })
-////        .forEach(println);
-//        
+        var graph = new Graph(nodes, links);
+        return links.keys().map(key -> graph.findLargest(key)).sortedBy(g -> -g.size()).findFirst().get().join(",");
     }
     
     record Graph(FuncList<String> nodes, FuncMap<String, FuncList<String>> links) {
@@ -133,19 +93,19 @@ public class Day23Part2Test extends BaseTest {
         public List<String> findLargestClique() {
             List<String> largestClique = new ArrayList<String>();
             Set<String> currentClique = new HashSet<>();
-
+            
             // Backtracking to find all maximal cliques
             findCliques(0, new ArrayList<>(nodes), currentClique, largestClique);
-
+            
             return largestClique;
         }
-
+        
         private void findCliques(int start, List<String> nodeList, Set<String> currentClique, List<String> largestClique) {
             if (currentClique.size() > largestClique.size()) {
                 largestClique.clear();
                 largestClique.addAll(currentClique);
             }
-
+            
             for (int i = start; i < nodeList.size(); i++) {
                 String node = nodeList.get(i);
                 if (isConnectedToClique(node, currentClique)) {
@@ -155,7 +115,7 @@ public class Day23Part2Test extends BaseTest {
                 }
             }
         }
-
+        
         private boolean isConnectedToClique(String node, Set<String> clique) {
             for (String member : clique) {
                 if (!links.getOrDefault(node, FuncList.empty()).contains(member)) {

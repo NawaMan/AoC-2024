@@ -288,13 +288,13 @@ public class Day21Part1Test extends BaseTest {
     
     static FuncList<FuncList<String>> cartesianProduct(FuncList<FuncList<String>> lists) {
         var list = FuncList.from(lists.stream().reduce(
-            List.of(List.of()),
+            List.of(List.<String>of()),
             (acc, nextList) -> acc.stream()
-                .flatMap(existing -> 
+                .flatMap((List<String> existing) -> 
                     nextList
                     .stream()
                     .map(item -> {
-                        List<String> newCombination = new ArrayList<>(existing);
+                        List<String> newCombination = new ArrayList<String>(existing);
                         newCombination.add(item);
                         return newCombination;
                     })
@@ -325,7 +325,6 @@ public class Day21Part1Test extends BaseTest {
                     .minBy(String::length)
                     ;
             var numberPart = Long.parseLong(target.replaceAll("[^0-9]+", ""));
-            println(target + ": " + (long)shorest.get().length() + " -- " + numberPart);
             return numberPart * (long)shorest.get().length();
         });
         return lines.sumToLong(calculate::apply);

@@ -418,11 +418,7 @@ public class Day15Part1Test extends BaseTest {
     Object calculate(FuncList<String> lines) {
         var grid      = new Grid(lines.acceptUntil(""::equals));
         var warehouse = new Warehouse(grid);
-        println(warehouse);
-        
-        var sequence = lines.skipUntil(""::equals).reduce((a, b) -> a + b).get();
-        println(sequence);
-        
+        var sequence  = lines.skipUntil(""::equals).reduce((a, b) -> a + b).get();
         for (int i = 0; i < sequence.length(); i++) {
             char ch = sequence.charAt(i);
                 switch (ch) {
@@ -432,8 +428,6 @@ public class Day15Part1Test extends BaseTest {
                 case '<': { warehouse.moveLeft();  continue; }
             }
         }
-        println(warehouse);
-        
         return warehouse.sumGPS();
     }
     

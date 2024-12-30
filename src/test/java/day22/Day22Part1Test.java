@@ -116,9 +116,6 @@ public class Day22Part1Test extends BaseTest {
     }
     
     Object calculate(FuncList<String> lines, int loop) {
-        lines.forEach(this::println);
-        println();
-        
         return lines
                 .map      (grab(regex("[0-9]+")))
                 .map      (l -> l.get(0))

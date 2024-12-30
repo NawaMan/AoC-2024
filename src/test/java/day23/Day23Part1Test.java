@@ -95,12 +95,6 @@ public class Day23Part1Test extends BaseTest {
                 .map(pair -> pair.sorted())
                 .groupingBy (pair -> pair.get(0), s -> s.streamPlus().map(pair -> pair.get(1)).sorted().toFuncList());
         
-        links
-        .entries()
-        .sortedBy(String::valueOf)
-        .forEach(this::println);
-        println();
-        
         return links
                 .entries()
                 .flatMap(entry -> {
@@ -118,7 +112,6 @@ public class Day23Part1Test extends BaseTest {
                 .filter(v -> ("," + v.join(",")).contains(",t"))
                 .distinct()
                 .sortedBy(String::valueOf)
-                .peek(v -> println(v))
                 .size();
     }
     

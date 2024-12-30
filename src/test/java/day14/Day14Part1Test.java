@@ -160,7 +160,7 @@ public class Day14Part1Test extends BaseTest {
     
     Object calculate(FuncList<String> lines, int wide, int tall, int step) {
         var robots = moveRobots(lines, wide, tall, step);
-        draw(wide, tall, robots);
+//        draw(wide, tall, robots);
         return robots
                 .filter(robot -> (robot.x != (wide / 2)) && (robot.y != (tall / 2)))
                 .groupingBy(robot -> ("(" + (robot.x < wide / 2) + "," + (robot.y < tall / 2) + ")"))

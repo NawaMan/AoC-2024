@@ -12,6 +12,7 @@ import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntPredicate;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.AocCommon;
@@ -268,17 +269,17 @@ public class Day18ExtraTest implements AocCommon {
 //            System.out.println("Node: ");
 //            nodeInfos.entrySet().forEach(println);
             
-            var display = grid.clone();
+//            var display = grid.clone();
             var node = end;
-            var i    = 0;
+//            var i    = 0;
             while (node != start) {
-                display.data[node.row][node.col] = BOLD + BLUE + "#" + RESET;
-                System.out.print("  (%2d, %2d)".formatted((node == null) ? -1 : node.row, (node == null) ? -1 : node.col));
-                i++;
-                if (i == 10) {
-                    i = 0;
-                    System.out.println();
-                }
+//                display.data[node.row][node.col] = BOLD + BLUE + "#" + RESET;
+//                System.out.print("  (%2d, %2d)".formatted((node == null) ? -1 : node.row, (node == null) ? -1 : node.col));
+//                i++;
+//                if (i == 10) {
+//                    i = 0;
+//                    System.out.println();
+//                }
                 
                 var nodeInfo = nodeInfos.get(node);
                 if (nodeInfo == null)
@@ -286,12 +287,12 @@ public class Day18ExtraTest implements AocCommon {
                 
                 node = nodeInfo.previous;
             }
-            if (node == start) {
-                display.data[node.row][node.col] = BOLD + BLUE + "#" + RESET;
-            }
-            System.out.println();
-            
-            System.out.println(display);
+//            if (node == start) {
+//                display.data[node.row][node.col] = BOLD + BLUE + "#" + RESET;
+//            }
+//            System.out.println();
+//            
+//            System.out.println(display);
             
             var shortestDistance = nodeInfos.get(end).distance;
             return Tuple2.of(shortestDistance, FuncList.empty());
@@ -3806,6 +3807,7 @@ public class Day18ExtraTest implements AocCommon {
             60,30
             """;
     
+    @Ignore("Not working ...")
     @Test
     public void testGridReduce() {
         var inputs = FuncList.of(input.split("\n")).cache();

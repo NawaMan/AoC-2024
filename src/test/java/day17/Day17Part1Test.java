@@ -223,9 +223,6 @@ public class Day17Part1Test extends BaseTest {
     
     
     Object calculate(FuncList<String> lines) {
-        lines.forEach(this::println);
-        println();
-        
         var output  = new LongFuncListBuilder();
         var context = new Context(0, 0, 0, out -> { output.add(out); });
         context.A = grab(regex("[0-9]+"), lines.get(0)).map(parseInt).get(0);

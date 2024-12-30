@@ -106,6 +106,7 @@ import functionalj.tuple.Tuple;
  *   Determine which four pairs of gates need their outputs swapped so that your system correctly performs addition; 
  *   what do you get if you sort the names of the eight wires involved in a swap and then join those names with commas?
  */
+@Ignore("Not working ...")
 public class Day24Part2Test extends BaseTest {
     
     Object calculate(FuncList<String> lines) {

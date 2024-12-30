@@ -171,7 +171,7 @@ public class Day11Part1Test extends BaseTest {
     Object calculate(FuncList<String> lines, int times) {
         return grab(regex("[0-9]+"), lines.get(0))
                 .map(BigInteger::new)
-                .sumToLong(num -> stoneCount(show("num: ", num), times));
+                .sumToLong(num -> stoneCount(num, times));
     }
     
     //== Test ==

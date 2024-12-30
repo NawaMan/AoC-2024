@@ -164,21 +164,17 @@ public class Day13Part1Test extends BaseTest {
     
     @Test
     public void testExample() throws Exception {
-        var start = System.currentTimeMillis();
         var lines  = readAllLines();
         var result = calculate(lines);
-        println("Run for: " + (System.currentTimeMillis() - start) + "ms");
         println("result: " + result);
         assertAsString("480", result);
     }
     
     @Test
     public void testProd() throws Exception {
-        var start = System.currentTimeMillis();
         var lines  = readAllLines();
         var result = calculate(lines);
         println("result: " + result);
-        println("Run for: " + (System.currentTimeMillis() - start) + "ms");
         assertAsString("39748", result);
     }
     

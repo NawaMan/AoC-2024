@@ -8,7 +8,6 @@ import functionalj.map.FuncMap;
 
 public class Day19Part1Test extends BaseTest {
     
-    
     Object calculate(FuncList<String> lines) {
         var availables
                 = grab(regex("[a-z]+"), lines.get(0))
@@ -34,12 +33,11 @@ public class Day19Part1Test extends BaseTest {
                        && choices
                            .filter  (choice -> pattern.substring(offset).startsWith(choice))
                            .anyMatch(choice -> isPossible(offset + choice.length(), pattern, availables));
-        println(pattern.substring(offset) + " vs " + choices + " = " + isPossible);
         return isPossible;
     }
     
     //== Test ==
-
+    
     @Test
     public void testExample() {
         var lines  = readAllLines();

@@ -161,7 +161,6 @@ public class Day18Part2Test extends BaseTest {
                 nextInfos.remove(nodeInfos.get(currNode));
                 visiteds.add(currNode);
                 
-//                System.out.println("Current: " + currNode);
                 var nextNodes = graphMap.get(currNode);
                 if (nextNodes != null) {
                     nextNodes.forEach(next -> {
@@ -188,19 +187,8 @@ public class Day18Part2Test extends BaseTest {
                 currDistance = nextInfo.distance;
             }
             
-//            System.out.println("Node: ");
-//            nodeInfos.entrySet().forEach(println);
-            
             var node = end;
-            var i    = 0;
             while (node != start) {
-                System.out.print("  (%2d, %2d)".formatted((node == null) ? "-1" : node.row, (node == null) ? "-1" : node.col));
-                i++;
-                if (i == 10) {
-                    i = 0;
-                    System.out.println();
-                }
-                
                 var nodeInfo = nodeInfos.get(node);
                 if (nodeInfo == null)
                     break;
@@ -215,8 +203,8 @@ public class Day18Part2Test extends BaseTest {
     
     Graph createGraph(int width, int height, FuncList<String> lines) {
         var grid  = new Grid(lines);
-        var start = new Position(0,         0);      // grid.select(i -> i == (int)'S').findFirst().get();
-        var end   = new Position(width - 1, height - 1); //grid.select(i -> i == (int)'E').findFirst().get();
+        var start = new Position(0,         0);
+        var end   = new Position(width - 1, height - 1);
         
         var graphMap = new ConcurrentHashMap<Position, FuncListBuilder<Edge>>();
         var banches  = grid.selectPositions().cache();
@@ -232,7 +220,6 @@ public class Day18Part2Test extends BaseTest {
         });
         
         var map = FuncMap.from(graphMap).mapValue(FuncListBuilder::build);
-//        map.entries().sortedBy(Map.Entry::getKey).forEach(println);
         return new Graph(grid, start, end, banches, map);
     }
     
@@ -245,11 +232,6 @@ public class Day18Part2Test extends BaseTest {
                 .groupingBy(line -> line.get(1))
                 .mapValue  (line -> line.map(IntFuncList.class::cast).map(each -> each.get(0)).sorted())
                 .toImmutableMap();
-        
-//        inputByRow
-//        .entries()
-//        .sortedBy(Map.Entry::getKey)
-//        .forEach(println);
         
         var lines = IntFuncList.range(0, height).mapToObj(row -> {
             var cols = inputByRow.get(row);
@@ -917,29 +899,6 @@ public class Day18Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines = readAllLines();
-//        var path = FuncList.of(knownPath.split("\n")).map(grab(regex("[0-9]+"))).map(each -> each.mapToInt(parseInt)).cache();
-//        var drops = lines.map(grab(regex("[0-9]+"))).map(each -> each.mapToInt(parseInt)).cache();
-//        for (int i = 2912; i < 2924; i++) {
-//            var drop = drops.get(i);
-//            if (!path.contains(drop))
-//                continue;
-//            
-//            var neighbours =
-//                    drops
-//                    .limit(i - 1)
-//                    .filter(n -> ((abs(n.get(0) - drop.get(0)) == 1) && (abs(n.get(1) - drop.get(1)) == 0))
-//                              || ((abs(n.get(0) - drop.get(0)) == 0) && (abs(n.get(1) - drop.get(1)) == 1)))
-//                    .cache();
-//            
-//            if (neighbours.size() != 0) {
-//                println("index: " + i);
-//                println("neighbours: ");
-//                neighbours.map(indent()).forEach(println);
-//                println();
-//            }
-//        }
-//        
-//        
         for (int i = 2914; i < 2916/*lines.size()*/; i++) {
             println("Drop at: " + lines.get(i));
             var result = calculate(71, 71, i, lines, i == 2914);
