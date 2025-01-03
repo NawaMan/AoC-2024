@@ -46,10 +46,10 @@ public class Day3Part1Test extends BaseTest {
     Pattern numberPattern = regex("[0-9]+");
     
     int calculate(FuncList<String> lines) {
-        return lines.mapToInt(this::calculateTotal).sum();
+        return lines.mapToInt(this::calculateLineTotal).sum();
     }
     
-    int calculateTotal(String line) {
+    int calculateLineTotal(String line) {
         return grab(mulPattern, line)
                 .sumToInt(this::calculateMul);
     }

@@ -43,7 +43,6 @@ public class Day3Part2Test extends BaseTest {
     
     int calculate(FuncList<String> lines) {
         var code = lines.join(" ");
-        
         return grab(commandPattern, code)
                 .prepend    ("do()")                                    // -- A
                 .segmentWhen(cmd     -> cmd.startsWith("do"))           // -- B
@@ -82,7 +81,7 @@ public class Day3Part2Test extends BaseTest {
     
     int segmentSum(FuncList<String> segment) {
         return segment
-                .skip(1)    // Skip the first `do()`
+                .skip(1)                        // Skip the first `do()`
                 .mapToInt(this::calculateMul)
                 .sum();
     }
