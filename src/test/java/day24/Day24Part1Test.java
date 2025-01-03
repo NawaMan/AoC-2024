@@ -15,7 +15,7 @@ import functionalj.function.Func1;
 import functionalj.list.FuncList;
 import functionalj.map.FuncMap;
 import functionalj.types.Choice;
-import functionalj.types.choice.Self;
+import functionalj.types.Self;
 
 /**
  * --- Day 24: Crossed Wires ---
@@ -215,6 +215,7 @@ public class Day24Part1Test extends BaseTest {
             
             logicCode
             .map    (capture(LOGIC))
+            .map    (pairs -> pairs.findFirst().get())
             .toMap  (pair -> pair.get("out"),
                      pair -> Node.Eval(
                                  pair.get("out"),
@@ -295,8 +296,9 @@ public class Day24Part1Test extends BaseTest {
         var inputs 
                 = lines
                 .acceptWhile(line -> !line.isEmpty())
-                .map(capture(regex("(?<key>[xy0-9]+): (?<value>[0-9]+)")))
-                .toMap(pair -> pair.get("key"), pair -> parseInt(pair.get("value")))
+                .map        (capture(regex("(?<key>[xy0-9]+): (?<value>[0-9]+)")))
+                .map        (pairs -> pairs.findFirst().get())
+                .toMap      (pair -> pair.get("key"), pair -> parseInt(pair.get("value")))
                 ;
         
         var logicCode = lines

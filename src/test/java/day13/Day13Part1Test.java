@@ -97,7 +97,7 @@ public class Day13Part1Test extends BaseTest {
         return adjustXL(parsedXY, adjustment);
     }
     static XY adjustXL(XY xy, LongUnaryOperator mapper) {
-        return new XY(mapper.applyAsLong(xy.x), mapper.applyAsLong(xy.y)); 
+        return new XY(mapper.applyAsLong(xy.x()), mapper.applyAsLong(xy.y())); 
     }
     
     @Struct
@@ -108,25 +108,25 @@ public class Day13Part1Test extends BaseTest {
         AB cost();
         
         default long maxA() {
-            return max(prize().x / buttonA().x, buttonB().y / buttonA().y) + 1L;
+            return max(prize().x() / buttonA().x(), buttonB().y() / buttonA().y()) + 1L;
         }
         default AB guessAB(long a) {
-            return new AB(a, (prize().x - a*buttonA().x) / buttonB().x);
+            return new AB(a, (prize().x() - a*buttonA().x()) / buttonB().x());
         }
         default long costOf(AB ab) {
-            return ab.a*cost().a + ab.b*cost().b;
+            return ab.a()*cost().a() + ab.b()*cost().b();
         }
         default long minCost1() {
-            var b = (buttonA().y()*prize().x()   - buttonA().x*prize().y())
-                  / (buttonA().y()*buttonB().x() - buttonA().x*buttonB().y());
+            var b = (buttonA().y()*prize().x()   - buttonA().x()*prize().y())
+                  / (buttonA().y()*buttonB().x() - buttonA().x()*buttonB().y());
             var a = (prize().x() - buttonB().x()*b) / buttonA().x();
             
             var isValid = isValid(b, a);
             return isValid ? ((cost().a()*a + cost().b()*b)) : Long.MAX_VALUE;
         }
         default long minCost2() {
-            var a = (buttonB().y*prize().x   - buttonB().x*prize().y())
-                  / (buttonA().x*buttonB().y - buttonA().y*buttonB().x());
+            var a = (buttonB().y()*prize().x()   - buttonB().x()*prize().y())
+                  / (buttonA().x()*buttonB().y() - buttonA().y()*buttonB().x());
             var b = (prize().x() - buttonA().x()*a) / buttonB().x();
             
             var isValid = isValid(b, a);

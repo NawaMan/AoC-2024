@@ -1,6 +1,7 @@
 package day13;
 
 import static day13.Day13Part1Test.newGame;
+//import static day13.Day13Part1Test.newGame;
 import static functionalj.function.Func.f;
 import static functionalj.stream.intstream.IntStreamPlus.loop;
 
@@ -53,9 +54,9 @@ public class Day13Part2Test extends BaseTest {
         var prizeAdjust = PRIZE_OFFSET;
         var segments    = lines.segment(4).map(FuncList::toCache).cache();
         return loop(segments.size())
-                .boxed()
-                .map(i -> newGame(segments.get((int)i), buttonCost, prizeAdjust))
-                .spawn(f(Game::minCost).defer())
+                .boxed    ()
+                .map      (i -> newGame(segments.get((int)i), buttonCost, prizeAdjust))
+                .spawn    (f(Game::minCost).defer())
                 .sumToLong(promise -> promise.getResult().get());
     }
     
