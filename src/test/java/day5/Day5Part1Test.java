@@ -113,8 +113,8 @@ public class Day5Part1Test extends BaseTest {
     int sumOfMiddlePages(FuncList<String> lines) {
         var firstSection = lines.acceptUntil(""::equals);
         var lastSection  = lines.skip       (firstSection.count() + 1);
-        var rules        = firstSection.map(stringsToInts);
-        var updates      = lastSection .map(stringsToInts);
+        var rules        = firstSection.map (stringsToInts);
+        var updates      = lastSection .map (stringsToInts);
         return updates
                 .filter  (update -> correctOrderUpdate(rules, update))
                 .mapToInt(update -> update.get(update.size() / 2))

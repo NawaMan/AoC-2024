@@ -62,22 +62,6 @@ public class Day5Part2Test extends BaseTest {
         });
     }
     
-    /** Quick method to get the middle -- assume rules exists for all pairs */
-    int quickFindMiddle(FuncList<IntFuncList> rules) {
-        // rules        : [[47, 53], [97, 61], [97, 47], [75, 53], [61, 53], [97, 53], [75, 47], [97, 75], [47, 61], [75, 61]]
-        // first pages  : [47, 97, 97, 75, 61, 97, 75, 97, 47, 75]
-        // frequencyMap : {47:2, 97:4, 75:3, 61:1}
-        // sorted       : [61=1, 47=2, 75=3, 97=4]
-        // midPage      :         ^^
-        var firstPages   = rules.map(rule -> rule.get(0));
-        var frequencyMap = firstPages.groupingBy(itself(), list -> list.size());
-        return frequencyMap
-                .entries()
-                .sortedBy(Map.Entry::getValue)
-                .mapToInt(Map.Entry::getKey)
-                .pipe    (keys -> keys.get((keys.size() - 1) / 2));
-    }
-    
     int findMiddlePage(FuncList<IntFuncList> rules) {
         // All pages     : 61,13,29
         // Relevant rules: 61|13  29|13  61|29
@@ -113,6 +97,22 @@ public class Day5Part2Test extends BaseTest {
         
         // Recursively reduce.
         return findMiddlePage(reduceRules); /* */
+    }
+    
+    /** Quick method to get the middle -- assume rules exists for all pairs */
+    int quickFindMiddle(FuncList<IntFuncList> rules) {
+        // rules        : [[47, 53], [97, 61], [97, 47], [75, 53], [61, 53], [97, 53], [75, 47], [97, 75], [47, 61], [75, 61]]
+        // first pages  : [47, 97, 97, 75, 61, 97, 75, 97, 47, 75]
+        // frequencyMap : {47:2, 97:4, 75:3, 61:1}
+        // sorted       : [61=1, 47=2, 75=3, 97=4]
+        // midPage      :         ^^
+        var firstPages   = rules.map(rule -> rule.get(0));
+        var frequencyMap = firstPages.groupingBy(itself(), list -> list.size());
+        return frequencyMap
+                .entries()
+                .sortedBy(Map.Entry::getValue)
+                .mapToInt(Map.Entry::getKey)
+                .pipe    (keys -> keys.get((keys.size() - 1) / 2));
     }
     
     //== Test ==
