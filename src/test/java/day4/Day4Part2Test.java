@@ -44,11 +44,11 @@ import functionalj.list.FuncList;
  */
 public class Day4Part2Test extends BaseTest {
     
-    record Grid(FuncList<String> lines) {
-        char charAt(int r, int c) {
-            if ((r < 0) || (r >= lines.size()))          return '.';
-            if ((c < 0) || (c >= lines.get(r).length())) return '.';
-            return lines.get(r).charAt(c);
+    record Grid(FuncList<String> grid) {
+        char charAt(int row, int col) {
+            if ((row < 0) || (row >= grid.size()))            return '.';
+            if ((col < 0) || (col >= grid.get(row).length())) return '.';
+            return grid.get(row).charAt(col);
         }
     }
     

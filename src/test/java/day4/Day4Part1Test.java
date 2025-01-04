@@ -59,28 +59,31 @@ import functionalj.list.FuncList;
  */
 public class Day4Part1Test extends BaseTest {
     
-    static record RC(int r, int c) {}
+    static record Direction(int row, int col) {}
     
-    static FuncList<RC> allDirections = FuncList.of(
-            new RC(-1,  1), new RC(-1,  0), new RC(-1, -1),
-            new RC( 0,  1),                 new RC( 0, -1), 
-            new RC( 1,  1), new RC( 1,  0), new RC( 1, -1));
+    static FuncList<Direction> allDirections = FuncList.of(
+            new Direction(-1, -1), new Direction(-1,  0), new Direction(-1,  1),
+            new Direction( 0, -1),                        new Direction( 0,  1), 
+            new Direction( 1, -1), new Direction( 1,  0), new Direction( 1,  1));
     
-    static record WordSearch(FuncList<String> lines, FuncList<RC> searchDirections) {
-        char charAt(int r, int c) {
-            if ((r < 0) || (r >= lines.size()))          return '.';
-            if ((c < 0) || (c >= lines.get(r).length())) return '.';
-            return lines.get(r).charAt(c);
+    static record WordSearch(FuncList<String> grid, FuncList<Direction> searchDirections) {
+        char charAt(int row, int col) {
+            if ((row < 0) || (row >= grid.size()))            return '.';
+            if ((col < 0) || (col >= grid.get(row).length())) return '.';
+            return grid.get(row).charAt(col);
         }
         int countWordAt(int row, int col, String word) {
             return searchDirections
-                    .filter(dir -> findWord(row, col, dir, 0, word))
+                    .filter(dir -> findWord(row, col, dir, word))
                     .size();
         }
-        private boolean findWord(int r, int c, RC dir, int at, String word) {
-            return (at >= word.length())
-                || ((charAt(r, c) == word.charAt(at)) 
-                        && findWord(r + dir.r(), c + dir.c(), dir, at + 1, word));
+        private boolean findWord(int row, int col, Direction dir, String word) {
+            return findWord(row, col, dir, 0, word);
+        }
+        private boolean findWord(int row, int col, Direction dir, int index, String word) {
+            return (index >= word.length())
+                || ((charAt(row, col) == word.charAt(index)) 
+                        && findWord(row + dir.row(), col + dir.col(), dir, index + 1, word));
         }
     }
     
