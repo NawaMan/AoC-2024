@@ -63,15 +63,15 @@ public class Day4Part2Test extends BaseTest {
                 }).sum();
     }
     boolean checkX(Grid grid, int row, int col, char before, char mid, char after) {
-        if (grid.charAt(row, col) != mid)
-            return false;
-        
-        if ((grid.charAt(row - 1, col - 1) == before && grid.charAt(row + 1, col + 1) == after)
-         || (grid.charAt(row - 1, col - 1) == after  && grid.charAt(row + 1, col + 1) == before)) {
-            return ((grid.charAt(row - 1, col + 1) == before && grid.charAt(row + 1, col - 1) == after)
-                 || (grid.charAt(row - 1, col + 1) == after  && grid.charAt(row + 1, col - 1) == before));
-        }
-        return false;
+        return (grid.charAt(row, col) == mid)
+            && checkHaftX(grid, row, col, before, after, 1,  1)
+            && checkHaftX(grid, row, col, before, after, 1, -1);
+    }
+    private boolean checkHaftX(Grid grid, int row, int col, char before, char after, int diffRow, int diffCol) {
+        var forward  = grid.charAt(row + diffRow, col + diffCol);
+        var backward = grid.charAt(row - diffRow, col - diffCol);
+        return (backward == before && forward == after)
+            || (backward == after  && forward == before);
     }
     
     //== Test ==

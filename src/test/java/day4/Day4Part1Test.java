@@ -2,13 +2,10 @@ package day4;
 
 import static functionalj.stream.intstream.IntStreamPlus.range;
 
-import java.util.function.IntBinaryOperator;
-
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.stream.intstream.IntStreamPlus;
 
 /**
  * --- Day 4: Ceres Search ---
@@ -62,47 +59,39 @@ import functionalj.stream.intstream.IntStreamPlus;
  */
 public class Day4Part1Test extends BaseTest {
     
+    static record RC(int r, int c) {}
+    
     static FuncList<RC> allDirections = FuncList.of(
             new RC(-1,  1), new RC(-1,  0), new RC(-1, -1),
             new RC( 0,  1),                 new RC( 0, -1), 
             new RC( 1,  1), new RC( 1,  0), new RC( 1, -1));
     
-    static record RC(int r, int c) {}
-    
-    static record Grid(FuncList<String> lines) {
+    static record WordSearch(FuncList<String> lines, FuncList<RC> searchDirections) {
         char charAt(int r, int c) {
             if ((r < 0) || (r >= lines.size()))          return '.';
             if ((c < 0) || (c >= lines.get(r).length())) return '.';
             return lines.get(r).charAt(c);
         }
-        IntStreamPlus visitAll(IntBinaryOperator operator) {
-            var rows = lines.size();
-            var cols = lines.get(0).length();
-            return range(0, rows).flatMapToInt(r -> {
-                        return range(0, cols).mapToInt(c -> {
-                            return operator.applyAsInt(r, c);
-                        });
-                    });
+        int countWordAt(int row, int col, String word) {
+            return searchDirections
+                    .filter(dir -> findWord(row, col, dir, 0, word))
+                    .size();
+        }
+        private boolean findWord(int r, int c, RC dir, int at, String word) {
+            return (at >= word.length())
+                || ((charAt(r, c) == word.charAt(at)) 
+                        && findWord(r + dir.r(), c + dir.c(), dir, at + 1, word));
         }
     }
     
     int countXMas(FuncList<String> lines) {
-        var grid = new Grid(lines);
-        return grid.visitAll((r, c) -> {
-            return (grid.charAt(r, c) == 'X')
-                    ? allDirections.filter(dir -> findWord(grid, r, c, dir, 1, "XMAS")).size()
-                    : 0;
+        var grid = new WordSearch(lines, allDirections);
+        var rows = lines.size();
+        var cols = lines.get(0).length();
+        return range(0, rows).flatMap(row -> {
+            return range(0, cols)
+                    .map(col -> grid.countWordAt(row, col, "XMAS"));
         }).sum();
-    }
-    
-    boolean findWord(Grid grid, int r, int c, RC dir, int at, String word) {
-        if (at >= word.length())
-            return true;
-        
-        r += dir.r;
-        c += dir.c;
-        return grid.charAt(r, c) == word.charAt(at)
-            && findWord(grid, r, c, dir, at + 1, word);
     }
     
     //== Test ==
