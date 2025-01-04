@@ -88,10 +88,10 @@ public class Day4Part1Test extends BaseTest {
         var grid = new WordSearch(lines, allDirections);
         var rows = lines.size();
         var cols = lines.get(0).length();
-        return range(0, rows).flatMap(row -> {
+        return range(0, rows).sum(row -> {
             return range(0, cols)
-                    .map(col -> grid.countWordAt(row, col, "XMAS"));
-        }).sum();
+                    .sum(col -> grid.countWordAt(row, col, "XMAS"));
+        });
     }
     
     //== Test ==

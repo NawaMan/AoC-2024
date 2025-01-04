@@ -56,11 +56,11 @@ public class Day4Part2Test extends BaseTest {
         var grid = new Grid(lines);
         var rows = lines.size();
         var cols = lines.get(0).length();
-        return range(0, rows).mapToInt(row -> {
+        return range(0, rows).sum(row -> {
                     return range(0, cols).filter(col -> {
                         return checkX(grid, row, col, 'M', 'A', 'S');
                     }).size();
-                }).sum();
+                });
     }
     boolean checkX(Grid grid, int row, int col, char before, char mid, char after) {
         return (grid.charAt(row, col) == mid)
