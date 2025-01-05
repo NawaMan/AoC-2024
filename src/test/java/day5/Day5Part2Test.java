@@ -30,11 +30,11 @@ import functionalj.list.intlist.IntFuncList;
  */
 public class Day5Part2Test extends BaseTest {
     
-    int sumOfMiddlePages(FuncList<String> lines) {
-        var firstSection = lines.acceptUntil(""::equals);
-        var lastSection  = lines.skip       (firstSection.count() + 1);
-        var rules        = firstSection.map (stringsToInts);
-        var updates      = lastSection .map (stringsToInts);
+    int sumOfMiddlePages(FuncList<String> allLines) {
+        var ruleLines   = allLines   .acceptUntil(""::equals);
+        var updateLines = allLines   .skip       (ruleLines.count() + 1);
+        var rules       = ruleLines  .map        (stringsToInts);
+        var updates     = updateLines.map        (stringsToInts);
         return updates
                 .filter  (update   -> incorrectUpdate(rules, update))
                 .map     (update   -> relevantRules  (rules, update))

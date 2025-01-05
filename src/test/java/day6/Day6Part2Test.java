@@ -1,18 +1,16 @@
 package day6;
 
-import static day6.Day6Part1Test.OutOfBound;
-import static day6.Day6Part1Test.findStartPosition;
 
+import static common.AocCommon.TwoRanges.loop2;
+
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 
 import common.BaseTest;
-import day6.Day6Part1Test.Direction;
-import day6.Day6Part1Test.Grid;
-import day6.Day6Part1Test.Position;
-import day6.Day6Part1Test.State;
-import day6.Day6Part1Test.Walker;
 import functionalj.list.FuncList;
 
 /**
@@ -127,33 +125,118 @@ import functionalj.list.FuncList;
  */
 public class Day6Part2Test extends BaseTest {
     
+    static final char Obstacle   = '#';
+    static final char Ground     = '.';
+    static final char OutOfBound = 'X';
+    
+    private static final Map<Character, Direction> directBySymbols = new HashMap<>();
+    
+    static enum Direction {
+        North('^', -1,  0),
+        East ('>',  0,  1),
+        South('v',  1,  0),
+        West ('>',  0, -1);
+        
+        final char symbol;
+        final int  nextRow;
+        final int  nextCol;
+        
+        private Direction(char symbol, int nextRow, int nextCol) {
+            this.symbol  = symbol;
+            this.nextRow = nextRow;
+            this.nextCol = nextCol;
+            directBySymbols.put(symbol, this);
+        }
+        
+        static Direction of(char symbol) {
+            return directBySymbols.get(symbol);
+        }
+        
+        Direction turnRight() {
+            return values()[(ordinal() + 1) % 4];
+        }
+    }
+    
+    static record Position(int row, int col) {
+        boolean  isAt(int row, int col) { return (this.row == row) && (this.col == col);             }
+        Position move(Direction dir)    { return new Position(row + dir.nextRow, col + dir.nextCol); }
+    }
+    
+    static record Grid(FuncList<String> lines, Position startPosition, Position obstacle) {
+        char charAt(Position position) {
+            return charAt(position.row, position.col);
+        }
+        char charAt(int row, int col) {
+            if ((row < 0) || (row >= lines.size()))            return OutOfBound;
+            if ((col < 0) || (col >= lines.get(row).length())) return OutOfBound;
+            if (startPosition.isAt(row, col))                  return Ground;
+            if ((obstacle != null) && obstacle.isAt(row, col)) return Obstacle;
+            return lines.get(row).charAt(col);
+        }
+    }
+    
+    static record State(Position position, Direction direction) {}
+    
+    static class Walker {
+        Grid      grid;
+        Position  position;
+        Direction direction;
+        Walker(Grid grid, Position position, Direction direction) {
+            this.grid      = grid;
+            this.direction = direction;
+            this.position  = position;
+        }
+        State state() {
+            return new State(position, direction);
+        }
+        char walk() {
+            var currentSymbol = grid.charAt(position.row, position.col);
+            if (currentSymbol == OutOfBound) return currentSymbol;
+            
+            var nextPosition = position.move(direction);
+            var nextSymbol   = grid.charAt(nextPosition);
+            if (nextSymbol == Obstacle) {
+                this.direction = direction.turnRight();
+                return currentSymbol;
+            }
+            
+            position = nextPosition;
+            return nextSymbol;
+        }
+    }
+    
+    static Position findStartPosition(FuncList<String> lines) {
+        return lines
+                .map  (line    -> Pattern.compile("[><\\^v]").matcher(line))
+                .query(matcher -> matcher.find())
+                .map  (result  -> new Position(result.index(), result.getValue().start()))
+                .first()
+                .get();
+    }
+    
     int countPosibleLoop(FuncList<String> lines) {
         var startPosition  = findStartPosition(lines);
         var startDirection = Direction.of(lines.get(startPosition.row()).charAt(startPosition.col()));
-        
-        var total = 0;
-        for(int row = 0; row < lines.size(); row++) {
-            for(int col = 0; col < lines.get(row).length(); col++) {
-                var block  = new Position(row, col);
-                var grid   = new Grid(lines, startPosition, block);
-                var walker = new Walker(startDirection, startPosition);
-                
-                var visiteds = new HashSet<State>();
-                while (true) {
-                    var state = walker.state();
-                    if (visiteds.contains(state)) {
-                        total++;
-                        break;
-                    }
-                    
-                    visiteds.add(state);
-                    if (walker.walk(grid) == OutOfBound)
-                        break;
-                }
-            }
+        int gridHeight = lines.size();
+        int gridWidth  = lines.get(0).length();
+        return loop2   (gridHeight, gridWidth)
+                .map   ((row, col) -> new Position(row, col))
+                .map   (position   -> new Grid  (lines, startPosition, position))
+                .map   (grid       -> new Walker(grid, startPosition, startDirection))
+                .filter(walker     -> checkIfStuckInLoop(walker))
+                .size();
+    }
+    
+    private boolean checkIfStuckInLoop(Walker walker) {
+        var visiteds = new HashSet<State>();
+        while (true) {
+            var state = walker.state();
+            if (!visiteds.add(state))
+                return true;
+            
+            if (walker.walk() == OutOfBound)
+                return false;
         }
-        
-        return total;
     }
     
     //== Test ==

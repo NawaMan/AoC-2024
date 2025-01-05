@@ -110,11 +110,11 @@ import functionalj.list.intlist.IntFuncList;
  */
 public class Day5Part1Test extends BaseTest {
     
-    int sumOfMiddlePages(FuncList<String> lines) {
-        var firstSection = lines.acceptUntil(""::equals);
-        var lastSection  = lines.skip       (firstSection.count() + 1);
-        var rules        = firstSection.map (stringsToInts);
-        var updates      = lastSection .map (stringsToInts);
+    int sumOfMiddlePages(FuncList<String> allLines) {
+        var ruleLines   = allLines   .acceptUntil(""::equals);
+        var updateLines = allLines   .skip       (ruleLines.count() + 1);
+        var rules       = ruleLines  .map        (stringsToInts);
+        var updates     = updateLines.map        (stringsToInts);
         return updates
                 .filter  (update -> correctOrderUpdate(rules, update))
                 .mapToInt(update -> update.get(update.size() / 2))
@@ -122,6 +122,7 @@ public class Day5Part1Test extends BaseTest {
     }
     
     boolean correctOrderUpdate(FuncList<IntFuncList> rules, IntFuncList update) {
+        // Slower way but use less memory.
         return rules.allMatch(rule -> {
             // update=75,47,61,53,29  intersect  rule=47|29  =>  matchOrder=[47,29]   <---  correct
             // update=75,47,61,53,29  intersect  rule=29|47  =>  matchOrder=[29,47]   <---  incorrect
@@ -130,6 +131,14 @@ public class Day5Part1Test extends BaseTest {
             return (matchOrder.size() != 2)         // irrelevant?
                     || matchOrder.equals(rule);     // correct?
         });
+//        // Faster way but use more memory.
+//        var updatePageIndex = update.toMapRevert();
+//        return rules.allMatch(rule -> {
+//            var firstPage = updatePageIndex.get(rule.get(0));
+//            var laterPage = updatePageIndex.get(rule.get(1));
+//            return ((firstPage == null) || (laterPage == null))
+//                || firstPage < laterPage;
+//        });
     }
     
     //== Test ==

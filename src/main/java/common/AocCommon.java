@@ -1,6 +1,7 @@
 package common;
 
 import static functionalj.lens.Access.theLong;
+import static functionalj.stream.intstream.IntStreamPlus.range;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,14 +11,19 @@ import java.util.regex.Pattern;
 import functionalj.function.Func;
 import functionalj.function.Func1;
 import functionalj.function.FuncUnit1;
+import functionalj.function.IntBiPredicatePrimitive;
 import functionalj.function.IntFunctionPrimitive;
+import functionalj.function.IntIntBiFunction;
 import functionalj.functions.StrFuncs;
 import functionalj.lens.lenses.BooleanAccessPrimitive;
 import functionalj.lens.lenses.IntegerAccessPrimitive;
 import functionalj.lens.lenses.IntegerToBooleanAccessPrimitive;
 import functionalj.lens.lenses.LongAccessPrimitive;
 import functionalj.list.FuncList;
+import functionalj.list.FuncList.Mode;
+import functionalj.list.ImmutableFuncList;
 import functionalj.list.intlist.IntFuncList;
+import functionalj.stream.StreamPlus;
 
 public interface AocCommon {
     
@@ -151,8 +157,54 @@ public interface AocCommon {
         };
     }
     
+    static interface TwoRanges {
+        <T> StreamPlus<T> map   (IntIntBiFunction<T>     mapper);
+        TwoRanges         filter(IntBiPredicatePrimitive predicate);
+        long              count (IntBiPredicatePrimitive predicate);
+        
+        static class Impl implements TwoRanges {
+            final int range1;
+            final int range2;
+            final IntBiPredicatePrimitive predicate;
+            Impl(int range1, int range2, IntBiPredicatePrimitive predicate) {
+                this.range1 = range1;
+                this.range2 = range2;
+                this.predicate
+                        = (predicate == null)
+                        ? ((IntBiPredicatePrimitive)(__,___)->true)
+                        : predicate;
+            }
+            @Override
+            public <T> StreamPlus<T> map(IntIntBiFunction<T> mapper) {
+                return range(0, range1).flatMapToObj(idx1 -> {
+                    return range(0, range2).mapToObj(idx2 -> mapper.apply(idx1, idx2));
+                });
+            }
+            @Override
+            public TwoRanges filter(IntBiPredicatePrimitive predicate) {
+                return new TwoRanges.Impl(range1, range2, (i1,i2) -> {
+                    return this.predicate.testIntInt(i1,i2) && predicate.testIntInt(i1,i2);
+                });
+            }
+            @Override
+            public long count(IntBiPredicatePrimitive predicate) {
+                return range(0, range1).sum(idx1 -> {
+                    return (int)range(0, range2)
+                            .mapToObj(idx2 -> predicate.testIntInt(idx1, idx2))
+                            .filter  (bool -> bool)
+                            .count();
+                });
+            }
+        }
+        static TwoRanges loop2(int range1, int range2) {
+            return new TwoRanges.Impl(range1, range2, null);
+        }
+    }
+    
     default FuncList<String> readAllLines() {
-        return readAllLines(challengeKind(1), challengeName());
+        var kind = challengeKind(1);
+        var name = challengeName();
+        return readAllLines(kind, name);
     }
     
     default FuncList<String> readAllLines(Kind kind, String challenge) {
@@ -165,7 +217,7 @@ public interface AocCommon {
             var challenge   = challengeName.replaceAll("^Day([0-9]+)Part([0-9]+)$", "day$1-part$2");
             var inputFile   = challenge + "-" + kind + ".txt";
             var lines       = Files.readAllLines(Path.of(inputBase, inputFolder, inputFile));
-            return FuncList.from(lines).toCache();
+            return ImmutableFuncList.from(Mode.cache, FuncList.from(lines));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
