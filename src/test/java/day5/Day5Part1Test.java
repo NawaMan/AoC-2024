@@ -122,23 +122,23 @@ public class Day5Part1Test extends BaseTest {
     }
     
     boolean correctOrderUpdate(FuncList<IntFuncList> rules, IntFuncList update) {
-        // Slower way but use less memory.
-        return rules.allMatch(rule -> {
-            // update=75,47,61,53,29  intersect  rule=47|29  =>  matchOrder=[47,29]   <---  correct
-            // update=75,47,61,53,29  intersect  rule=29|47  =>  matchOrder=[29,47]   <---  incorrect
-            // update=75,47,61,53,29  intersect  rule=61|13  =>  matchOrder=[61]      <---  irrelevant
-            var matchOrder = update.filterIn(rule);
-            return (matchOrder.size() != 2)         // irrelevant?
-                    || matchOrder.equals(rule);     // correct?
-        });
-//        // Faster way but use more memory.
-//        var updatePageIndex = update.toMapRevert();
+//        // Slower way but use less memory.
 //        return rules.allMatch(rule -> {
-//            var firstPage = updatePageIndex.get(rule.get(0));
-//            var laterPage = updatePageIndex.get(rule.get(1));
-//            return ((firstPage == null) || (laterPage == null))
-//                || firstPage < laterPage;
+//            // update=75,47,61,53,29  intersect  rule=47|29  =>  matchOrder=[47,29]   <---  correct
+//            // update=75,47,61,53,29  intersect  rule=29|47  =>  matchOrder=[29,47]   <---  incorrect
+//            // update=75,47,61,53,29  intersect  rule=61|13  =>  matchOrder=[61]      <---  irrelevant
+//            var matchOrder = update.filterIn(rule);
+//            return (matchOrder.size() != 2)         // irrelevant?
+//                    || matchOrder.equals(rule);     // correct?
 //        });
+        // Faster way but use more memory.
+        var updatePageIndex = update.toMapRevert();
+        return rules.allMatch(rule -> {
+            var firstPage = updatePageIndex.get(rule.get(0));
+            var laterPage = updatePageIndex.get(rule.get(1));
+            return ((firstPage == null) || (laterPage == null))
+                || firstPage < laterPage;
+        });
     }
     
     //== Test ==

@@ -49,7 +49,7 @@ public class Day5Part2Test extends BaseTest {
             // update=75,47,61,53,29  intersect  rule=61|13  =>  matchOrder=[61]      <---  irrelevant
             var matchOrder = update.filterIn(rule);
             return (matchOrder.size() == 2) 
-                    && !matchOrder.toString().equals(rule.toString());
+                    && !matchOrder.equals(rule);
         });
     }
     
@@ -69,15 +69,15 @@ public class Day5Part2Test extends BaseTest {
         return quickFindMiddle(rules);   /*     // Put line comment on this line to select the longer method.
         
         // Below are the longer way --- by finding first and last and remove them until the middle one left.
-        // First pages: 61, 29, 61  ->  61,29
-        // Last pages : 13, 13, 29  ->  13,29
-        var firstPages = rules.map(rule -> rule.get(0));
-        var lastPages  = rules.map(rule -> rule.get(1));
+        // Earlier pages: 61, 29, 61  ->  61,29
+        // Later pages  : 13, 13, 29  ->  13,29
+        var ealierPages = rules.map(rule -> rule.get(0));
+        var laterPages  = rules.map(rule -> rule.get(1));
         
         // First page: [61,29] - [13,29]  ->  61
         // Last page : [13,29] - [61,29]  ->  13
-        var firstPage = firstPages.exclude(lastPages::contains) .findFirst().get();
-        var lastPage  = lastPages .exclude(firstPages::contains).findFirst().get();
+        var firstPage = ealierPages.exclude(laterPages::contains) .findFirst().get();
+        var lastPage  = laterPages .exclude(ealierPages::contains).findFirst().get();
         
         // Middle Pages = [61,13,29] - [61] - [13]  ->  29
         var middlePages
