@@ -1,14 +1,19 @@
 package day6;
 
+import static day6.Day6Part1Test.GridWalker.findAllVisited;
+import static java.util.regex.Pattern.compile;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.regex.Pattern;
+import java.util.Set;
 
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 /**
  * --- Day 6: Guard Gallivant ---
@@ -157,27 +162,57 @@ public class Day6Part1Test extends BaseTest {
         boolean  isAt(int row, int col) { return (this.row == row) && (this.col == col);             }
         Position move(Direction dir)    { return new Position(row + dir.nextRow, col + dir.nextCol); }
     }
-    
-    static record Grid(FuncList<String> lines, Position startPosition) {
-        char charAt(Position pos) {
-            return charAt(pos.row, pos.col);
+
+    static class Grid {
+        final FuncList<String> lines;
+        final Position         startPosition;
+        final Direction        startDirection;
+        Grid(FuncList<String> lines) {
+            this.lines          = lines;
+            this.startPosition  = findStartPosition();
+            this.startDirection = Direction.of(lines.get(startPosition.row()).charAt(startPosition.col()));
+        }
+        char charAt(Position position) {
+            return charAt(position.row, position.col);
         }
         char charAt(int row, int col) {
             if ((row < 0) || (row >= lines.size()))            return OutOfBound;
             if ((col < 0) || (col >= lines.get(row).length())) return OutOfBound;
-            if (startPosition.isAt(row, col))                  return Ground;
+            
+            // Mask the staring position as a ground because once the walk start this will be seen as a ground position.
+            if (startPosition.isAt(row, col))
+                return Ground;
+            
             return lines.get(row).charAt(col);
+        }
+        Position findStartPosition() {
+            return lines
+                    .map  (line    -> compile("[><\\^v]").matcher(line))
+                    .query(matcher -> matcher.find())
+                    .map  (result  -> new Position(result.index(), result.getValue().start()))
+                    .first()
+                    .get();
         }
     }
     
-    static class Walker {
-        Position  position;
-        Direction direction;
-        Walker(Position position, Direction direction) {
-            this.direction = direction;
-            this.position  = position;
+    @Getter
+    @Accessors(fluent = true)
+    static class GridWalker {
+        
+        static Set<Position> findAllVisited(Grid grid) {
+            return new GridWalker(grid).findAllVisited();
         }
-        char walk(Grid grid) {
+        
+        final   Grid      grid;
+        private Position  position;
+        private Direction direction;
+        
+        GridWalker(Grid grid) {
+            this.grid      = grid;
+            this.position  = grid.startPosition;
+            this.direction = grid.startDirection;
+        }
+        protected char step() {
             var currentSymbol = grid.charAt(position.row, position.col);
             if (currentSymbol == OutOfBound) return currentSymbol;
             
@@ -191,28 +226,18 @@ public class Day6Part1Test extends BaseTest {
             position = nextPosition;
             return nextSymbol;
         }
-    }
-    
-    static Position findStartPosition(FuncList<String> lines) {
-        return lines
-                .map  (line    -> Pattern.compile("[><\\^v]").matcher(line))
-                .query(matcher -> matcher.find())
-                .map  (result  -> new Position(result.index(), result.getValue().start()))
-                .first()
-                .get();
+        private Set<Position> findAllVisited() {
+            var visiteds = new HashSet<Position>();
+            do {
+                visiteds.add(position);
+            } while (!(step() == OutOfBound));
+            return visiteds;
+        }
     }
     
     int countVisitedBlocks(FuncList<String> lines) {
-        var start     = findStartPosition(lines);
-        var direction = Direction.of(lines.get(start.row).charAt(start.col));
-        var grid      = new Grid(lines, start);
-        var walker    = new Walker(start, direction);
-        var visiteds  = new HashSet<Position>();
-        var isDone    = false;
-        while (!isDone) {
-            visiteds.add(walker.position);
-            isDone = (walker.walk(grid) == OutOfBound);
-        }
+        var grid     = new Grid(lines);
+        var visiteds = findAllVisited(grid);
         return visiteds.size();
     }
     

@@ -1,5 +1,6 @@
 package day7;
 
+import static functionalj.stream.intstream.IntStreamPlus.range;
 import static java.lang.Math.pow;
 
 import java.math.BigInteger;
@@ -63,11 +64,9 @@ public class Day7Part2Test extends BaseTest {
         var result    = each.first().get();
         var operands  = each.tail().cache();
         var caseCount = (int)pow(3, operands.size() - 1);
-        for (int thisCase = 0; thisCase < caseCount; thisCase++) {
-            if (result.equals(calculate(operands, thisCase)))
-                return true;
-        }
-        return false;
+        return range(0, caseCount)
+                .mapToObj(caseIndex -> calculate(operands, caseIndex))
+                .anyMatch(value     -> result.equals(value));
     }
     
     BigInteger calculate(FuncList<BigInteger> operands, int thisCase) {

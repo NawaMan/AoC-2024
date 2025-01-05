@@ -2,15 +2,12 @@ package day6;
 
 
 import static common.AocCommon.TwoRanges.loop2;
+import static day6.Day6Part2Test.LoopInGridFinder.checkLoop;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.junit.Test;
 
-import common.BaseTest;
 import functionalj.list.FuncList;
 
 /**
@@ -123,120 +120,53 @@ import functionalj.list.FuncList;
  * 
  * Your puzzle answer was 1697.
  */
-public class Day6Part2Test extends BaseTest {
+public class Day6Part2Test extends Day6Part1Test {
     
-    static final char Obstacle   = '#';
-    static final char Ground     = '.';
-    static final char OutOfBound = 'X';
-    
-    private static final Map<Character, Direction> directBySymbols = new HashMap<>();
-    
-    static enum Direction {
-        North('^', -1,  0),
-        East ('>',  0,  1),
-        South('v',  1,  0),
-        West ('>',  0, -1);
-        
-        final char symbol;
-        final int  nextRow;
-        final int  nextCol;
-        
-        private Direction(char symbol, int nextRow, int nextCol) {
-            this.symbol  = symbol;
-            this.nextRow = nextRow;
-            this.nextCol = nextCol;
-            directBySymbols.put(symbol, this);
-        }
-        
-        static Direction of(char symbol) {
-            return directBySymbols.get(symbol);
-        }
-        
-        Direction turnRight() {
-            return values()[(ordinal() + 1) % 4];
-        }
-    }
-    
-    static record Position(int row, int col) {
-        boolean  isAt(int row, int col) { return (this.row == row) && (this.col == col);             }
-        Position move(Direction dir)    { return new Position(row + dir.nextRow, col + dir.nextCol); }
-    }
-    
-    static record Grid(FuncList<String> lines, Position startPosition, Position obstacle) {
-        char charAt(Position position) {
-            return charAt(position.row, position.col);
+    static class GridWithObstacle extends Grid {
+        final Position obstacle;
+        GridWithObstacle(FuncList<String> lines, Position obstacle) {
+            super(lines);
+            this.obstacle = obstacle;
         }
         char charAt(int row, int col) {
-            if ((row < 0) || (row >= lines.size()))            return OutOfBound;
-            if ((col < 0) || (col >= lines.get(row).length())) return OutOfBound;
-            if (startPosition.isAt(row, col))                  return Ground;
             if ((obstacle != null) && obstacle.isAt(row, col)) return Obstacle;
-            return lines.get(row).charAt(col);
+            return super.charAt(row, col);
         }
     }
     
-    static record State(Position position, Direction direction) {}
-    
-    static class Walker {
-        Grid      grid;
-        Position  position;
-        Direction direction;
-        Walker(Grid grid, Position position, Direction direction) {
-            this.grid      = grid;
-            this.direction = direction;
-            this.position  = position;
+    static class LoopInGridFinder extends GridWalker {
+        
+        static boolean checkLoop(Grid grid) {
+            return new LoopInGridFinder(grid).checkLoop();
         }
-        State state() {
-            return new State(position, direction);
+        
+        LoopInGridFinder(Grid grid) {
+            super(grid);
         }
-        char walk() {
-            var currentSymbol = grid.charAt(position.row, position.col);
-            if (currentSymbol == OutOfBound) return currentSymbol;
-            
-            var nextPosition = position.move(direction);
-            var nextSymbol   = grid.charAt(nextPosition);
-            if (nextSymbol == Obstacle) {
-                this.direction = direction.turnRight();
-                return currentSymbol;
+
+        private record State(Position position, Direction direction) {}
+        
+        private boolean checkLoop() {
+            var visiteds = new HashSet<State>();
+            while (true) {
+                var state = new State(position(), direction());
+                if (!visiteds.add(state))
+                    return true;
+                
+                if (step() == OutOfBound)
+                    return false;
             }
-            
-            position = nextPosition;
-            return nextSymbol;
         }
-    }
-    
-    static Position findStartPosition(FuncList<String> lines) {
-        return lines
-                .map  (line    -> Pattern.compile("[><\\^v]").matcher(line))
-                .query(matcher -> matcher.find())
-                .map  (result  -> new Position(result.index(), result.getValue().start()))
-                .first()
-                .get();
     }
     
     int countPosibleLoop(FuncList<String> lines) {
-        var startPosition  = findStartPosition(lines);
-        var startDirection = Direction.of(lines.get(startPosition.row()).charAt(startPosition.col()));
         int gridHeight = lines.size();
         int gridWidth  = lines.get(0).length();
         return loop2   (gridHeight, gridWidth)
                 .map   ((row, col) -> new Position(row, col))
-                .map   (position   -> new Grid  (lines, startPosition, position))
-                .map   (grid       -> new Walker(grid, startPosition, startDirection))
-                .filter(walker     -> checkIfStuckInLoop(walker))
+                .map   (position   -> new GridWithObstacle  (lines, position))
+                .filter(grid       -> checkLoop(grid))
                 .size();
-    }
-    
-    private boolean checkIfStuckInLoop(Walker walker) {
-        var visiteds = new HashSet<State>();
-        while (true) {
-            var state = walker.state();
-            if (!visiteds.add(state))
-                return true;
-            
-            if (walker.walk() == OutOfBound)
-                return false;
-        }
     }
     
     //== Test ==
