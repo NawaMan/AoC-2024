@@ -1,13 +1,18 @@
 package day6;
 
 import static day6.Day6Part1Test.GridWalker.findAllVisited;
+import static functionalj.stream.intstream.IntStreamPlus.range;
 import static java.util.regex.Pattern.compile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -136,7 +141,7 @@ public class Day6Part1Test extends BaseTest {
         North('^', -1,  0),
         East ('>',  0,  1),
         South('v',  1,  0),
-        West ('>',  0, -1);
+        West ('<',  0, -1);
         
         final char symbol;
         final int  nextRow;
@@ -241,8 +246,62 @@ public class Day6Part1Test extends BaseTest {
         return visiteds.size();
     }
     
+    //== Display for debug ==
+    
+    public static final String BOLD = "\033[1m";
+    public static final String BLUE  = "\033[94m";
+    public static final String DARK  = "\033[34m";
+    public static final String RESET = "\033[0m"; // Reset to default color
+    
+    static void drawGridWalker(String indent, GridWalker walker, Map<Position, Direction> visiteds) throws InterruptedException {
+        System.out.println();
+        for (int row = 0; row < walker.grid.lines.size(); row++) {
+            System.out.print(indent);
+            for (int col = 0; col < walker.grid.lines.get(0).length(); col++) {
+                if (walker.position.isAt(row, col)) {
+                    System.out.print(BOLD + BLUE + walker.direction.symbol + RESET);
+                } else if (visiteds.containsKey(new Position(row, col))) {
+                    System.out.print(BOLD + DARK + visiteds.get(new Position(row, col)).symbol + RESET);
+                } else {
+                    System.out.print(walker.grid.charAt(row, col));
+                }
+            }
+            System.out.println();
+        }
+    }
+    
     //== Test ==
     
+    public static void main(String ... args) throws InterruptedException, IOException {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+      
+        var lines    = FuncList.from(Files.readAllLines(Path.of("/home/nawa/dev/git/AoC-2024/data", "day6", "day6-part1-example.txt")));
+        var grid     = new Grid(lines);
+        var walker   = new GridWalker(grid);
+        var visiteds = new HashMap<Position, Direction>();
+        do {
+            System.out.print("\033[1;1H");
+//            System.out.print("\033[H\033[2J");
+            System.out.flush();
+
+            drawGridWalker("    ", walker, visiteds);
+            range(0, 5).forEach(__ -> System.out.println());
+
+            visiteds.put(walker.position, walker.direction);
+//            System.out.println(visiteds.size() + ": " + visiteds);
+            walker.step();
+            Thread.sleep(200);
+            
+            if ((walker.position.row < 0 || walker.position.row >= walker.grid.lines.size())
+             || (walker.position.col < 0 || walker.position.col >= walker.grid.lines.get(0).length()))
+                break;
+            // if (!Console.readln().trim().equals("exit")) break;
+        } while (true);
+        System.exit(0);
+    }
+    
+    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();
@@ -251,6 +310,7 @@ public class Day6Part1Test extends BaseTest {
         assertAsString("41", result);
     }
     
+    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();

@@ -143,7 +143,7 @@ public class Day6Part2Test extends Day6Part1Test {
         LoopInGridFinder(Grid grid) {
             super(grid);
         }
-
+        
         private record State(Position position, Direction direction) {}
         
         private boolean checkLoop() {
