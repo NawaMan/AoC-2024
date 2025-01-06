@@ -1,6 +1,7 @@
 package day6;
 
-import static day6.Day6Part1Test.GridWalker.findAllVisited;
+import static day6.State.theState;
+import static functionalj.stream.StreamPlus.generate;
 import static functionalj.stream.intstream.IntStreamPlus.range;
 import static java.util.regex.Pattern.compile;
 
@@ -11,12 +12,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
+import functionalj.stream.StreamPlus;
+import functionalj.types.Struct;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -167,7 +170,7 @@ public class Day6Part1Test extends BaseTest {
         boolean  isAt(int row, int col) { return (this.row == row) && (this.col == col);             }
         Position move(Direction dir)    { return new Position(row + dir.nextRow, col + dir.nextCol); }
     }
-
+    
     static class Grid {
         final FuncList<String> lines;
         final Position         startPosition;
@@ -204,46 +207,61 @@ public class Day6Part1Test extends BaseTest {
     @Accessors(fluent = true)
     static class GridWalker {
         
-        static Set<Position> findAllVisited(Grid grid) {
-            return new GridWalker(grid).findAllVisited();
-        }
+        @Struct
+        static void State(Position position, Direction direction, boolean isOutOfBound) {}
         
         final   Grid      grid;
         private Position  position;
         private Direction direction;
         
+        private Set<State> visiteds = new HashSet<State>();
+        
         GridWalker(Grid grid) {
             this.grid      = grid;
             this.position  = grid.startPosition;
             this.direction = grid.startDirection;
+            visiteds.add(new State(position, direction, false));
         }
-        protected char step() {
+        StreamPlus<State> steps() {
+            return generate     (()    -> step())
+                    .acceptWhile(state -> state != null)        // Loop
+                    .dropAfter  (state -> state.isOutOfBound()) // Out of bound.
+                    .prependWith(Stream.of(new State(grid.startPosition, grid.startDirection, false)));
+        }
+        private State walkStep() {
             var currentSymbol = grid.charAt(position.row, position.col);
-            if (currentSymbol == OutOfBound) return currentSymbol;
+            if (currentSymbol == OutOfBound) 
+                return new State(position, direction, true);
             
             var nextPosition = position.move(direction);
-            var nextSymbol   = grid.charAt(nextPosition);
+            var nextSymbol   = grid.charAt(nextPosition); 
             if (nextSymbol == Obstacle) {
                 this.direction = direction.turnRight();
-                return currentSymbol;
+                return new State(position, direction, false);
             }
             
             position = nextPosition;
-            return nextSymbol;
+            return new State(position, direction, nextSymbol == OutOfBound);
         }
-        private Set<Position> findAllVisited() {
-            var visiteds = new HashSet<Position>();
-            do {
-                visiteds.add(position);
-            } while (!(step() == OutOfBound));
-            return visiteds;
+        State step() {
+            var state = walkStep();
+            if (visiteds.contains(state))   // In case of a loop.
+                return null;
+            
+            visiteds.add(state);
+            return state;
         }
     }
     
     int countVisitedBlocks(FuncList<String> lines) {
-        var grid     = new Grid(lines);
-        var visiteds = findAllVisited(grid);
-        return visiteds.size();
+        var grid   = new Grid(lines);
+        var walker = new GridWalker(grid);
+        return walker
+                .steps   ()
+                .exclude (theState.isOutOfBound)
+                .map     (State::position)
+                .distinct()
+                .size    ();
     }
     
     //== Display for debug ==
@@ -282,26 +300,23 @@ public class Day6Part1Test extends BaseTest {
         var visiteds = new HashMap<Position, Direction>();
         do {
             System.out.print("\033[1;1H");
-//            System.out.print("\033[H\033[2J");
             System.out.flush();
-
+            
             drawGridWalker("    ", walker, visiteds);
             range(0, 5).forEach(__ -> System.out.println());
-
+            
             visiteds.put(walker.position, walker.direction);
-//            System.out.println(visiteds.size() + ": " + visiteds);
             walker.step();
-            Thread.sleep(200);
             
             if ((walker.position.row < 0 || walker.position.row >= walker.grid.lines.size())
              || (walker.position.col < 0 || walker.position.col >= walker.grid.lines.get(0).length()))
                 break;
+            Thread.sleep(200);
             // if (!Console.readln().trim().equals("exit")) break;
         } while (true);
         System.exit(0);
     }
     
-    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();
@@ -310,7 +325,6 @@ public class Day6Part1Test extends BaseTest {
         assertAsString("41", result);
     }
     
-    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();

@@ -2,9 +2,7 @@ package day6;
 
 
 import static common.AocCommon.TwoRanges.loop2;
-import static day6.Day6Part2Test.LoopInGridFinder.checkLoop;
-
-import java.util.HashSet;
+import static day6.State.theState;
 
 import org.junit.Test;
 
@@ -134,29 +132,10 @@ public class Day6Part2Test extends Day6Part1Test {
         }
     }
     
-    static class LoopInGridFinder extends GridWalker {
-        
-        static boolean checkLoop(Grid grid) {
-            return new LoopInGridFinder(grid).checkLoop();
-        }
-        
-        LoopInGridFinder(Grid grid) {
-            super(grid);
-        }
-        
-        private record State(Position position, Direction direction) {}
-        
-        private boolean checkLoop() {
-            var visiteds = new HashSet<State>();
-            while (true) {
-                var state = new State(position(), direction());
-                if (!visiteds.add(state))
-                    return true;
-                
-                if (step() == OutOfBound)
-                    return false;
-            }
-        }
+    boolean checkLoop(Grid grid) {
+        return new GridWalker(grid)
+                .steps()
+                .noneMatch(theState.isOutOfBound);
     }
     
     int countPosibleLoop(FuncList<String> lines) {
