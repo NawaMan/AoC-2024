@@ -138,7 +138,7 @@ public class Day6Part1Test extends BaseTest {
     static final char Ground     = '.';
     static final char OutOfBound = 'X';
     
-    private static final Map<Character, Direction> directBySymbols = new HashMap<>();
+    private static final Map<Character, Direction> directionsBySymbols = new HashMap<>();
     
     static enum Direction {
         North('^', -1,  0),
@@ -154,11 +154,11 @@ public class Day6Part1Test extends BaseTest {
             this.symbol  = symbol;
             this.nextRow = nextRow;
             this.nextCol = nextCol;
-            directBySymbols.put(symbol, this);
+            directionsBySymbols.put(symbol, this);
         }
         
         static Direction of(char symbol) {
-            return directBySymbols.get(symbol);
+            return directionsBySymbols.get(symbol);
         }
         
         Direction turnRight() {
@@ -167,8 +167,12 @@ public class Day6Part1Test extends BaseTest {
     }
     
     static record Position(int row, int col) {
-        boolean  isAt(int row, int col) { return (this.row == row) && (this.col == col);             }
-        Position move(Direction dir)    { return new Position(row + dir.nextRow, col + dir.nextCol); }
+        boolean  isAt(int row, int col) {
+            return (this.row == row) && (this.col == col);
+        }
+        Position move(Direction dir) {
+            return new Position(row + dir.nextRow, col + dir.nextCol);
+        }
     }
     
     static class Grid {
@@ -193,7 +197,7 @@ public class Day6Part1Test extends BaseTest {
             
             return lines.get(row).charAt(col);
         }
-        Position findStartPosition() {
+        private Position findStartPosition() {
             return lines
                     .map  (line    -> compile("[><\\^v]").matcher(line))
                     .query(matcher -> matcher.find())
@@ -228,6 +232,14 @@ public class Day6Part1Test extends BaseTest {
                     .dropAfter  (state -> state.isOutOfBound()) // Out of bound.
                     .prependWith(Stream.of(new State(grid.startPosition, grid.startDirection, false)));
         }
+        private State step() {
+            var state = walkStep();
+            if (visiteds.contains(state))   // In case of a loop.
+                return null;
+            
+            visiteds.add(state);
+            return state;
+        }
         private State walkStep() {
             var currentSymbol = grid.charAt(position.row, position.col);
             if (currentSymbol == OutOfBound) 
@@ -242,14 +254,6 @@ public class Day6Part1Test extends BaseTest {
             
             position = nextPosition;
             return new State(position, direction, nextSymbol == OutOfBound);
-        }
-        State step() {
-            var state = walkStep();
-            if (visiteds.contains(state))   // In case of a loop.
-                return null;
-            
-            visiteds.add(state);
-            return state;
         }
     }
     
@@ -266,7 +270,7 @@ public class Day6Part1Test extends BaseTest {
     
     //== Display for debug ==
     
-    public static final String BOLD = "\033[1m";
+    public static final String BOLD  = "\033[1m";
     public static final String BLUE  = "\033[94m";
     public static final String DARK  = "\033[34m";
     public static final String RESET = "\033[0m"; // Reset to default color
@@ -298,11 +302,16 @@ public class Day6Part1Test extends BaseTest {
         var grid     = new Grid(lines);
         var walker   = new GridWalker(grid);
         var visiteds = new HashMap<Position, Direction>();
+        
+        drawGridWalker("                         ", walker, visiteds);
+        range(0, 5).forEach(__ -> System.out.println());
+        Thread.sleep(2000);
+        
         do {
             System.out.print("\033[1;1H");
             System.out.flush();
             
-            drawGridWalker("    ", walker, visiteds);
+            drawGridWalker("                         ", walker, visiteds);
             range(0, 5).forEach(__ -> System.out.println());
             
             visiteds.put(walker.position, walker.direction);
@@ -312,6 +321,7 @@ public class Day6Part1Test extends BaseTest {
              || (walker.position.col < 0 || walker.position.col >= walker.grid.lines.get(0).length()))
                 break;
             Thread.sleep(200);
+            
             // if (!Console.readln().trim().equals("exit")) break;
         } while (true);
         System.exit(0);

@@ -132,7 +132,7 @@ public class Day6Part2Test extends Day6Part1Test {
         }
     }
     
-    boolean checkLoop(Grid grid) {
+    boolean checkInfiniteLoop(Grid grid) {
         return new GridWalker(grid)
                 .steps()
                 .noneMatch(theState.isOutOfBound);
@@ -144,7 +144,7 @@ public class Day6Part2Test extends Day6Part1Test {
         return loop2   (gridHeight, gridWidth)
                 .map   ((row, col) -> new Position(row, col))
                 .map   (position   -> new GridWithObstacle  (lines, position))
-                .filter(grid       -> checkLoop(grid))
+                .filter(grid       -> checkInfiniteLoop(grid))
                 .size();
     }
     
