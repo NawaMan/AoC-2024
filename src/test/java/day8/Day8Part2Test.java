@@ -70,6 +70,7 @@ public class Day8Part2Test extends BaseTest {
                 || (col < 0 || col >= colCount);
         }
     }
+    
     record Antenna(Position position, char symbol) {}
     
     int countAllNodes(FuncList<String> lines) {
@@ -78,7 +79,7 @@ public class Day8Part2Test extends BaseTest {
         
         var antennas 
                 = lines
-                .mapWithIndex((row, line) -> matches(line, regex("[^\\.]")).map(extractAntenna(row)))
+                .mapWithIndex(this::extractAntennas)
                 .flatMap     (StreamPlus::toFuncList)
                 .cache       ();
         
@@ -91,10 +92,17 @@ public class Day8Part2Test extends BaseTest {
                 .distinct  ()
                 .size      ();
     }
-
+    
+    StreamPlus<Antenna> extractAntennas(int row, String line) {
+        return matches(line, regex("[^\\.]")).map(extractAntenna(row));
+    }
+    
     Func1<RegExMatchResult, Antenna> extractAntenna(int row) {
         return result -> {
-            return new Antenna(new Position(row, result.start()), result.group().charAt(0));
+            var col      = result.start();
+            var position = new Position(row, col);
+            var symbol   = result.group().charAt(0);
+            return new Antenna(position, symbol);
         };
     }
     
