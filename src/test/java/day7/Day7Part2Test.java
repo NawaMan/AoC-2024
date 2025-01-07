@@ -1,14 +1,10 @@
 package day7;
 
-import static functionalj.stream.intstream.IntStreamPlus.range;
-import static java.lang.Math.pow;
-
 import java.math.BigInteger;
 import java.util.function.BinaryOperator;
 
 import org.junit.Test;
 
-import common.BaseTest;
 import functionalj.list.FuncList;
 
 /**
@@ -35,58 +31,20 @@ import functionalj.list.FuncList;
  * 
  * Your puzzle answer was 945341732469724.
  */
-public class Day7Part2Test extends BaseTest {
-    
-    BinaryOperator<BigInteger> newOperator(String name, BinaryOperator<BigInteger> body) {
-        return new BinaryOperator<BigInteger>() {
-            @Override public BigInteger apply(BigInteger left, BigInteger right) { return body.apply(left, right); }
-            @Override public String toString() { return name; }
-        };
-    }
-    
-    FuncList<BinaryOperator<BigInteger>> operators = FuncList.of(
-            newOperator("+", BigInteger::add),
-            newOperator("*", BigInteger::multiply),
-            newOperator("||", (left, right) -> new BigInteger(left.toString() + right.toString()))
-    );
-    
-    BigInteger countValidExpression(FuncList<String> lines) {
-        return lines
-            .map   (grab(regex("[0-9]+")))
-            .map   (each -> each.map(BigInteger::new))
-            .filter(each -> checkIfPossible(each))
-            .map   (each -> each.first().get())
-            .reduce(BigInteger::add)
-            .get();
-    }
-    
-    boolean checkIfPossible(FuncList<BigInteger> each) {
-        var result    = each.first().get();
-        var operands  = each.tail().cache();
-        var caseCount = (int)pow(3, operands.size() - 1);
-        return range(0, caseCount)
-                .mapToObj(caseIndex -> calculate(operands, caseIndex))
-                .anyMatch(value     -> result.equals(value));
-    }
-    
-    BigInteger calculate(FuncList<BigInteger> operands, int thisCase) {
-        var total         = operands.get(0);
-        var operatorCount = operators.size();
-        for (int index = 0; index < operands.size() - 1; index++) {
-            var operator = operators.get  (thisCase % operatorCount);
-            var operand  = operands .get  (index + 1);
-            total        = operator .apply(total, operand);
-            thisCase /= operatorCount;
-        }
-        return total;
-    }
+public class Day7Part2Test extends Day7Part1Test {
     
     //== Test ==
+    
+    FuncList<BinaryOperator<BigInteger>> operators = FuncList.of(
+            BigInteger::add, 
+            BigInteger::multiply,
+            (left, right) -> new BigInteger(left.toString() + right.toString())
+    );
     
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = countValidExpression(lines);
+        var result = countValidExpression(lines, operators);
         println("result: " + result);
         assertAsString("11387", result);
     }
@@ -94,7 +52,7 @@ public class Day7Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = countValidExpression(lines);
+        var result = countValidExpression(lines, operators);
         println("result: " + result);
         assertAsString("945341732469724", result);
     }

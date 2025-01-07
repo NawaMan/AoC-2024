@@ -1,8 +1,5 @@
 package day7;
 
-import static functionalj.stream.intstream.IntStreamPlus.range;
-import static java.lang.Math.pow;
-
 import java.math.BigInteger;
 import java.util.function.BinaryOperator;
 
@@ -63,55 +60,47 @@ import functionalj.list.FuncList;
  */
 public class Day7Part1Test extends BaseTest {
     
-    BinaryOperator<BigInteger> newOperator(String name, BinaryOperator<BigInteger> body) {
-        return new BinaryOperator<BigInteger>() {
-            @Override public BigInteger apply(BigInteger left, BigInteger right) { return body.apply(left, right); }
-            @Override public String toString() { return name; }
-        };
-    }
-    
-    FuncList<BinaryOperator<BigInteger>> operators = FuncList.of(
-            newOperator("+", BigInteger::add),
-            newOperator("*", BigInteger::multiply)
-    );
-    
-    BigInteger countValidExpression(FuncList<String> lines) {
+    BigInteger countValidExpression(FuncList<String> lines, FuncList<BinaryOperator<BigInteger>> operators) {
         return lines
             .map   (grab(regex("[0-9]+")))
             .map   (each -> each.map(BigInteger::new))
-            .filter(each -> checkIfPossible(each))
+            .filter(each -> checkIfPossible(each, operators))
             .map   (each -> each.first().get())
             .reduce(BigInteger::add)
             .get();
     }
     
-    boolean checkIfPossible(FuncList<BigInteger> each) {
-        var result    = each.first().get();
-        var operands  = each.tail().cache();
-        var caseCount = (int)pow(2, operands.size() - 1);
-        return range(0, caseCount)
-                .mapToObj(caseIndex -> calculate(operands, caseIndex))
-                .anyMatch(value     -> result.equals(value));
+    boolean checkIfPossible(FuncList<BigInteger> each, FuncList<BinaryOperator<BigInteger>> operators) {
+        var result   = each.first().get();
+        var operands = each.tail().toImmutableList();
+        var first    = operands.get(0);
+        return new Calculator(result, operands, operators)
+                .calculateValue(first, 1);
     }
     
-    BigInteger calculate(FuncList<BigInteger> operands, int thisCase) {
-        var total         = operands.get(0);
-        var operatorCount = operators.size();
-        for (int index = 0; index < operands.size() - 1; index++) {
-            var operator = operators.get  (thisCase % operatorCount);
-            var operand  = operands .get  (index + 1);
-            total        = operator .apply(total, operand);
-            thisCase /= operatorCount;
+    record Calculator(BigInteger expected, FuncList<BigInteger> operands, FuncList<BinaryOperator<BigInteger>> operators) {
+        boolean calculateValue(BigInteger value, int index) {
+            return (index == operands.size())
+                    ? expected.equals(value)
+                    : operators.anyMatch(operator -> {
+                        var newValue = operator.apply(value, operands.get(index));
+                        var newIndex = index + 1;
+                        return calculateValue(newValue, newIndex);
+                    });
         }
-        return total;
     }
     
     //== Test ==
     
+    FuncList<BinaryOperator<BigInteger>> operators = FuncList.of(
+            BigInteger::add, 
+            BigInteger::multiply
+    );
+    
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = countValidExpression(lines);
+        var result = countValidExpression(lines, operators);
         println("result: " + result);
         assertAsString("3749", result);
     }
@@ -119,7 +108,7 @@ public class Day7Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = countValidExpression(lines);
+        var result = countValidExpression(lines, operators);
         println("result: " + result);
         assertAsString("1611660863222", result);
     }
