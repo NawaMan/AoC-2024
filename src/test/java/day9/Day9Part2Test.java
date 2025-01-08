@@ -13,7 +13,6 @@ import common.BaseTest;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
 import functionalj.stream.StreamPlus;
-import functionalj.stream.intstream.IntStreamPlus;
 import functionalj.tuple.IntIntTuple;
 
 /**
@@ -72,19 +71,11 @@ public class Day9Part2Test extends BaseTest {
         reveredDataBlocks.forEach(pair -> {
             var id          = pair._1;
             var neededSpace = pair._2;
-//            range(0, id * 2)
-//            .mapToObj(filesystem::get)
-//            .filter(foundArray -> StreamPlus.of(foundArray).filter(Objects::isNull).size() >= neededSpace)
-//            .findFirst()
-//            .ifPresent(foundArray -> migrateData(sectorByIds, id, neededSpace, foundArray));
-            for (int i = 0; i < (id * 2); i++) {
-                var foundArray = filesystem.get(i);
-                var hasEnough  = StreamPlus.of(foundArray).filter(Objects::isNull).size() >= neededSpace;
-                if(hasEnough) {
-                    migrateData(sectorByIds, id, neededSpace, foundArray);
-                    break;
-                }
-            }
+            range(0, id * 2)
+            .mapToObj (filesystem::get)
+            .filter   (foundArray -> StreamPlus.of(foundArray).filter(Objects::isNull).size() >= neededSpace)
+            .findFirst()
+            .ifPresent(foundArray -> migrateData(sectorByIds, id, neededSpace, foundArray));
         });
         
         var checksum
