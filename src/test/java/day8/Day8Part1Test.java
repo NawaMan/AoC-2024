@@ -7,7 +7,6 @@ import static functionalj.functions.StrFuncs.matches;
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.functions.RegExMatchResult;
 import functionalj.list.FuncList;
 import functionalj.stream.StreamPlus;
 import functionalj.types.Struct;
@@ -126,9 +125,8 @@ public class Day8Part1Test extends BaseTest {
         
         var antennas 
                 = lines
-                .mapWithIndex   (this::extractAntennas)
-                .flatMap        (StreamPlus::toFuncList)
-                .toImmutableList();
+                .flatMapWithIndex(this::extractAntennas)
+                .toImmutableList ();
         
         return antennas
                 .groupingBy(theAntenna.symbol)
@@ -142,14 +140,12 @@ public class Day8Part1Test extends BaseTest {
     
     StreamPlus<Antenna> extractAntennas(int row, String line) {
         return matches(line, regex("[^\\.]"))
-                .map(result -> extractAntenna(row, result));
-    }
-    
-    Antenna extractAntenna(int row, RegExMatchResult result) {
-        var col      = result.start();
-        var position = new Position(row, col);
-        var symbol   = result.group().charAt(0);
-        return new Antenna(position, symbol);
+                .map(result -> {
+                    var col      = result.start();
+                    var position = new Position(row, col);
+                    var symbol   = result.group().charAt(0);
+                    return new Antenna(position, symbol);
+                });
     }
     
     FuncList<Position> createAntinodes(FuncList<Antenna> antennas) {

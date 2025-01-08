@@ -7,7 +7,6 @@ import static functionalj.stream.intstream.IntStreamPlus.range;
 import org.junit.Test;
 
 import functionalj.list.FuncList;
-import functionalj.stream.StreamPlus;
 
 /**
  * --- Part Two ---
@@ -68,9 +67,8 @@ public class Day8Part2Test extends Day8Part1Test {
         
         var antennas 
                 = lines
-                .mapWithIndex   (this::extractAntennas)
-                .flatMap        (StreamPlus::toFuncList)
-                .toImmutableList();
+                .flatMapWithIndex(this::extractAntennas)
+                .toImmutableList ();
         
         return antennas
                 .groupingBy(theAntenna.symbol)

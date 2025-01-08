@@ -21,6 +21,7 @@ import functionalj.lens.lenses.BooleanAccessPrimitive;
 import functionalj.lens.lenses.IntegerAccessPrimitive;
 import functionalj.lens.lenses.IntegerToBooleanAccessPrimitive;
 import functionalj.lens.lenses.LongAccessPrimitive;
+import functionalj.list.AsFuncList;
 import functionalj.list.FuncList;
 import functionalj.list.FuncList.Mode;
 import functionalj.list.ImmutableFuncList;
@@ -277,13 +278,14 @@ public interface AocCommon {
         return readAllLines(dataPath, kind, challenge);
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     default FuncList<String> readAllLines(String inputBase , Kind kind, String challengeName) {
         try {
             var inputFolder = challengeName.replaceAll("^Day([0-9]+).*$", "day$1");
             var challenge   = challengeName.replaceAll("^Day([0-9]+)Part([0-9]+)$", "day$1-part$2");
             var inputFile   = challenge + "-" + kind + ".txt";
             var lines       = Files.readAllLines(Path.of(inputBase, inputFolder, inputFile));
-            return ImmutableFuncList.from(Mode.cache, FuncList.from(lines));
+            return ImmutableFuncList.from(Mode.cache, (AsFuncList)FuncList.from(lines));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
