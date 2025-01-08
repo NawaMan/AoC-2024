@@ -260,7 +260,7 @@ public interface AocCommon {
             }
         }
         
-        static <T> TwoLists<T, T> loopList2(FuncList<T> list) {
+        static <T> TwoLists<T, T> nestLoopList2(FuncList<T> list) {
             return new TwoLists.Impl<>(list, list, null);
         }
         static <T1, T2> TwoLists<T1, T2> loopList2(FuncList<T1> list1, FuncList<T2> list2) {

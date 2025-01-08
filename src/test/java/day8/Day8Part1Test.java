@@ -1,6 +1,6 @@
 package day8;
 
-import static common.AocCommon.TwoLists.loopList2;
+import static common.AocCommon.TwoLists.nestLoopList2;
 import static day8.Antenna.theAntenna;
 import static functionalj.functions.StrFuncs.matches;
 
@@ -132,8 +132,7 @@ public class Day8Part1Test extends BaseTest {
                 .groupingBy(theAntenna.symbol)
                 .values    ()
                 .map       (values   -> values.map(Antenna.class::cast))
-                .flatMap   (entry    -> createAntinodes(entry))
-                .exclude   (position -> position.isOutOfBound(rowCount, colCount))
+                .flatMap   (values   -> createAntinodes(values, rowCount, colCount))
                 .excludeIn (antennas.map(theAntenna.position).toSet())
                 .size      ();
     }
@@ -148,10 +147,11 @@ public class Day8Part1Test extends BaseTest {
                 });
     }
     
-    FuncList<Position> createAntinodes(FuncList<Antenna> antennas) {
-        return loopList2(antennas)
-                .filter((first, second) -> !first.equals(second))
-                .map   ((first, second) -> createAntinode(first, second));
+    FuncList<Position> createAntinodes(FuncList<Antenna> antennas, int rowCount, int colCount) {
+        return nestLoopList2(antennas)
+                .filter ((first, second) -> !first.equals(second))
+                .map    ((first, second) -> createAntinode(first, second))
+                .exclude(position -> position.isOutOfBound(rowCount, colCount));
     }
     
     Position createAntinode(Antenna first, Antenna second) {

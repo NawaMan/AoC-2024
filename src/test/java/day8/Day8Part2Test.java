@@ -1,6 +1,6 @@
 package day8;
 
-import static common.AocCommon.TwoLists.loopList2;
+import static common.AocCommon.TwoLists.nestLoopList2;
 import static day8.Antenna.theAntenna;
 import static functionalj.stream.intstream.IntStreamPlus.range;
 
@@ -75,13 +75,12 @@ public class Day8Part2Test extends Day8Part1Test {
                 .values    ()
                 .map       (values -> values.map(Antenna.class::cast))
                 .flatMap   (entry  -> createAntinodes(entry, rowCount, colCount))
-                .appendAll (antennas.map(theAntenna.position).toSet())
                 .distinct  ()
                 .size      ();
     }
     
     FuncList<Position> createAntinodes(FuncList<Antenna> antennas, int rowCount, int colCount) {
-        return loopList2(antennas)
+        return nestLoopList2(antennas)
                 .filter ((first, second) -> !first.equals(second))
                 .flatMap((first, second) -> {
                     return range(1, MAX)
