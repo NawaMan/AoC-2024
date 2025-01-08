@@ -75,6 +75,7 @@ public class Day8Part2Test extends Day8Part1Test {
                 .values    ()
                 .map       (values -> values.map(Antenna.class::cast))
                 .flatMap   (entry  -> createAntinodes(entry, rowCount, colCount))
+                .appendAll (antennas.map(theAntenna.position))
                 .distinct  ()
                 .size      ();
     }

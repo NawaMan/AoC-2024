@@ -186,13 +186,18 @@ public interface AocCommon {
             @Override
             public <T> StreamPlus<T> map(IntIntBiFunction<T> mapper) {
                 return range(0, range1).flatMapToObj(idx1 -> {
-                    return range(0, range2).mapToObj(idx2 -> mapper.apply(idx1, idx2));
+                    return range(0, range2)
+                            .filter  (idx2 -> predicate.testIntInt(idx1, idx2))
+                            .mapToObj(idx2 -> {
+                                return mapper.apply(idx1, idx2);
+                            });
                 });
             }
             @Override
             public TwoRanges filter(IntBiPredicatePrimitive predicate) {
                 return new TwoRanges.Impl(range1, range2, (i1,i2) -> {
-                    return this.predicate.testIntInt(i1,i2) && predicate.testIntInt(i1,i2);
+                    return this.predicate.testIntInt(i1,i2)
+                            && predicate.testIntInt(i1,i2);
                 });
             }
             @Override
@@ -240,13 +245,18 @@ public interface AocCommon {
             @Override
             public <T> FuncList<T> map(BiFunction<T1, T2, T> mapper) {
                 return list1.flatMapToObj(item1 -> {
-                    return list2.mapToObj(item2 -> mapper.apply(item1, item2));
+                    return list2
+                            .filter  (item2 -> predicate.test(item1, item2))
+                            .mapToObj(item2 -> {
+                                return mapper.apply(item1, item2);
+                            });
                 });
             }
             @Override
             public TwoLists<T1, T2> filter(BiPredicate<T1, T2> predicate) {
                 return new TwoLists.Impl<>(list1, list2, (i1,i2) -> {
-                    return this.predicate.test(i1,i2) && predicate.test(i1,i2);
+                    return this.predicate.test(i1,i2)
+                            && predicate.test(i1,i2);
                 });
             }
             @Override

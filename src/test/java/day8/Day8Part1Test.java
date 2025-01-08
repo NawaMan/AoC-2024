@@ -133,7 +133,7 @@ public class Day8Part1Test extends BaseTest {
                 .values    ()
                 .map       (values   -> values.map(Antenna.class::cast))
                 .flatMap   (values   -> createAntinodes(values, rowCount, colCount))
-                .excludeIn (antennas.map(theAntenna.position).toSet())
+                .distinct  ()
                 .size      ();
     }
     
@@ -155,9 +155,11 @@ public class Day8Part1Test extends BaseTest {
     }
     
     Position createAntinode(Antenna first, Antenna second) {
-        return new Position(
+        var position = new Position(
                 2*second.position().row() - first.position().row(),
                 2*second.position().col() - first.position().col());
+        println("first: " + first + ", second: " + second + ", POS: " + position);
+        return position;
     }
     
     //== Test ==
