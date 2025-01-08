@@ -1,5 +1,7 @@
 package day8;
 
+import static common.AocCommon.TwoLists.loopList2;
+import static day8.Antenna.theAntenna;
 import static functionalj.functions.StrFuncs.matches;
 
 import org.junit.Test;
@@ -8,6 +10,7 @@ import common.BaseTest;
 import functionalj.functions.RegExMatchResult;
 import functionalj.list.FuncList;
 import functionalj.stream.StreamPlus;
+import functionalj.types.Struct;
 
 /**
  * --- Day 8: Resonant Collinearity ---
@@ -114,7 +117,8 @@ public class Day8Part1Test extends BaseTest {
         }
     }
     
-    record Antenna(Position position, char symbol) {}
+    @Struct
+    void Antenna(Position position, char symbol) {}
     
     int countAntinodes(FuncList<String> lines) {
         var rowCount = lines.size();
@@ -122,22 +126,23 @@ public class Day8Part1Test extends BaseTest {
         
         var antennas 
                 = lines
-                .mapWithIndex(this::extractAntennas)
-                .flatMap     (StreamPlus::toFuncList)
-                .cache       ();
+                .mapWithIndex   (this::extractAntennas)
+                .flatMap        (StreamPlus::toFuncList)
+                .toImmutableList();
         
         return antennas
-                .groupingBy(Antenna::symbol)
+                .groupingBy(theAntenna.symbol)
                 .values    ()
                 .map       (values   -> values.map(Antenna.class::cast))
-                .flatMap   (entry    -> totalAntinodes(entry))
+                .flatMap   (entry    -> createAntinodes(entry))
                 .exclude   (position -> position.isOutOfBound(rowCount, colCount))
-                .excludeIn (antennas.map(Antenna::position).toSet())
+                .excludeIn (antennas.map(theAntenna.position).toSet())
                 .size      ();
     }
-
+    
     StreamPlus<Antenna> extractAntennas(int row, String line) {
-        return matches(line, regex("[^\\.]")).map(result -> extractAntenna(row, result));
+        return matches(line, regex("[^\\.]"))
+                .map(result -> extractAntenna(row, result));
     }
     
     Antenna extractAntenna(int row, RegExMatchResult result) {
@@ -147,13 +152,16 @@ public class Day8Part1Test extends BaseTest {
         return new Antenna(position, symbol);
     }
     
-    FuncList<Position> totalAntinodes(FuncList<Antenna> antennas) {
-        return antennas.flatMap(first -> 
-               antennas
-               .filter(second -> !first.equals(second))
-               .map   (second -> new Position(
-                                       2*second.position.row - first.position.row,
-                                       2*second.position.col - first.position.col)));
+    FuncList<Position> createAntinodes(FuncList<Antenna> antennas) {
+        return loopList2(antennas)
+                .filter((first, second) -> !first.equals(second))
+                .map   ((first, second) -> createAntinode(first, second));
+    }
+    
+    Position createAntinode(Antenna first, Antenna second) {
+        return new Position(
+                2*second.position().row() - first.position().row(),
+                2*second.position().col() - first.position().col());
     }
     
     //== Test ==

@@ -5,6 +5,8 @@ import static functionalj.stream.intstream.IntStreamPlus.range;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.IntPredicate;
 import java.util.regex.Pattern;
 
@@ -23,6 +25,7 @@ import functionalj.list.FuncList;
 import functionalj.list.FuncList.Mode;
 import functionalj.list.ImmutableFuncList;
 import functionalj.list.intlist.IntFuncList;
+import functionalj.stream.AsStreamPlus;
 import functionalj.stream.StreamPlus;
 
 public interface AocCommon {
@@ -162,6 +165,11 @@ public interface AocCommon {
         TwoRanges         filter(IntBiPredicatePrimitive predicate);
         long              count (IntBiPredicatePrimitive predicate);
         
+        default <T, S extends AsStreamPlus<T>> StreamPlus<T> flatMap(IntIntBiFunction<AsStreamPlus<T>> mapper) {
+            return map(mapper)
+                    .flatMap(it -> it.streamPlus());
+        }
+        
         static class Impl implements TwoRanges {
             final int range1;
             final int range2;
@@ -196,8 +204,66 @@ public interface AocCommon {
                 });
             }
         }
+        
         static TwoRanges loop2(int range1, int range2) {
             return new TwoRanges.Impl(range1, range2, null);
+        }
+    }
+    
+    static interface TwoLists<T1, T2> {
+        <T> FuncList<T>  map   (BiFunction<T1, T2, T> mapper);
+        TwoLists<T1, T2> filter(BiPredicate<T1, T2>   predicate);
+        long             count (BiPredicate<T1, T2>   predicate);
+        
+        @SuppressWarnings("unchecked")
+        default <T, S extends AsStreamPlus<T>> S flatMap(BiFunction<T1, T2, ? extends AsStreamPlus<T>> mapper) {
+            return (S)map(mapper)
+                    .streamPlus()
+                    .flatMap(it -> it.streamPlus());
+        }
+        
+        static class Impl<T1, T2> implements TwoLists<T1, T2> {
+            final FuncList<T1> list1;
+            final FuncList<T2> list2;
+            final BiPredicate<T1, T2> predicate;
+            
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Impl(FuncList<T1> list1, FuncList<T2> list2, BiPredicate<T1, T2> predicate) {
+                this.list1 = list1;
+                this.list2 = list2;
+                this.predicate
+                        = (predicate == null)
+                        ? ((BiPredicate)(__,___)->true)
+                        : predicate;
+            }
+            @Override
+            public <T> FuncList<T> map(BiFunction<T1, T2, T> mapper) {
+                return list1.flatMapToObj(item1 -> {
+                    return list2.mapToObj(item2 -> mapper.apply(item1, item2));
+                });
+            }
+            @Override
+            public TwoLists<T1, T2> filter(BiPredicate<T1, T2> predicate) {
+                return new TwoLists.Impl<>(list1, list2, (i1,i2) -> {
+                    return this.predicate.test(i1,i2) && predicate.test(i1,i2);
+                });
+            }
+            @Override
+            public long count(BiPredicate<T1, T2> predicate) {
+                return list1.sumToLong(item1 -> {
+                    return list2
+                            .map   (item2 -> predicate.test(item1, item2))
+                            .filter(bool -> bool)
+                            .count();
+                });
+            }
+        }
+        
+        static <T> TwoLists<T, T> loopList2(FuncList<T> list) {
+            return new TwoLists.Impl<>(list, list, null);
+        }
+        static <T1, T2> TwoLists<T1, T2> loopList2(FuncList<T1> list1, FuncList<T2> list2) {
+            return new TwoLists.Impl<>(list1, list2, null);
         }
     }
     

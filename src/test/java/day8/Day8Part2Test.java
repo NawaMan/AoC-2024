@@ -1,15 +1,11 @@
 package day8;
 
-import static functionalj.functions.StrFuncs.matches;
-import static functionalj.stream.intstream.IntStreamPlus.infinite;
-
-import java.util.function.IntFunction;
+import static common.AocCommon.TwoLists.loopList2;
+import static day8.Antenna.theAntenna;
+import static functionalj.stream.intstream.IntStreamPlus.range;
 
 import org.junit.Test;
 
-import common.BaseTest;
-import functionalj.function.Func1;
-import functionalj.functions.RegExMatchResult;
 import functionalj.list.FuncList;
 import functionalj.stream.StreamPlus;
 
@@ -62,68 +58,45 @@ import functionalj.stream.StreamPlus;
  * Your puzzle answer was 1229.
  * 
  */
-public class Day8Part2Test extends BaseTest {
+public class Day8Part2Test extends Day8Part1Test {
     
-    record Position(int row, int col) {
-        boolean isOutOfBound(int rowCount, int colCount) {
-            return (row < 0 || row >= rowCount)
-                || (col < 0 || col >= colCount);
-        }
-    }
+    static int MAX = 10000;
     
-    record Antenna(Position position, char symbol) {}
-    
-    int countAllNodes(FuncList<String> lines) {
+    int countAntinodes(FuncList<String> lines) {
         var rowCount = lines.size();
         var colCount = lines.get(0).length();
         
         var antennas 
                 = lines
-                .mapWithIndex(this::extractAntennas)
-                .flatMap     (StreamPlus::toFuncList)
-                .cache       ();
+                .mapWithIndex   (this::extractAntennas)
+                .flatMap        (StreamPlus::toFuncList)
+                .toImmutableList();
         
         return antennas
-                .groupingBy(Antenna::symbol)
+                .groupingBy(theAntenna.symbol)
                 .values    ()
                 .map       (values -> values.map(Antenna.class::cast))
-                .flatMap   (entry  -> totalAntinodes(entry, rowCount, colCount))
-                .appendAll (antennas.map(Antenna::position).toSet())
+                .flatMap   (entry  -> createAntinodes(entry, rowCount, colCount))
+                .appendAll (antennas.map(theAntenna.position).toSet())
                 .distinct  ()
                 .size      ();
     }
     
-    StreamPlus<Antenna> extractAntennas(int row, String line) {
-        return matches(line, regex("[^\\.]")).map(extractAntenna(row));
+    FuncList<Position> createAntinodes(FuncList<Antenna> antennas, int rowCount, int colCount) {
+        return loopList2(antennas)
+                .filter ((first, second) -> !first.equals(second))
+                .flatMap((first, second) -> {
+                    return range(1, MAX)
+                            .mapToObj   (step     -> createAntinode(first, second, step))
+                            .acceptUntil(position -> position.isOutOfBound(rowCount, colCount));
+                 })
+                .toFuncList();
     }
     
-    Func1<RegExMatchResult, Antenna> extractAntenna(int row) {
-        return result -> {
-            var col      = result.start();
-            var position = new Position(row, col);
-            var symbol   = result.group().charAt(0);
-            return new Antenna(position, symbol);
-        };
-    }
-    
-    FuncList<Position> totalAntinodes(FuncList<Antenna> antennas, int rowCount, int colCount) {
-        return antennas.flatMap(first -> {
-            return antennas
-                    .filter (second -> !first.equals(second))
-                    .flatMap(second -> {
-                            return infinite()
-                                    .mapToObj   (createAntinode(first, second))
-                                    .acceptUntil(position -> position.isOutOfBound(rowCount, colCount))
-                                    .toFuncList();
-                        }
-                    );
-        });
-    }
-    
-    IntFunction<Position> createAntinode(Antenna first, Antenna second) {
-        return i -> new Position(
-                (i + 1)*second.position.row - i*first.position.row,
-                (i + 1)*second.position.col - i*first.position.col);
+    Position createAntinode(Antenna first, Antenna second, int step) {
+        return new Position(
+                (step + 1)*second.position().row() - step*first.position().row(),
+                (step + 1)*second.position().col() - step*first.position().col());
     }
     
     //== Test ==
@@ -131,7 +104,7 @@ public class Day8Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = countAllNodes(lines);
+        var result = countAntinodes(lines);
         println("result: " + result);
         assertAsString("34", result);
     }
@@ -139,7 +112,7 @@ public class Day8Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = countAllNodes(lines);
+        var result = countAntinodes(lines);
         println("result: " + result);
         assertAsString("1229", result);
     }
