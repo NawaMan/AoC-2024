@@ -2,6 +2,7 @@ package day9;
 
 import static functionalj.list.FuncList.repeat;
 import static functionalj.list.intlist.IntFuncList.infinite;
+import static functionalj.stream.intstream.IntStreamPlus.loop;
 
 import java.math.BigInteger;
 
@@ -98,26 +99,75 @@ public class Day9Part1Test extends BaseTest {
         var filesystem 
                 = infinite()
                 .zipToObjWith(line, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
-                .flatMap(itself())
-                .cache();
+                .flatMap     (itself())
+                .cache       ();
         
         // Get an iterator of the reverse of the file system so we can get its value out one-by-one.
-        var reverseFs  = filesystem.reverse().excludeNull().cache().iterable().iterator();
+        var reverseFs
+                = filesystem
+                .reverse()
+                .excludeNull()
+                .cache()
+                .iterable()
+                .iterator();
+        
         // Calculate the used and empty space to know when to stop.
-        int usedSpace  = filesystem.excludeNull().size();
+        int usedSpace
+                = loop (line.size())
+                .filter(theInt.thatIsEven())
+                .map   (line::get)
+                .sum();
+        
         int emptySpace = filesystem.size() - usedSpace;
         var compactFS
-            = filesystem.mapOnly(i -> i == null, i -> reverseFs.next()) // Fill null from the front with value from the back
-            .limit(usedSpace)                                           // ... stop at where we know the use space is.
-            .appendAll(repeat((Integer)null).limit(emptySpace));        // ... then fill the rest with empty space.
+            = filesystem
+            .mapOnly  (i -> i == null, i -> reverseFs.next())       // Fill null from the front with value from the back
+            .limit    (usedSpace)                                   // ... stop at where we know the use space is.
+            .appendAll(repeat((Integer)null).limit(emptySpace));    // ... then fill the rest with empty space.
         
         return compactFS
                 .mapWithIndex((index, id) -> (id == null) ? 0L : index*id.longValue())
-                .mapToObj(BigInteger::valueOf)
-                .reduce(BigInteger.ZERO, BigInteger::add);
+                .mapToObj    (BigInteger::valueOf)
+                .reduce      (BigInteger.ZERO, BigInteger::add);
     }
     
     //== Test ==
+    
+    @Test
+    public void testExperiment() {
+        var line   = "2333133121414131402";
+        var inputs = IntFuncList.from(line.chars()).map(i -> i - '0').cache();
+        var maxId  = inputs.size() / 2;
+        println(inputs);
+        println(maxId);
+        
+        var totalSpace  = inputs.sum();
+        var emptySpaces = inputs.filterWithIndex((i, num) -> (i % 2) == 1).pipe(l -> show("empty spaces", l));
+        var usedSpaces  = inputs.filterWithIndex((i, num) -> (i % 2) == 0).pipe(l -> show("used spaces ",  l));
+        println(totalSpace);
+        println(emptySpaces.sum());
+        println(usedSpaces.sum());
+        
+        var usedRevSpaces = usedSpaces.reverse();
+        println("Used space: " + usedRevSpaces);
+        println();
+        
+        println("inputs: ");
+        println(inputs);
+        println();
+        
+        var revIDs = loop(maxId + 1).toFuncList().reverse();
+        
+        println("usedRevSpaces: ");
+        println(usedRevSpaces);
+        println(revIDs.zipWith(usedRevSpaces));
+        println();
+        
+        var toMoves = revIDs.zipWith(usedRevSpaces).iterator();
+        while (toMoves.hasNext()) {
+            println(toMoves.next());
+        }
+    }
     
     @Test
     public void testExample() {
@@ -126,7 +176,7 @@ public class Day9Part1Test extends BaseTest {
         println("result: " + result);
         assertAsString("1928", result);
     }
-    
+
     @Test
     public void testProd() {
         var lines  = readAllLines();
