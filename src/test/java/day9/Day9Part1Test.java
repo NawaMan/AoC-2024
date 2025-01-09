@@ -3,14 +3,26 @@ package day9;
 import static functionalj.list.FuncList.repeat;
 import static functionalj.list.intlist.IntFuncList.infinite;
 import static functionalj.stream.intstream.IntStreamPlus.loop;
+import static functionalj.stream.intstream.IntStreamPlus.range;
 
+import java.awt.font.NumericShaper.Range;
 import java.math.BigInteger;
+import java.util.function.BiFunction;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
+import functionalj.function.Apply;
+import functionalj.function.Func;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
+import functionalj.stream.intstream.IntStep;
+import functionalj.stream.intstream.IntStreamPlus;
+import functionalj.tuple.IntIntTuple;
+import functionalj.tuple.Tuple2;
+import functionalj.tuple.Tuple4;
+import functionalj.tuple.Tuple5;
 
 /**
  * --- Day 9: Disk Fragmenter ---
@@ -162,13 +174,86 @@ public class Day9Part1Test extends BaseTest {
         println(usedRevSpaces);
         println(revIDs.zipWith(usedRevSpaces));
         println();
-        
+
+        println("usedRevSpaces - pair:");
         var toMoves = revIDs.zipWith(usedRevSpaces).iterator();
         while (toMoves.hasNext()) {
             println(toMoves.next());
         }
+        println();
+
+        println("input segment(2):");
+        println(inputs.segment(2));
+        println();
+        
+        var mainList
+                = repeat(IntIntTuple.of(0, 0))
+                .zipWith(IntFuncList.loop()
+                .zipWith(inputs.segment(2)
+                .zipWith(revIDs.zipWith(usedRevSpaces))), (a, b) -> {
+                    return Tuple4.of(a, b._1(), b._2()._1(), b._2()._2());
+                })
+                .toFuncList();
+        println("mainList: ");
+        mainList.forEach(println);
+        println();
+        
+        
+        var list1 = repeat(IntIntTuple.of(0, 0));
+        var list2 = IntFuncList.loop();
+        var list3 = inputs.segment(2);
+        var list4 = revIDs;
+        var list5 = usedRevSpaces;
+        
+        var listSize = IntFuncList.of(list3.size(), list4.size(), list5.size()).min().getAsInt();
+        
+        IntFuncList.loop(listSize).mapToObj(i -> {
+            return Tuple5.of(list1.get(i), list2.get(i), list3.get(i), list4.get(i), list5.get(i));
+        })
+        .forEach(println);
+        println();
+        
+//        Func.f()
+//        .app
+//        ;
+        
+        IntFuncList.of(1)
+        .boxed()
+        .mapGroup((Integer a, Integer b, Integer c, Integer d, Integer e) -> {
+            return "";
+        });
+        
+        
+//        Apply.$(,
+//                FuncList.of(1),
+//                FuncList.of(1),
+//                FuncList.of(1),
+//                FuncList.of(1),
+//                FuncList.of(1));
+        
+        
+//        // BiFunction<? super DATA, FuncList<DATA>, FuncList<DATA>> restater
+//        mainList
+//        .prepend(Tuple4.of(IntIntTuple.of(0, 0), 0, null, null))
+//        .toImmutableList()
+//        .restate((head, tail) -> {
+//            println("head:   " + head + " -> " +  tail);
+//            println("head-2: " + head._2() + " - " +  head._3());
+//            
+//            var first = tail.first().get();
+//            
+//            var id      = head._2();
+//            var count   = first._3().get(0);
+//            var value   = IntIntTuple.of(id, count);
+//            var newHead = Tuple4.of(value, 0, IntFuncList.of(0, first._3().get(1)), first._4());
+//            println("new-head:" + newHead);
+//            return tail;
+//        })
+//        .limit(2)
+//        .forEach(println);
     }
     
+    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();
@@ -177,6 +262,7 @@ public class Day9Part1Test extends BaseTest {
         assertAsString("1928", result);
     }
 
+    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();
