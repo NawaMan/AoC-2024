@@ -123,16 +123,13 @@ public class Day8Part1Test extends BaseTest {
         var rowCount = lines.size();
         var colCount = lines.get(0).length();
         
-        var antennas 
-                = lines
-                .flatMapWithIndex(this::extractAntennas)
-                .toImmutableList ();
+        var antennas = lines.flatMapWithIndex(this::extractAntennas);
         
         return antennas
                 .groupingBy(theAntenna.symbol)
                 .values    ()
-                .map       (values   -> values.map(Antenna.class::cast))
-                .flatMap   (values   -> createAntinodes(values, rowCount, colCount))
+                .map       (values -> values.map(Antenna.class::cast))
+                .flatMap   (values -> createAntinodes(values, rowCount, colCount))
                 .distinct  ()
                 .size      ();
     }
@@ -158,7 +155,6 @@ public class Day8Part1Test extends BaseTest {
         var position = new Position(
                 2*second.position().row() - first.position().row(),
                 2*second.position().col() - first.position().col());
-        println("first: " + first + ", second: " + second + ", POS: " + position);
         return position;
     }
     
