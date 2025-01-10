@@ -147,44 +147,54 @@ public class Day9Part1Test extends BaseTest {
     }
     
     long diskFragmenter(String line) {
-        var inputs = IntFuncList.from(line.chars()).map(i -> i - '0').cache();
-        var maxId  = inputs.size() / 2;
-        var revIDs = loop(maxId + 1).toFuncList().reverse();
-        var usedSpaces  = inputs.filterWithIndex((i, num) -> (i % 2) == 0).pipe(l -> show("used spaces ",  l));
-        var usedRevSpaces = usedSpaces.reverse();
+        var inputs
+                = IntFuncList.from(line.chars())
+                .map(i -> i - '0')
+                .toImmutableList();
         
-        var needs = revIDs.zipToObjWith(usedRevSpaces, (id, size) -> new IndexedInt(id, size)).reverse().toImmutableList();
+        var usedRevSpaces
+                = inputs
+                .filterWithIndex((i, num) -> (i % 2) == 0)
+                .reverse();
+        
+        var needs
+                = loop(1 + (inputs.size() / 2))
+                .toFuncList()
+                .reverse()
+                .zipToObjWith(usedRevSpaces, (id, size) -> new IndexedInt(id, size))
+                .reverse()
+                .toImmutableList();
         
         var accumulator = new LongAdder();
-        var accepter = Func.f((Integer id, Integer count, Integer offset) -> {
+        var accepter = Func.f((Integer offset, Integer id, Integer count) -> {
             System.out.println("OUT: " + Tuple3.of(id, count, offset));
             accumulator.add(id * (count * (2 * offset + count - 1) / 2));
             return offset + count;
         });
         
-        int first = 0;
-        int last  = needs.size() - 1;
+        int first      = 0;
+        int last       = needs.size() - 1;
         var availSpace = 0;
         var neededPair = needs.get(last--);
         var offset     = 0;
         while (first <= last*2) {
             if (availSpace == 0) {
-                offset     = accepter.apply(first / 2, inputs.get(first++), offset);
+                offset     = accepter.apply(offset, first / 2, inputs.get(first++));
                 availSpace = inputs.get(first++);
             }
             while (availSpace != 0) {
                 if (availSpace >= neededPair.item()) {
-                    offset      = accepter.apply(neededPair.index(), neededPair.item(), offset);
+                    offset      = accepter.apply(offset, neededPair.index(), neededPair.item());
                     availSpace -= neededPair.item();
                     neededPair  = needs.get(last--);
                 } else {
-                    offset     = accepter.apply(neededPair.index(), availSpace, offset);             // Run out of space
+                    offset     = accepter.apply(offset, neededPair.index(), availSpace);             // Run out of space
                     neededPair = new IndexedInt(neededPair.index(), neededPair.item() - availSpace); // Left over
                     availSpace = 0;
                 }
             }
         }
-        offset = accepter.apply(neededPair.index(), neededPair.item(), offset);
+        offset = accepter.apply(offset, neededPair.index(), neededPair.item());
         return accumulator.longValue();
     }
     
