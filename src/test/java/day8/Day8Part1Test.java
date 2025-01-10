@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.stream.StreamPlus;
 import functionalj.types.Struct;
 
 /**
@@ -122,40 +121,37 @@ public class Day8Part1Test extends BaseTest {
     int countAntinodes(FuncList<String> lines) {
         var rowCount = lines.size();
         var colCount = lines.get(0).length();
-        
-        var antennas = lines.flatMapWithIndex(this::extractAntennas);
-        
-        return antennas
+        return lines
+                .flatMapWithIndex(this::extractAntennas)
                 .groupingBy(theAntenna.symbol)
                 .values    ()
-                .map       (values -> values.map(Antenna.class::cast))
-                .flatMap   (values -> createAntinodes(values, rowCount, colCount))
+                .flatMap   (antennas -> createAntinodes(antennas, rowCount, colCount))
                 .distinct  ()
                 .size      ();
     }
     
-    StreamPlus<Antenna> extractAntennas(int row, String line) {
+    FuncList<Antenna> extractAntennas(int row, String line) {
         return matches(line, regex("[^\\.]"))
                 .map(result -> {
                     var col      = result.start();
                     var position = new Position(row, col);
                     var symbol   = result.group().charAt(0);
                     return new Antenna(position, symbol);
-                });
+                })
+                .toFuncList();
     }
     
     FuncList<Position> createAntinodes(FuncList<Antenna> antennas, int rowCount, int colCount) {
         return nestLoopList2(antennas)
                 .filter ((first, second) -> !first.equals(second))
                 .map    ((first, second) -> createAntinode(first, second))
-                .exclude(position -> position.isOutOfBound(rowCount, colCount));
+                .exclude(position        -> position.isOutOfBound(rowCount, colCount));
     }
     
     Position createAntinode(Antenna first, Antenna second) {
-        var position = new Position(
+        return new Position(
                 2*second.position().row() - first.position().row(),
                 2*second.position().col() - first.position().col());
-        return position;
     }
     
     //== Test ==

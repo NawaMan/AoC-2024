@@ -7,6 +7,7 @@ import static functionalj.stream.intstream.IntStreamPlus.range;
 
 import java.awt.font.NumericShaper.Range;
 import java.math.BigInteger;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
 
 import org.junit.Ignore;
@@ -17,10 +18,13 @@ import functionalj.function.Apply;
 import functionalj.function.Func;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
+import functionalj.store.Store;
+import functionalj.stream.intstream.IndexedInt;
 import functionalj.stream.intstream.IntStep;
 import functionalj.stream.intstream.IntStreamPlus;
 import functionalj.tuple.IntIntTuple;
 import functionalj.tuple.Tuple2;
+import functionalj.tuple.Tuple3;
 import functionalj.tuple.Tuple4;
 import functionalj.tuple.Tuple5;
 
@@ -98,7 +102,6 @@ import functionalj.tuple.Tuple5;
  */
 public class Day9Part1Test extends BaseTest {
     
-    
     BigInteger calculateChecksum(FuncList<String> lines) {
         // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
         var line = IntFuncList.from(lines.get(0).chars()).map(i -> i - '0').cache();
@@ -143,114 +146,55 @@ public class Day9Part1Test extends BaseTest {
                 .reduce      (BigInteger.ZERO, BigInteger::add);
     }
     
+    long diskFragmenter(String line) {
+        var inputs = IntFuncList.from(line.chars()).map(i -> i - '0').cache();
+        var maxId  = inputs.size() / 2;
+        var revIDs = loop(maxId + 1).toFuncList().reverse();
+        var usedSpaces  = inputs.filterWithIndex((i, num) -> (i % 2) == 0).pipe(l -> show("used spaces ",  l));
+        var usedRevSpaces = usedSpaces.reverse();
+        
+        var needs = revIDs.zipToObjWith(usedRevSpaces, (id, size) -> new IndexedInt(id, size)).reverse().toImmutableList();
+        
+        var accumulator = new LongAdder();
+        var accepter = Func.f((Integer id, Integer count, Integer offset) -> {
+            System.out.println("OUT: " + Tuple3.of(id, count, offset));
+            accumulator.add(id * (count * (2 * offset + count - 1) / 2));
+            return offset + count;
+        });
+        
+        int first = 0;
+        int last  = needs.size() - 1;
+        var availSpace = 0;
+        var neededPair = needs.get(last--);
+        var offset     = 0;
+        while (first <= last*2) {
+            if (availSpace == 0) {
+                offset     = accepter.apply(first / 2, inputs.get(first++), offset);
+                availSpace = inputs.get(first++);
+            }
+            while (availSpace != 0) {
+                if (availSpace >= neededPair.item()) {
+                    offset      = accepter.apply(neededPair.index(), neededPair.item(), offset);
+                    availSpace -= neededPair.item();
+                    neededPair  = needs.get(last--);
+                } else {
+                    offset     = accepter.apply(neededPair.index(), availSpace, offset);             // Run out of space
+                    neededPair = new IndexedInt(neededPair.index(), neededPair.item() - availSpace); // Left over
+                    availSpace = 0;
+                }
+            }
+        }
+        offset = accepter.apply(neededPair.index(), neededPair.item(), offset);
+        return accumulator.longValue();
+    }
+    
     //== Test ==
     
     @Test
     public void testExperiment() {
-        var line   = "2333133121414131402";
-        var inputs = IntFuncList.from(line.chars()).map(i -> i - '0').cache();
-        var maxId  = inputs.size() / 2;
-        println(inputs);
-        println(maxId);
-        
-        var totalSpace  = inputs.sum();
-        var emptySpaces = inputs.filterWithIndex((i, num) -> (i % 2) == 1).pipe(l -> show("empty spaces", l));
-        var usedSpaces  = inputs.filterWithIndex((i, num) -> (i % 2) == 0).pipe(l -> show("used spaces ",  l));
-        println(totalSpace);
-        println(emptySpaces.sum());
-        println(usedSpaces.sum());
-        
-        var usedRevSpaces = usedSpaces.reverse();
-        println("Used space: " + usedRevSpaces);
-        println();
-        
-        println("inputs: ");
-        println(inputs);
-        println();
-        
-        var revIDs = loop(maxId + 1).toFuncList().reverse();
-        
-        println("usedRevSpaces: ");
-        println(usedRevSpaces);
-        println(revIDs.zipWith(usedRevSpaces));
-        println();
-
-        println("usedRevSpaces - pair:");
-        var toMoves = revIDs.zipWith(usedRevSpaces).iterator();
-        while (toMoves.hasNext()) {
-            println(toMoves.next());
-        }
-        println();
-
-        println("input segment(2):");
-        println(inputs.segment(2));
-        println();
-        
-        var mainList
-                = repeat(IntIntTuple.of(0, 0))
-                .zipWith(IntFuncList.loop()
-                .zipWith(inputs.segment(2)
-                .zipWith(revIDs.zipWith(usedRevSpaces))), (a, b) -> {
-                    return Tuple4.of(a, b._1(), b._2()._1(), b._2()._2());
-                })
-                .toFuncList();
-        println("mainList: ");
-        mainList.forEach(println);
-        println();
-        
-        
-        var list1 = repeat(IntIntTuple.of(0, 0));
-        var list2 = IntFuncList.loop();
-        var list3 = inputs.segment(2);
-        var list4 = revIDs;
-        var list5 = usedRevSpaces;
-        
-        var listSize = IntFuncList.of(list3.size(), list4.size(), list5.size()).min().getAsInt();
-        
-        IntFuncList.loop(listSize).mapToObj(i -> {
-            return Tuple5.of(list1.get(i), list2.get(i), list3.get(i), list4.get(i), list5.get(i));
-        })
-        .forEach(println);
-        println();
-        
-//        Func.f()
-//        .app
-//        ;
-        
-        IntFuncList.of(1)
-        .boxed()
-        .mapGroup((Integer a, Integer b, Integer c, Integer d, Integer e) -> {
-            return "";
-        });
-        
-        
-//        Apply.$(,
-//                FuncList.of(1),
-//                FuncList.of(1),
-//                FuncList.of(1),
-//                FuncList.of(1),
-//                FuncList.of(1));
-        
-        
-//        // BiFunction<? super DATA, FuncList<DATA>, FuncList<DATA>> restater
-//        mainList
-//        .prepend(Tuple4.of(IntIntTuple.of(0, 0), 0, null, null))
-//        .toImmutableList()
-//        .restate((head, tail) -> {
-//            println("head:   " + head + " -> " +  tail);
-//            println("head-2: " + head._2() + " - " +  head._3());
-//            
-//            var first = tail.first().get();
-//            
-//            var id      = head._2();
-//            var count   = first._3().get(0);
-//            var value   = IntIntTuple.of(id, count);
-//            var newHead = Tuple4.of(value, 0, IntFuncList.of(0, first._3().get(1)), first._4());
-//            println("new-head:" + newHead);
-//            return tail;
-//        })
-//        .limit(2)
-//        .forEach(println);
+        var line        = "2333133121414131402";
+        var accumulator = diskFragmenter(line);
+        System.out.println(accumulator);
     }
     
     @Ignore
