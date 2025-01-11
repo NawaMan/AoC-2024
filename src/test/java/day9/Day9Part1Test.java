@@ -2,6 +2,7 @@ package day9;
 
 import static functionalj.list.FuncList.repeat;
 import static functionalj.list.intlist.IntFuncList.infinite;
+import static functionalj.stream.intstream.IntStreamPlus.loop;
 
 import java.math.BigInteger;
 
@@ -85,10 +86,15 @@ import functionalj.list.intlist.IntFuncList;
  */
 public class Day9Part1Test extends BaseTest {
     
-    
     BigInteger calculateChecksum(FuncList<String> lines) {
         // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
-        var line = IntFuncList.from(lines.get(0).chars()).map(i -> i - '0').cache();
+        var inputs = IntFuncList.from(lines.get(0).chars()).map(i -> i - '0').cache();
+        return diskFragmenterWithExpansion(inputs);
+    }
+
+    BigInteger diskFragmenterWithExpansion(IntFuncList inputs) {
+        // Input line: 
+        // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
         
         // [   0,    0, null, null, null,    1,    1,    1, null, null, null
         // ,   2, null, null, null,    3,    3,    3, null,    4,    4, null
@@ -97,24 +103,37 @@ public class Day9Part1Test extends BaseTest {
         // ]
         var filesystem 
                 = infinite()
-                .zipToObjWith(line, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
-                .flatMap(itself())
-                .cache();
+                .zipToObjWith(inputs, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
+                .flatMap     (itself())
+                .cache       ();
         
         // Get an iterator of the reverse of the file system so we can get its value out one-by-one.
-        var reverseFs  = filesystem.reverse().excludeNull().cache().iterable().iterator();
+        var reverseFs
+                = filesystem
+                .reverse()
+                .excludeNull()
+                .cache()
+                .iterable()
+                .iterator();
+        
         // Calculate the used and empty space to know when to stop.
-        int usedSpace  = filesystem.excludeNull().size();
+        int usedSpace
+                = loop (inputs.size())
+                .filter(theInt.thatIsEven())
+                .map   (inputs::get)
+                .sum();
+        
         int emptySpace = filesystem.size() - usedSpace;
         var compactFS
-            = filesystem.mapOnly(i -> i == null, i -> reverseFs.next()) // Fill null from the front with value from the back
-            .limit(usedSpace)                                           // ... stop at where we know the use space is.
-            .appendAll(repeat((Integer)null).limit(emptySpace));        // ... then fill the rest with empty space.
+            = filesystem
+            .mapOnly  (i -> i == null, i -> reverseFs.next())       // Fill null from the front with value from the back
+            .limit    (usedSpace)                                   // ... stop at where we know the use space is.
+            .appendAll(repeat((Integer)null).limit(emptySpace));    // ... then fill the rest with empty space.
         
         return compactFS
                 .mapWithIndex((index, id) -> (id == null) ? 0L : index*id.longValue())
-                .mapToObj(BigInteger::valueOf)
-                .reduce(BigInteger.ZERO, BigInteger::add);
+                .mapToObj    (BigInteger::valueOf)
+                .reduce      (BigInteger.ZERO, BigInteger::add);
     }
     
     //== Test ==
@@ -126,7 +145,7 @@ public class Day9Part1Test extends BaseTest {
         println("result: " + result);
         assertAsString("1928", result);
     }
-    
+
     @Test
     public void testProd() {
         var lines  = readAllLines();

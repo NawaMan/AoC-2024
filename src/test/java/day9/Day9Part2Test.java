@@ -2,6 +2,7 @@ package day9;
 
 import static functionalj.list.FuncList.repeat;
 import static functionalj.list.intlist.IntFuncList.infinite;
+import static functionalj.stream.intstream.IntStreamPlus.range;
 
 import java.math.BigInteger;
 import java.util.Objects;
@@ -53,32 +54,28 @@ public class Day9Part2Test extends BaseTest {
                 .cache();
         var reveredDataBlocks
                 = diskMap
-                .filterWithIndex((index, num) -> index % 2 == 0)
+                .filterWithIndex  ((index, num) -> index % 2 == 0)
                 .mapToObjWithIndex(IntIntTuple::new)
-                .reverse()
-                .cache();
+                .reverse();
         var filesystem 
                 = infinite()
-                .zipToObjWith(diskMap, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
-                .map(FuncList::toArray)
+                .zipToObjWith(diskMap, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length).toArray())
                 .cache()
                 ;
         var sectorByIds
                 = filesystem
                 .filterWithIndex((index, array) -> index % 2 != 1)
                 .toArray();
+
         
         reveredDataBlocks.forEach(pair -> {
             var id          = pair._1;
             var neededSpace = pair._2;
-            for (int i = 0; i < (id * 2); i++) {
-                var foundArray = filesystem.get(i);
-                var hasEnough  = StreamPlus.of(foundArray).filter(Objects::isNull).size() >= neededSpace;
-                if(hasEnough) {
-                    migrateData(sectorByIds, id, neededSpace, foundArray);
-                    break;
-                }
-            }
+            range(0, id * 2)
+            .mapToObj (filesystem::get)
+            .filter   (foundArray -> StreamPlus.of(foundArray).filter(Objects::isNull).size() >= neededSpace)
+            .findFirst()
+            .ifPresent(foundArray -> migrateData(sectorByIds, id, neededSpace, foundArray));
         });
         
         var checksum

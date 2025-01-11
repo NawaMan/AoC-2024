@@ -65,10 +65,10 @@ public class Day8Part2Test extends Day8Part1Test {
         var rowCount = lines.size();
         var colCount = lines.get(0).length();
         
-        var antennas 
+        var antennas
                 = lines
                 .flatMapWithIndex(this::extractAntennas)
-                .toImmutableList ();
+                .toImmutableList();
         
         return antennas
                 .groupingBy(theAntenna.symbol)
