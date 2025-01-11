@@ -5,19 +5,12 @@ import static functionalj.list.intlist.IntFuncList.infinite;
 import static functionalj.stream.intstream.IntStreamPlus.loop;
 
 import java.math.BigInteger;
-import java.util.concurrent.atomic.LongAdder;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.function.Func;
-import functionalj.function.FuncUnit3;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
-import functionalj.stream.intstream.IndexedInt;
-import functionalj.tuple.Tuple3;
-import functionalj.types.Struct;
 
 /**
  * --- Day 9: Disk Fragmenter ---
@@ -95,7 +88,13 @@ public class Day9Part1Test extends BaseTest {
     
     BigInteger calculateChecksum(FuncList<String> lines) {
         // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
-        var line = IntFuncList.from(lines.get(0).chars()).map(i -> i - '0').cache();
+        var inputs = IntFuncList.from(lines.get(0).chars()).map(i -> i - '0').cache();
+        return diskFragmenterWithExpansion(inputs);
+    }
+
+    BigInteger diskFragmenterWithExpansion(IntFuncList inputs) {
+        // Input line: 
+        // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
         
         // [   0,    0, null, null, null,    1,    1,    1, null, null, null
         // ,   2, null, null, null,    3,    3,    3, null,    4,    4, null
@@ -104,7 +103,7 @@ public class Day9Part1Test extends BaseTest {
         // ]
         var filesystem 
                 = infinite()
-                .zipToObjWith(line, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
+                .zipToObjWith(inputs, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
                 .flatMap     (itself())
                 .cache       ();
         
@@ -119,9 +118,9 @@ public class Day9Part1Test extends BaseTest {
         
         // Calculate the used and empty space to know when to stop.
         int usedSpace
-                = loop (line.size())
+                = loop (inputs.size())
                 .filter(theInt.thatIsEven())
-                .map   (line::get)
+                .map   (inputs::get)
                 .sum();
         
         int emptySpace = filesystem.size() - usedSpace;
@@ -137,110 +136,8 @@ public class Day9Part1Test extends BaseTest {
                 .reduce      (BigInteger.ZERO, BigInteger::add);
     }
     
-    @Struct
-    static void Input(
-            IntFuncList          diskMap,
-            FuncList<IndexedInt> needs) {}
-    
-    @Struct
-    static void Output(int id, int offset, int count) {}
-    
-    @Struct
-    static void Loop(
-            Input      input,
-            int        offset,
-            int        first,
-            int        last,
-            int        availSpace,
-            IndexedInt neededPair,
-            Output     output) {}
-    
-    long diskFragmenter(String line) {
-        var inputs
-                = IntFuncList.from(line.chars())
-                .map(i -> i - '0')
-                .toImmutableList();
-        
-        var usedRevSpaces
-                = inputs
-                .filterWithIndex((i, num) -> (i % 2) == 0)
-                .reverse();
-        
-        var needs
-                = loop(1 + (inputs.size() / 2))
-                .toFuncList()
-                .reverse()
-                .zipToObjWith(usedRevSpaces, (id, size) -> new IndexedInt(id, size))
-                .reverse()
-                .toImmutableList();
-        
-        var accumulator = new LongAdder();
-        var accepter = Func.f((Integer offset, Integer id, Integer count) -> {
-            System.out.println("OUT: " + Tuple3.of(id, count, offset));
-            accumulator.add(id * (count * (2 * offset + count - 1) / 2));
-        });
-
-        var data = new Loop.Builder()
-                .input     (new Input(inputs, needs))
-                .offset    (0)
-                .first     (0)
-                .last      (needs.size() - 2)
-                .availSpace(0)
-                .neededPair(needs.get(needs.size() - 1))
-                .output    (new Output(-1, 0, -1))
-                .build()
-                ;
-        do {
-            data = updateData(data);
-            accepter.accept(data.output().offset(), data.output().id(), data.output().count());     // Run out of space
-        } while (data.first() <= data.last()*2);
-        
-        accepter.accept(data.offset(), data.neededPair().index(), data.neededPair().item());
-        return accumulator.longValue();
-    }
-    
-    private Loop updateData(Loop data) {
-        if (data.availSpace() == 0) {
-            return data
-                    .withOffset    (data.offset() + data.input().diskMap().get(data.first()))
-                    .withFirst     (data.first()  + 2)
-                    .withAvailSpace(data.input().diskMap().get(data.first() + 1))
-                    .withOutput    (out -> out.withId    (data.first() / 2)
-                                              .withOffset(data.offset())
-                                              .withCount (data.input().diskMap().get(data.first())));
-        }
-        
-        if (data.availSpace() >= data.neededPair().item()) {
-            return data
-                    .withOffset    (data.offset()     + data.neededPair().item())
-                    .withLast      (data.last()       - 1)
-                    .withAvailSpace(data.availSpace() - data.neededPair().item())
-                    .withNeededPair(data.input().needs().get(data.last()))
-                    .withOutput    (out -> out.withId    (data.neededPair().index())
-                                              .withOffset(data.offset())
-                                              .withCount (data.neededPair().item()));
-        }
-        
-        int leftOver = data.neededPair().item() - data.availSpace();
-        return data
-                .withOffset    (data.offset() + data.availSpace())
-                .withAvailSpace(0)
-                .withNeededPair(new IndexedInt(data.neededPair().index(), leftOver))
-                .withOutput    (out -> out.withId    (data.neededPair().index())
-                                          .withOffset(data.offset())
-                                          .withCount (data.availSpace()));
-    }
-    
     //== Test ==
     
-    @Test
-    public void testExperiment() {
-        var line        = "2333133121414131402";
-        var accumulator = diskFragmenter(line);
-        System.out.println(accumulator);
-    }
-    
-    @Ignore
     @Test
     public void testExample() {
         var lines  = readAllLines();
@@ -249,7 +146,6 @@ public class Day9Part1Test extends BaseTest {
         assertAsString("1928", result);
     }
 
-    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();
