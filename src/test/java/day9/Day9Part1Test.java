@@ -3,30 +3,21 @@ package day9;
 import static functionalj.list.FuncList.repeat;
 import static functionalj.list.intlist.IntFuncList.infinite;
 import static functionalj.stream.intstream.IntStreamPlus.loop;
-import static functionalj.stream.intstream.IntStreamPlus.range;
 
-import java.awt.font.NumericShaper.Range;
 import java.math.BigInteger;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.BiFunction;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.function.Apply;
 import functionalj.function.Func;
+import functionalj.function.FuncUnit3;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
-import functionalj.store.Store;
 import functionalj.stream.intstream.IndexedInt;
-import functionalj.stream.intstream.IntStep;
-import functionalj.stream.intstream.IntStreamPlus;
-import functionalj.tuple.IntIntTuple;
-import functionalj.tuple.Tuple2;
 import functionalj.tuple.Tuple3;
-import functionalj.tuple.Tuple4;
-import functionalj.tuple.Tuple5;
+import functionalj.types.Struct;
 
 /**
  * --- Day 9: Disk Fragmenter ---
@@ -146,6 +137,24 @@ public class Day9Part1Test extends BaseTest {
                 .reduce      (BigInteger.ZERO, BigInteger::add);
     }
     
+    @Struct
+    static void Input(
+            IntFuncList          diskMap,
+            FuncList<IndexedInt> needs) {}
+    
+    @Struct
+    static void Output(int id, int offset, int count) {}
+    
+    @Struct
+    static void Loop(
+            Input      input,
+            int        offset,
+            int        first,
+            int        last,
+            int        availSpace,
+            IndexedInt neededPair,
+            Output     output) {}
+    
     long diskFragmenter(String line) {
         var inputs
                 = IntFuncList.from(line.chars())
@@ -169,33 +178,57 @@ public class Day9Part1Test extends BaseTest {
         var accepter = Func.f((Integer offset, Integer id, Integer count) -> {
             System.out.println("OUT: " + Tuple3.of(id, count, offset));
             accumulator.add(id * (count * (2 * offset + count - 1) / 2));
-            return offset + count;
         });
+
+        var data = new Loop.Builder()
+                .input     (new Input(inputs, needs))
+                .offset    (0)
+                .first     (0)
+                .last      (needs.size() - 2)
+                .availSpace(0)
+                .neededPair(needs.get(needs.size() - 1))
+                .output    (new Output(-1, 0, -1))
+                .build()
+                ;
+        do {
+            data = updateData(data);
+            accepter.accept(data.output().offset(), data.output().id(), data.output().count());     // Run out of space
+        } while (data.first() <= data.last()*2);
         
-        int first      = 0;
-        int last       = needs.size() - 1;
-        var availSpace = 0;
-        var neededPair = needs.get(last--);
-        var offset     = 0;
-        while (first <= last*2) {
-            if (availSpace == 0) {
-                offset     = accepter.apply(offset, first / 2, inputs.get(first++));
-                availSpace = inputs.get(first++);
-            }
-            while (availSpace != 0) {
-                if (availSpace >= neededPair.item()) {
-                    offset      = accepter.apply(offset, neededPair.index(), neededPair.item());
-                    availSpace -= neededPair.item();
-                    neededPair  = needs.get(last--);
-                } else {
-                    offset     = accepter.apply(offset, neededPair.index(), availSpace);             // Run out of space
-                    neededPair = new IndexedInt(neededPair.index(), neededPair.item() - availSpace); // Left over
-                    availSpace = 0;
-                }
-            }
-        }
-        offset = accepter.apply(offset, neededPair.index(), neededPair.item());
+        accepter.accept(data.offset(), data.neededPair().index(), data.neededPair().item());
         return accumulator.longValue();
+    }
+    
+    private Loop updateData(Loop data) {
+        if (data.availSpace() == 0) {
+            return data
+                    .withOffset    (data.offset() + data.input().diskMap().get(data.first()))
+                    .withFirst     (data.first()  + 2)
+                    .withAvailSpace(data.input().diskMap().get(data.first() + 1))
+                    .withOutput    (out -> out.withId    (data.first() / 2)
+                                              .withOffset(data.offset())
+                                              .withCount (data.input().diskMap().get(data.first())));
+        }
+        
+        if (data.availSpace() >= data.neededPair().item()) {
+            return data
+                    .withOffset    (data.offset()     + data.neededPair().item())
+                    .withLast      (data.last()       - 1)
+                    .withAvailSpace(data.availSpace() - data.neededPair().item())
+                    .withNeededPair(data.input().needs().get(data.last()))
+                    .withOutput    (out -> out.withId    (data.neededPair().index())
+                                              .withOffset(data.offset())
+                                              .withCount (data.neededPair().item()));
+        }
+        
+        int leftOver = data.neededPair().item() - data.availSpace();
+        return data
+                .withOffset    (data.offset() + data.availSpace())
+                .withAvailSpace(0)
+                .withNeededPair(new IndexedInt(data.neededPair().index(), leftOver))
+                .withOutput    (out -> out.withId    (data.neededPair().index())
+                                          .withOffset(data.offset())
+                                          .withCount (data.availSpace()));
     }
     
     //== Test ==
