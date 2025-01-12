@@ -77,7 +77,18 @@ import functionalj.list.FuncList;
  */
 public class Day10Part2Test extends BaseTest {
     
-    record Position(int row, int col) {}
+    record Position(int row, int col) {
+        Position move(Direction direction) {
+            return (direction == null) ? this : new Position(row + direction.row, col + direction.col);
+        }
+    }
+    
+    static record Direction(int row, int col) {}
+    
+    static FuncList<Direction> allDirections = FuncList.of(
+                       new Direction(-1,  0), 
+            new Direction( 0, -1), new Direction( 0,  1), 
+                       new Direction( 1,  0));
     
     record Grid(FuncList<String> lines) {
         int at(int r, int c) {
@@ -96,21 +107,19 @@ public class Day10Part2Test extends BaseTest {
         }
     }
     
-    int countTrails(FuncList<String> lines) {
+    long countTrails(FuncList<String> lines) {
         var grid   = new Grid(lines);
         var starts = grid.allPositions((r, c, ch) -> (ch == 0) ? new Position(r, c): null);
-        return starts.mapToInt(start -> seachForTailAt(grid, start, 0, 0, 0)).sum();
+        return starts.sumToLong(start -> countTailsAt(grid, start, null, 0));
     }
     
-    int seachForTailAt(Grid grid, Position pos, int diffRow, int diffCol, int nextLevel) {
-        var nextPost = new Position(pos.row + diffRow, pos.col + diffCol);
+    long countTailsAt(Grid grid, Position pos, Direction direction, int nextLevel) {
+        var nextPost = pos.move(direction);
         var h = grid.at(nextPost.row, nextPost.col);
         if (nextLevel != h) return 0;
         if (nextLevel == 9) return 1;
-        return seachForTailAt(grid, nextPost,  1,  0, nextLevel + 1)
-             + seachForTailAt(grid, nextPost, -1,  0, nextLevel + 1)
-             + seachForTailAt(grid, nextPost,  0,  1, nextLevel + 1)
-             + seachForTailAt(grid, nextPost,  0, -1, nextLevel + 1);
+        return allDirections
+                .sumToLong(dir -> countTailsAt(grid, nextPost, dir, nextLevel + 1));
     }
     
     //== Test ==

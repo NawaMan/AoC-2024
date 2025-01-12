@@ -5,7 +5,6 @@ import static functionalj.list.intlist.IntFuncList.range;
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.function.Func3;
 import functionalj.list.FuncList;
 
 /**
@@ -97,43 +96,55 @@ import functionalj.list.FuncList;
  */
 public class Day10Part1Test extends BaseTest {
     
-    record Position(int row, int col) {}
+    static record Position(int row, int col) {
+        Position move(Direction direction) {
+            return (direction == null) ? this : new Position(row + direction.row, col + direction.col);
+        }
+    }
+    
+    static record Direction(int row, int col) {}
+    
+    static FuncList<Direction> allDirections = FuncList.of(
+                       new Direction(-1,  0), 
+            new Direction( 0, -1), new Direction( 0,  1), 
+                       new Direction( 1,  0));
     
     record Grid(FuncList<String> lines) {
+        int at(Position position) {
+            return at(position.row, position.col);
+        }
         int at(int row, int col) {
             if (row < 0 || row >= lines.size())            return -1;
             if (col < 0 || col >= lines.get(row).length()) return -1;
             var ch = lines.get(row).charAt(col);
             return ((ch < '0' || ch > '9')) ? -1 : (ch - '0');
         }
-        <T> FuncList<T> allPositions(Func3<Integer, Integer, Integer, T> mapper) {
+        FuncList<Position> allPositions(char ch) {
             return range(0, lines.size()).toCache().flatMapToObj(row -> {
                 return range(0, lines.get(0).length())
                         .toCache ()
-                        .mapToObj(col -> mapper.apply(row, col, at(row, col)))
-                        .excludeNull();
+                        .filter  (col -> (ch == at(row, col)))
+                        .mapToObj(col -> new Position(row, col));
             });
         }
     }
     
     Object calculate(FuncList<String> lines) {
         var grid   = new Grid(lines);
-        var starts = grid.allPositions((r, c, ch) -> (ch == 0) ? new Position(r, c): null);
-        return starts.mapToInt(start -> seachForTails(grid, start, 0, 0, 0).distinct().size()).sum();
+        var starts = grid.allPositions((char)0);
+        return starts
+                .map      (start -> searchForTails(grid, start, null, 0))
+                .map      (tails -> tails.distinct())
+                .sumToLong(tails -> tails.count());
     }
     
-    FuncList<Position> seachForTails(Grid grid, Position pos, int nextRow, int nextCol, int nextLevel) {
-        var nextPost = new Position(pos.row + nextRow, pos.col + nextCol);
-        var h = grid.at(nextPost.row, nextPost.col);
-        if (nextLevel != h) return FuncList.empty();
-        if (nextLevel == 9) return FuncList.of(nextPost);
-        return FuncList.of(
-                    seachForTails(grid, nextPost,  1,  0, nextLevel + 1),
-                    seachForTails(grid, nextPost, -1,  0, nextLevel + 1),
-                    seachForTails(grid, nextPost,  0,  1, nextLevel + 1),
-                    seachForTails(grid, nextPost,  0, -1, nextLevel + 1)
-                )
-                .flatMap(itself());
+    FuncList<Position> searchForTails(Grid grid, Position prevPosition, Direction currDirection, int exptLevel) {
+        var currPost  = prevPosition.move(currDirection);
+        var currLevel = grid.at(currPost);
+        if (exptLevel != currLevel) return FuncList.empty();
+        if (exptLevel ==         9) return FuncList.of(currPost);
+        return allDirections
+                .flatMap(dir -> searchForTails(grid, currPost, dir, exptLevel + 1));
     }
     
     //== Test ==
