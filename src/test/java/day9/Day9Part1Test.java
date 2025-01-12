@@ -1,14 +1,18 @@
 package day9;
 
-import static functionalj.list.FuncList.repeat;
-import static functionalj.list.intlist.IntFuncList.infinite;
-import static functionalj.stream.intstream.IntStreamPlus.loop;
 
-import java.math.BigInteger;
+import static functionalj.list.intlist.IntFuncList.infinite;
+import static functionalj.list.intlist.IntFuncList.loop;
+import static functionalj.list.intlist.IntFuncList.repeat;
+import static java.lang.Math.max;
+
+import java.util.function.IntBinaryOperator;
+import java.util.function.IntUnaryOperator;
 
 import org.junit.Test;
 
 import common.BaseTest;
+import functionalj.function.IntIntBiFunction;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
 
@@ -86,54 +90,67 @@ import functionalj.list.intlist.IntFuncList;
  */
 public class Day9Part1Test extends BaseTest {
     
-    BigInteger calculateChecksum(FuncList<String> lines) {
-        // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
-        var inputs = IntFuncList.from(lines.get(0).chars()).map(i -> i - '0').cache();
-        return diskFragmenterWithExpansion(inputs);
-    }
-
-    BigInteger diskFragmenterWithExpansion(IntFuncList inputs) {
+    static IntUnaryOperator  charToNum   = i -> i - '0';
+    static IntBinaryOperator weightedSum = (index, id) -> index*max(0, id);
+    
+    static IntIntBiFunction<IntFuncList> expand = (id, length) -> {
+        return repeat((id % 2) == 1 ? -1 : id/2).limit(length);
+    };
+    
+    long calculateChecksum(FuncList<String> lines) {
+        // General Idea
+        // - Expand the code into the actual file system.
+        // - Use -1 to represent empty space
+        // - Create iterator of the needed files from the back (revert)
+        // - Loop through the expanded file system and replace all -1 with the value from the iterator.
+        
+        // Convert the disk map as string to disk map as IntFuncList.
+        var diskMap 
+                = IntFuncList.from(lines.get(0).chars())
+                .map(charToNum)
+                .cache();
+        
         // Input line: 
         // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
         
-        // [   0,    0, null, null, null,    1,    1,    1, null, null, null
-        // ,   2, null, null, null,    3,    3,    3, null,    4,    4, null
-        // ,   5,    5,    5,    5, null,    6,    6,    6,    6, null,    7
-        // ,   7,    7, null,    8,    8,    8,    8,    9,    9
+        // [   0,  0, -1, -1, -1,  1,  1,  1, -1, -1, -1
+        // ,   2, -1, -1, -1,  3,  3,  3, -1,  4,  4, -1
+        // ,   5,  5,  5,  5, -1,  6,  6,  6,  6, -1,  7
+        // ,   7,  7, -1,  8,  8,  8,  8,  9,  9
         // ]
+        
+        // Expand the file system.
         var filesystem 
                 = infinite()
-                .zipToObjWith(inputs, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
-                .flatMap     (itself())
-                .cache       ();
+                .zipToObjWith(diskMap, expand)
+                .flatMapToInt(itself())
+                .toFuncList();
         
         // Get an iterator of the reverse of the file system so we can get its value out one-by-one.
-        var reverseFs
+        var filesInReverse
                 = filesystem
                 .reverse()
-                .excludeNull()
+                .exclude(-1)
                 .cache()
                 .iterable()
                 .iterator();
         
         // Calculate the used and empty space to know when to stop.
-        int usedSpace
-                = loop (inputs.size())
+        var usedSpace
+                = loop (diskMap.size())
                 .filter(theInt.thatIsEven())
-                .map   (inputs::get)
-                .sum();
+                .sum   (diskMap::get);
         
-        int emptySpace = filesystem.size() - usedSpace;
+        // Compact the file-system
         var compactFS
             = filesystem
-            .mapOnly  (i -> i == null, i -> reverseFs.next())       // Fill null from the front with value from the back
-            .limit    (usedSpace)                                   // ... stop at where we know the use space is.
-            .appendAll(repeat((Integer)null).limit(emptySpace));    // ... then fill the rest with empty space.
+            .map  (i -> (i != -1) ? i : filesInReverse.next())   // Fill -1 from the front with value from the back
+            .limit(usedSpace);                                   // ... stop at where we know the use space is.
         
         return compactFS
-                .mapWithIndex((index, id) -> (id == null) ? 0L : index*id.longValue())
-                .mapToObj    (BigInteger::valueOf)
-                .reduce      (BigInteger.ZERO, BigInteger::add);
+                .mapWithIndex(weightedSum)
+                .mapToLong()
+                .sum();
     }
     
     //== Test ==
