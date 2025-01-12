@@ -85,6 +85,11 @@ import lombok.RequiredArgsConstructor;
  */
 public class Day11Part1Test extends BaseTest {
     
+    // Solution -- Dynamic programming.
+    // - Use an object to hold already determined -- BlinkChain
+    // - The BlinkChain will holder the chain of numbers up until it splitted into two.
+    // - The BlinkChain object is mutable by adding more number in the chain. 
+    
     static final BigInteger _2024 = BigInteger.valueOf(2024);
     
     @RequiredArgsConstructor
@@ -98,10 +103,12 @@ public class Day11Part1Test extends BaseTest {
         }
     }
     
+    // This class can represent a reference to a point in the BlinkChain.
     static record Blink(BlinkChain chain, int index) {
         
         private static ConcurrentHashMap<BigInteger, Blink> blinks = new ConcurrentHashMap<>();
         
+        // Create a Blink for a number.
         static Blink of(BigInteger number) {
             var blink = blinks.get(number);
             if (blink != null)
@@ -110,6 +117,7 @@ public class Day11Part1Test extends BaseTest {
             var str = ("" + number);
             var len = str.length();
             if ((len % 2) == 0) {
+                // Split --- So the chain ends.
                 var end1  = new BigInteger(str.substring(0, len / 2));
                 var end2  = new BigInteger(str.substring(len / 2));
                 var chain = new BlinkChain(end1, end2);
@@ -121,6 +129,7 @@ public class Day11Part1Test extends BaseTest {
             }
             
             if (number.equals(BigInteger.ZERO)) {
+                // Case of 0 - Just one of the case which a know next value.
                 var oneBlink  = Blink.of(BigInteger.ONE);
                 var oneChain  = oneBlink.chain;
                 var zeroIndex = oneChain.add(BigInteger.ZERO);
@@ -130,6 +139,7 @@ public class Day11Part1Test extends BaseTest {
                 return zeroBlink;
             }
             
+            // Other number which will add the the chain.
             var nextNumber = number.multiply(_2024);
             var nextBlink  = Blink.of(nextNumber);
             var nextChain  = nextBlink.chain;
@@ -141,8 +151,10 @@ public class Day11Part1Test extends BaseTest {
         }
     }
     
+    // Memoization of the number to count.
     private static ConcurrentHashMap<BigInteger, ConcurrentHashMap<Integer, Long>> counts = new ConcurrentHashMap<>();
     
+    // Determine the count with the memoization.
     long stoneCount(BigInteger number, int times) {
         var numCounts = counts.computeIfAbsent(number, __ -> new ConcurrentHashMap<>());
         var numCount  = numCounts.get(times);
@@ -153,7 +165,8 @@ public class Day11Part1Test extends BaseTest {
         return numCount;
     }
     
-    long determineStoneCount(BigInteger number, int times) {
+    // Actually determine the count.
+    private long determineStoneCount(BigInteger number, int times) {
         var info  = Blink.of(number);
         var index = info.index;
         var chain = info.chain;
@@ -170,7 +183,7 @@ public class Day11Part1Test extends BaseTest {
     
     Object calculate(FuncList<String> lines, int times) {
         return grab(regex("[0-9]+"), lines.get(0))
-                .map(BigInteger::new)
+                .map      (BigInteger::new)
                 .sumToLong(num -> stoneCount(num, times));
     }
     
