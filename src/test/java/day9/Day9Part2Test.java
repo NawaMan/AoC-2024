@@ -1,20 +1,18 @@
 package day9;
 
+import static functionalj.list.FuncList.repeat;
 import static functionalj.list.intlist.IntFuncList.infinite;
-import static functionalj.list.intlist.IntFuncList.repeat;
-import static functionalj.stream.intstream.IntStreamPlus.range;
-import static java.lang.Math.max;
 
-import java.util.function.IntBinaryOperator;
-import java.util.function.IntUnaryOperator;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Objects;
 
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.function.IntIntBiFunction;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
-import functionalj.stream.intstream.IntStreamPlus;
+import functionalj.stream.StreamPlus;
 import functionalj.tuple.IntIntTuple;
 
 /**
@@ -49,89 +47,79 @@ import functionalj.tuple.IntIntTuple;
  */
 public class Day9Part2Test extends BaseTest {
     
-    static IntUnaryOperator  charToNum   = i -> i - '0';
-    static IntBinaryOperator weightedSum = (index, id) -> index*max(0, id);
-    
-    static IntIntBiFunction<IntFuncList> expand = (id, length) -> {
-        return repeat((id % 2) == 1 ? -1 : id/2).limit(length);
-    };
-    
-    long calculate(FuncList<String> lines) {
-        // General Idea
-        // - Convert the file system section to array. 
-        // - Going through empty section and find from the back section that can fit in.
-        
-        // Convert the disk map as string to disk map as IntFuncList.
+    BigInteger calculate(FuncList<String> lines) {
         var diskMap
                 = IntFuncList.from(lines.get(0).chars())
-                .map  (i -> i - '0')
-                .cache()
-                ;
-        
-        // Create pairs between file ID and needed space -- then revert.
-        // (id, neededSpace): (9,2), (8,4), (7,3), (6,4), (5,4), (4,2), (3,3), (2,1), (1,3), (0,2)
+                .map(i -> i - '0')
+                .cache();
         var reveredDataBlocks
                 = diskMap
-                .filterWithIndex  ((index, num) -> index % 2 == 0)
+                .filterWithIndex((index, num) -> index % 2 == 0)
                 .mapToObjWithIndex(IntIntTuple::new)
-                .reverse          ()
-                ;
-        
-        // Expand the file system.
-        // Each of the section is an array of ints where -1 means empty.
-        // 
-        // [   0,  0, -1, -1, -1,  1,  1,  1, -1, -1, -1
-        // ,   2, -1, -1, -1,  3,  3,  3, -1,  4,  4, -1
-        // ,   5,  5,  5,  5, -1,  6,  6,  6,  6, -1,  7
-        // ,   7,  7, -1,  8,  8,  8,  8,  9,  9
-        // ]
+                .reverse()
+                .cache();
         var filesystem 
                 = infinite()
-                .zipToObjWith(diskMap, (id, length) -> repeat((id % 2) == 1 ? -1 : id/2).limit(length).toArray())
+                .zipToObjWith(diskMap, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
+                .map(FuncList::toArray)
                 .cache()
                 ;
-        
-        // Extract file sections
-        // [0, 0], [1, 1, 1], [2], [3, 3, 3], [4, 4], [5, 5, 5, 5], [6, 6, 6, 6], [7, 7, 7], [8, 8, 8, 8], [9, 9]
-        var fileSections
+        var sectorByIds
                 = filesystem
                 .filterWithIndex((index, array) -> index % 2 != 1)
-                .toArray(int[][]::new);
+                .toArray();
         
-        // For each needed space, look into the file-system (from the front to find the big enough empty space.)
-        reveredDataBlocks
-        .forEach(pair -> {
+        reveredDataBlocks.forEach(pair -> {
             var id          = pair._1;
             var neededSpace = pair._2;
-            
-            // Loop over each empty spaces (the even-indexed of the file system).
-            // Starting just after the pair position (id*2).
-            range(0, id * 2)
-            .mapToObj (filesystem::get)
-            
-            .filter   (foundArray -> IntStreamPlus.of(foundArray).filter(i -> i == -1).size() >= neededSpace)
-            .findFirst()
-            .ifPresent(foundArray -> migrateData(fileSections, id, neededSpace, foundArray));
+            for (int i = 0; i < (id * 2); i++) {
+                var foundArray = filesystem.get(i);
+                var hasEnough  = StreamPlus.of(foundArray).filter(Objects::isNull).size() >= neededSpace;
+                if(hasEnough) {
+                    migrateData(sectorByIds, id, neededSpace, foundArray);
+                    break;
+                }
+            }
         });
         
-        return filesystem
-                .flatMapToInt(IntFuncList::of)
-                .mapWithIndex(weightedSum)
-                .sum();
+        var checksum
+                = filesystem
+                .flatMap     (FuncList::of)
+                .mapWithIndex((index, id) -> (id == null) ? 0L :(long)index*((Integer)id).intValue())
+                .mapToObj    (BigInteger::valueOf)
+                .reduce      (BigInteger.ZERO, BigInteger::add);
+        
+        println("First 20: ----");
+        filesystem
+        .limit(20)
+        .forEach(each -> println(Arrays.toString((Object[])each)));
+        println();
+        println();
+        println();
+        
+        println("Last 20: ----");
+        filesystem
+        .skip(filesystem.size() - 20)
+        .forEach(each -> println(Arrays.toString((Object[])each)));
+        println();
+        println();
+        
+        println("Size: " + filesystem.size());
+        
+        return checksum;
     }
     
-     int migrateData(int[][] source, int id, int neededSpace, int[] target) {
-        for (int j = 0; j < target.length && neededSpace > 0; j++) {
-            if (target[j] == -1) {
-                target[j] = id;
+     int migrateData(Object[] sectorByIds, int id, int neededSpace, Object[] foundArray) {
+        for (int j = 0; j < foundArray.length && neededSpace > 0; j++) {
+            if (foundArray[j] == null) {
+                foundArray[j] = id;
                 neededSpace--;
             }
         }
         
-        var array = source[id];
+        var array = (Object[])sectorByIds[id];
         for (int j = 0; j < array.length; j++)
-            array[j] = -1;
-        
+            array[j] = null;
         return neededSpace;
     }
     
@@ -140,7 +128,8 @@ public class Day9Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calculate(lines);
+//        var result = calculate(lines);
+        var result = Day9Part1Test.defragment(lines.get(0));
         println("result: " + result);
         assertAsString("2858", result);
     }
@@ -148,7 +137,8 @@ public class Day9Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calculate(lines);
+//        var result = calculate(lines);
+        var result = Day9Part1Test.defragment(lines.get(0));
         println("result: " + result);
         assertAsString("6237075041489", result);
     }
