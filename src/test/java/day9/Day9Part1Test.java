@@ -1,19 +1,11 @@
 package day9;
 
 
-import static functionalj.list.intlist.IntFuncList.AllOf;
 import static functionalj.list.intlist.IntFuncList.infinite;
 import static functionalj.list.intlist.IntFuncList.loop;
 import static functionalj.list.intlist.IntFuncList.repeat;
-import static functionalj.stream.intstream.IntStep.StartFrom;
-import static functionalj.stream.intstream.IntStreamPlus.range;
-import static java.lang.Integer.MIN_VALUE;
 import static java.lang.Math.max;
-import static java.util.Comparator.comparing;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntUnaryOperator;
 
@@ -22,11 +14,7 @@ import org.junit.Test;
 import common.BaseTest;
 import functionalj.function.IntIntBiFunction;
 import functionalj.list.FuncList;
-import functionalj.list.ImmutableFuncList;
 import functionalj.list.intlist.IntFuncList;
-import functionalj.stream.intstream.IndexedInt;
-import functionalj.tuple.Tuple2;
-import functionalj.tuple.Tuple3;
 
 /**
  * --- Day 9: Disk Fragmenter ---
@@ -166,95 +154,6 @@ public class Day9Part1Test extends BaseTest {
     }
     
     //== Test ==
-    
-    
-    public static void main(String[] args) {
-        var line = "2333133121414131402";
-        System.out.println(defragment(line));
-    }
-    
-    public static BigInteger defragment(String line) {
-        var inputs    = IntFuncList.from(line.chars()).map(i -> i - '0').toArray();
-        int fileCount = (inputs.length / 2) + 1;
-        var filesRev  = StartFrom(0).step(2).limit(fileCount).map(i -> inputs[i]).mapWithIndex().reverse().toImmutableList();
-        
-        // Move when possible and leave the rest.
-        var outputs = IntFuncList.range(0, filesRev.size()).mapToObj(i -> oneLoop(i, inputs, filesRev)).toArrayList();
-        
-        // Add the space from the files that has been moved.
-        var additions
-                = outputs
-                .stream()
-                .filter(t3 -> t3._3())
-                .map   (t3 -> Tuple3.of(t3._2()._1()*2, new IndexedInt(0, inputs[t3._2()._1()*2]), false))
-                .toList();
-        additions.forEach(outputs::add);
-        
-        // Add the left-over or not filled space.
-        IntFuncList.of(inputs)
-        .mapWithIndex()
-        .filter(theIndexedInt.index().thatIsOdd())
-        .filter(theIndexedInt.item().thatIsNotZero())
-        .map   (pair -> Tuple3.of(pair._1(), new IndexedInt(0, pair._2()), false))
-        .forEach(outputs::add);
-        
-        outputs.sort(comparing(Tuple3::_1));
-        
-        return FuncList.from(outputs)
-                .map(t3 -> t3._2()._2())
-                .accumulate((a, b) -> a + b)
-                .prepend(0)
-                .zipWith(FuncList.from(outputs).map(t3 -> t3._2()))  // ------------------------- D
-                .mapToObj(t2 -> IntFuncList.range(t2._1(), t2._1() + t2._2()._2()).mapToObj(i -> BigInteger.valueOf(i*t2._2()._1())).reduce(BigInteger::add).orElse(BigInteger.ZERO))
-                .reduce(BigInteger::add)
-                .orElse(BigInteger.ZERO);
-//        .forEach(System.out::println);
-        
-        // D
-//        (0,(0,2))
-//        (2,(9,2))
-//        (4,(2,1))
-//        (5,(1,3))
-//        (8,(7,3))
-//        (11,(0,1))
-//        (12,(4,2))
-//        (14,(0,1))
-//        (15,(3,3))
-//        (18,(0,1))
-//        (19,(0,2))
-//        (21,(0,1))
-//        (22,(5,4))
-//        (26,(0,1))
-//        (27,(6,4))
-//        (31,(0,1))
-//        (32,(0,3))
-//        (35,(0,1))
-//        (36,(8,4))
-//        (40,(0,2))
-    }
-    
-    private static Tuple3<Integer, IndexedInt, Boolean> oneLoop(int revFileId, int[] inputs, ImmutableFuncList<IndexedInt> filesRev) {
-        var file     = filesRev.get(revFileId);
-        var fileId   = file._1();
-        var fileIdx  = fileId*2;
-        var fileSize = file._2();
-        
-        var availIndex = -1;
-        for (int i = 1; i < inputs.length; i += 2) {
-            var availSize = inputs[i];
-            if (availSize >= fileSize) {
-                availIndex = i;
-                break;
-            }
-        }
-        
-        if ((availIndex == -1) || (availIndex >= fileIdx)) {
-            return Tuple3.of(fileIdx, file, false);
-        } else {
-            inputs[availIndex] -= fileSize;
-            return Tuple3.of(availIndex, file, true);
-        }
-    }
     
     @Test
     public void testExample() {
