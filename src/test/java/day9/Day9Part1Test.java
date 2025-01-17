@@ -93,7 +93,7 @@ public class Day9Part1Test extends BaseTest {
     static IntUnaryOperator  charToNum   = i -> i - '0';
     static IntBinaryOperator weightedSum = (index, id) -> index*max(0, id);
     
-    static IntIntBiFunction<IntFuncList> expand = (id, length) -> {
+    static IntIntBiFunction<IntFuncList> expandSegment = (id, length) -> {
         return repeat((id % 2) == 1 ? -1 : id/2).limit(length);
     };
     
@@ -104,54 +104,54 @@ public class Day9Part1Test extends BaseTest {
         // - Create iterator of the needed files from the back (revert)
         // - Loop through the expanded file system and replace all -1 with the value from the iterator.
         
-        // Convert the disk map as string to disk map as IntFuncList.
-        var diskMap 
+        var diskMap
                 = IntFuncList.from(lines.get(0).chars())
                 .map(charToNum)
-                .cache();
+                .toImmutableList();
         
-        // Input line: 
-        // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
-        
-        // [   0,  0, -1, -1, -1,  1,  1,  1, -1, -1, -1
-        // ,   2, -1, -1, -1,  3,  3,  3, -1,  4,  4, -1
-        // ,   5,  5,  5,  5, -1,  6,  6,  6,  6, -1,  7
-        // ,   7,  7, -1,  8,  8,  8,  8,  9,  9
-        // ]
-        
-        // Expand the file system.
-        var filesystem 
-                = infinite()
-                .zipToObjWith(diskMap, expand)
+        var fileSystem 
+                = infinite   ()
+                .zipToObjWith(diskMap, expandSegment)
                 .flatMapToInt(itself())
-                .toFuncList();
+                .toFuncList  ();
         
-        // Get an iterator of the reverse of the file system so we can get its value out one-by-one.
         var filesInReverse
-                = filesystem
-                .reverse()
-                .exclude(-1)
-                .cache()
+                = fileSystem
+                .reverse ()
+                .exclude (-1)
+                .cache   ()
                 .iterable()
                 .iterator();
         
-        // Calculate the used and empty space to know when to stop.
         var usedSpace
                 = loop (diskMap.size())
                 .filter(theInt.thatIsEven())
                 .sum   (diskMap::get);
         
-        // Compact the file-system
-        var compactFS
-            = filesystem
+        var compactFileSystem
+            = fileSystem
             .map  (i -> (i != -1) ? i : filesInReverse.next())   // Fill -1 from the front with value from the back
             .limit(usedSpace);                                   // ... stop at where we know the use space is.
         
-        return compactFS
+        return compactFileSystem
                 .mapWithIndex(weightedSum)
                 .mapToLong()
                 .sum();
     }
+    
+    // diskMap: 
+    // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
+    
+    // fileSystem: 
+    // [   0,  0, -1, -1, -1,  1,  1,  1, -1, -1, -1
+    // ,   2, -1, -1, -1,  3,  3,  3, -1,  4,  4, -1
+    // ,   5,  5,  5,  5, -1,  6,  6,  6,  6, -1,  7
+    // ,   7,  7, -1,  8,  8,  8,  8,  9,  9
+    // ]
+    
+    // filesInReverse   : [9, 9, 8, 8, 8, 8, 7, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 4, 4, 3, 3, 3, 2, 1, 1, 1, 0, 0]
+    // usedSpace        : 28
+    // compactFileSystem: [0, 0, 9, 9, 8, 1, 1, 1, 8, 8, 8, 2, 7, 7, 7, 3, 3, 3, 6, 4, 4, 6, 5, 5, 5, 5, 6, 6]
     
     //== Test ==
     
