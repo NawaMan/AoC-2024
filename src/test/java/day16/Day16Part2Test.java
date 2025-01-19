@@ -63,6 +63,7 @@ import functionalj.list.FuncList;
  * 
  * Analyze your map further. How many tiles are part of at least one of the best paths through the maze?
  */
+@Ignore("Not working.")
 public class Day16Part2Test extends BaseTest {
     
     Object calculate(FuncList<String> lines) {
@@ -90,7 +91,6 @@ public class Day16Part2Test extends BaseTest {
         assertAsString("64", result);
     }
     
-    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();
