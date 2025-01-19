@@ -1,18 +1,13 @@
 package day9;
 
 
-import static functionalj.list.intlist.IntFuncList.infinite;
 import static functionalj.list.intlist.IntFuncList.loop;
 import static functionalj.list.intlist.IntFuncList.repeat;
 import static java.lang.Math.max;
 
-import java.util.function.IntBinaryOperator;
-import java.util.function.IntUnaryOperator;
-
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.function.IntIntBiFunction;
 import functionalj.list.FuncList;
 import functionalj.list.intlist.IntFuncList;
 
@@ -90,13 +85,6 @@ import functionalj.list.intlist.IntFuncList;
  */
 public class Day9Part1Test extends BaseTest {
     
-    static IntUnaryOperator  charToNum   = i -> i - '0';
-    static IntBinaryOperator weightedSum = (index, id) -> index*max(0, id);
-    
-    static IntIntBiFunction<IntFuncList> expandSegment = (id, length) -> {
-        return repeat((id % 2) == 1 ? -1 : id/2).limit(length);
-    };
-    
     long calculateChecksum(FuncList<String> lines) {
         // General Idea
         // - Expand the code into the actual file system.
@@ -106,12 +94,14 @@ public class Day9Part1Test extends BaseTest {
         
         var diskMap
                 = IntFuncList.from(lines.get(0).chars())
-                .map(charToNum)
+                .map(i -> i - '0')
                 .toImmutableList();
         
         var fileSystem 
-                = infinite   ()
-                .zipToObjWith(diskMap, expandSegment)
+                = diskMap
+                .mapToObjWithIndex((index, length) -> {
+                    return repeat((index % 2) == 1 ? -1 : index/2).limit(length);
+                })
                 .flatMapToInt(itself())
                 .toFuncList  ();
         
@@ -134,21 +124,21 @@ public class Day9Part1Test extends BaseTest {
             .limit(usedSpace);                                   // ... stop at where we know the use space is.
         
         return compactFileSystem
-                .mapWithIndex(weightedSum)
+                .mapWithIndex((index, id) -> index*max(0, id))
                 .mapToLong()
                 .sum();
     }
     
     // diskMap: 
     // [2, 3, 3, 3, 1, 3, 3, 1, 2, 1, 4, 1, 4, 1, 3, 1, 4, 0, 2]
-    
+    // 
     // fileSystem: 
     // [   0,  0, -1, -1, -1,  1,  1,  1, -1, -1, -1
     // ,   2, -1, -1, -1,  3,  3,  3, -1,  4,  4, -1
     // ,   5,  5,  5,  5, -1,  6,  6,  6,  6, -1,  7
     // ,   7,  7, -1,  8,  8,  8,  8,  9,  9
     // ]
-    
+    // 
     // filesInReverse   : [9, 9, 8, 8, 8, 8, 7, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 4, 4, 3, 3, 3, 2, 1, 1, 1, 0, 0]
     // usedSpace        : 28
     // compactFileSystem: [0, 0, 9, 9, 8, 1, 1, 1, 8, 8, 8, 2, 7, 7, 7, 3, 3, 3, 6, 4, 4, 6, 5, 5, 5, 5, 6, 6]

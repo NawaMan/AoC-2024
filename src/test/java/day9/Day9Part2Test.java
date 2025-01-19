@@ -10,6 +10,7 @@ import static functionalj.list.intlist.IntFuncList.range;
 import static functionalj.stream.intstream.IntStep.StartFrom;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntUnaryOperator;
 
@@ -56,12 +57,6 @@ import functionalj.types.Struct;
  */
 public class Day9Part2Test extends BaseTest {
     
-    static IntUnaryOperator charToNum = i -> i - '0';
-    
-    static IntUnaryOperator intAt(int[] ints) {
-        return i -> ints[i];
-    }
-    
     //== Expanding method ==
     
     // The expanding method expands the file system and them attempt to move files from  the back.
@@ -80,32 +75,49 @@ public class Day9Part2Test extends BaseTest {
     // 0099.111777244.333....5555.6666.....8888..
     // 00992111777.44.333....5555.6666.....8888..
     // 
-    // fileSegments:   (0,2),(1,3),(2,1),(3,3),(4,2),(5,4),(6,4),(7,3),(8,4),(9,2)
+    // fileSegments:   (0,2),(1,3),(2,1),(3,3),(4,2),(5,4),(6,4),(7,3),(8,4),(9,2) (fileId, neededSpace)
     // segmentsRevert: (9,2),(8,4),(7,3),(6,4),(5,4),(4,2),(3,3),(2,1),(1,3),(0,2)
+    // 
+    // fileSystem:
+    //    [0, 0]
+    //    [null, null, null]
+    //    [1, 1, 1]
+    //    [null, null, null]
+    //    [2]
+    //    [null, null, null]
+    //    [3, 3, 3]
+    //    [null]
+    //    [4, 4]
+    //    [null]
+    //    [5, 5, 5, 5]
+    //    [null]
+    //    [6, 6, 6, 6]
+    //    [null]
+    //    [7, 7, 7]
+    //    [null]
+    //    [8, 8, 8, 8]
+    //    []
+    //    [9, 9]
+    //
+    // sectorByIds:
+    //    [0, 0]
+    //    [1, 1, 1]
+    //    [2]
+    //    [3, 3, 3]
+    //    [4, 4]
+    //    [5, 5, 5, 5]
+    //    [6, 6, 6, 6]
+    //    [7, 7, 7]
+    //    [8, 8, 8, 8]
+    //    []
+    //    [9, 9]
     
-    // fileSystem: 
-    // [   0,  0, -1, -1, -1,  1,  1,  1, -1, -1, -1
-    // ,   2, -1, -1, -1,  3,  3,  3, -1,  4,  4, -1
-    // ,   5,  5,  5,  5, -1,  6,  6,  6,  6, -1,  7
-    // ,   7,  7, -1,  8,  8,  8,  8,  9,  9
-    // ]
     
-    // sectorByIds
-    // [0, 0]
-    // [1, 1, 1]
-    // [2]
-    // [3, 3, 3]
-    // [4, 4]
-    // [5, 5, 5, 5]
-    // [6, 6, 6, 6]
-    // [7, 7, 7]
-    // [8, 8, 8, 8]
-    // [9, 9]
     
     BigInteger calculate(FuncList<String> lines) {
         var diskMap
                 = IntFuncList.from(lines.get(0).chars())
-                .map(charToNum)
+                .map(i -> i - '0')
                 .toImmutableList();
         var segmentsRevert
                 = diskMap
@@ -115,10 +127,10 @@ public class Day9Part2Test extends BaseTest {
                 .cache();
         var fileSystem 
                 = infinite()
-                .zipToObjWith(diskMap, (id, length) -> repeat((id % 2) == 1 ? null : id/2).limit(length))
+                .zipToObjWith(diskMap, (index, length) -> repeat((index % 2) == 1 ? null : index/2).limit(length))
                 .map(FuncList::toArray)
-                .cache()
-                ;
+                .cache();
+        
         var sectorByIds
                 = fileSystem
                 .filterWithIndex((index, array) -> index % 2 != 1)
@@ -257,14 +269,18 @@ public class Day9Part2Test extends BaseTest {
     
     @Struct
     void Segment(int index, File file, boolean hasMoved) {}
+
+    static IntUnaryOperator intAt(int[] ints) {
+        return i -> ints[i];
+    }
     
     long defragment(String line) {
-        var inputs    = IntFuncList.from(line.chars()).map(charToNum).toArray();
-        int fileCount = (inputs.length / 2) + 1;
+        var diskMap   = IntFuncList.from(line.chars()).map(i -> i - '0').toArray();
+        int fileCount = (diskMap.length / 2) + 1;
         
         var fileSegments
                 = StartFrom(0).step(2).limit(fileCount)
-                .map              (intAt(inputs))
+                .map              (intAt(diskMap))
                 .mapToObjWithIndex(File::new);
         var segmentsRevert
                 = fileSegments
@@ -273,7 +289,7 @@ public class Day9Part2Test extends BaseTest {
         
         var movedFiles
                 = range  (0, fileCount)
-                .mapToObj(segmentIndex -> moveFiles(segmentIndex, inputs, segmentsRevert))
+                .mapToObj(segmentIndex -> moveFiles(segmentIndex, diskMap, segmentsRevert))
                 .toImmutableList();
         
         var leftEmptySpaces
@@ -282,10 +298,10 @@ public class Day9Part2Test extends BaseTest {
                 .filter (output -> output.hasMoved())
                 .map    (output -> output.file())
                 .map    (file   -> file.id()*2)
-                .map    (index  -> new Segment(index, new File(0, inputs[index]), false));
+                .map    (index  -> new Segment(index, new File(0, diskMap[index]), false));
         
         var unfilledSpaces
-                = IntFuncList.of(inputs)
+                = IntFuncList.of(diskMap)
                 .mapToObjWithIndex(File::new)
                 .filter (theFile.id  .thatIsOdd())
                 .filter (theFile.size.thatIsNotZero())
@@ -311,15 +327,15 @@ public class Day9Part2Test extends BaseTest {
                 .sumToLong (this::weightedSum);
     }
     
-    static Segment moveFiles(int revFileId, int[] inputs, ImmutableFuncList<File> filesRev) {
-        var file     = filesRev.get(revFileId);
+    static Segment moveFiles(int segmentIndex, int[] diskMap, ImmutableFuncList<File> segmentsRevert) {
+        var file     = segmentsRevert.get(segmentIndex);
         var fileId   = file.id();
         var fileIdx  = fileId*2;
         var fileSize = file.size();
         
         var availIdx = -1;
-        for (int i = 1; i < inputs.length; i += 2) {
-            var availSize = inputs[i];
+        for (int i = 1; i < diskMap.length; i += 2) {
+            var availSize = diskMap[i];
             if (availSize >= fileSize) {
                 availIdx = i;
                 break;
@@ -329,7 +345,7 @@ public class Day9Part2Test extends BaseTest {
         if ((availIdx == -1) || (availIdx >= fileIdx)) {
             return new Segment(fileIdx, file, false);
         } else {
-            inputs[availIdx] -= fileSize;
+            diskMap[availIdx] -= fileSize;
             return new Segment(availIdx, file, true);
         }
     }
@@ -347,8 +363,8 @@ public class Day9Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-//        var result = calculate(lines);
-        var result = defragment(lines.get(0));
+        var result = calculate(lines);
+//        var result = defragment(lines.get(0));
         println("result: " + result);
         assertAsString("2858", result);
     }
