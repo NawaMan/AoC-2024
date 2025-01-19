@@ -10,7 +10,6 @@ import static functionalj.list.intlist.IntFuncList.range;
 import static functionalj.stream.intstream.IntStep.StartFrom;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntUnaryOperator;
 

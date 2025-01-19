@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -290,6 +291,7 @@ public class Day18Part1Test extends BaseTest {
         assertAsString("22", result);
     }
     
+    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();

@@ -1,6 +1,5 @@
 package day15;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -167,13 +166,17 @@ import lombok.experimental.Accessors;
  * ##..........##
  * ##############
  * 
- * This warehouse also uses GPS to locate the boxes. For these larger boxes, distances are measured from the edge of the map to the closest edge of the box in question. So, the box shown below has a distance of 1 from the top edge of the map and 5 from the left edge of the map, resulting in a GPS coordinate of 100 * 1 + 5 = 105.
+ * This warehouse also uses GPS to locate the boxes. 
+ * For these larger boxes, distances are measured from the edge of the map to the closest edge of the box in question. 
+ * So, the box shown below has a distance of 1 from the top edge of the map and 5 from the left edge of the map, 
+ *   resulting in a GPS coordinate of 100 * 1 + 5 = 105.
  * 
  * ##########
  * ##...[]...
  * ##........
  * 
- * In the scaled-up version of the larger example from above, after the robot has finished all of its moves, the warehouse would look like this:
+ * In the scaled-up version of the larger example from above, after the robot has finished all of its moves, 
+ *   the warehouse would look like this:
  * 
  * ####################
  * ##[].......[].[][]##
@@ -191,7 +194,6 @@ import lombok.experimental.Accessors;
  * Predict the motion of the robot and boxes in this new, scaled-up warehouse. What is the sum of all boxes' final GPS 
  *   coordinates?
  */
-@Ignore("Not working. :-(")
 public class Day15Part2Test extends BaseTest {
 
     record Grid(FuncList<String> lines) {
@@ -368,7 +370,7 @@ public class Day15Part2Test extends BaseTest {
                 if (!frontMoved)
                     return false;
                 
-                fronts.forEach(front -> moveUp(front, true, false));
+                fronts.forEach(front -> moveDown(front, true, false));
             }
             
             if (!isCheckOnly) {
@@ -383,7 +385,7 @@ public class Day15Part2Test extends BaseTest {
         }
         
         public long sumGPS() {
-            return goods.mapToLong(g -> g.r*100 + g.c).sum();
+            return goods.mapToLong(g -> (long)g.r*100L + (long)g.c).sum();
         }
     }
     
@@ -424,7 +426,6 @@ public class Day15Part2Test extends BaseTest {
         assertAsString("9021", result);
     }
     
-    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();

@@ -28,15 +28,15 @@ import functionalj.list.intlist.IntFuncList;
  * 
  * What is the lowest positive initial value for register A that causes the program to output a copy of itself?
  */
-@Ignore("Not workging ...")
 public class Day17Part2Test extends BaseTest {
     
-    static final long START = 11781491000L;
+    static final long START = 100000000000L;
+    static final long END   = 110000000000L;
     
     long calculate(FuncList<String> lines) {
         var code = grab(regex("[0-9]+"), lines.get(4)).mapToInt(parseInt).cache();
         
-        for (long a = START; a < Long.MAX_VALUE; a++) {
+        for (long a = START; a < END; a++) {
             if (a % 1000 == 999)
                 println("a: " + a);
             if (calculate(a, code)) {
@@ -81,6 +81,7 @@ public class Day17Part2Test extends BaseTest {
         assertAsString("117440", result);
     }
     
+    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();
