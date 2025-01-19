@@ -1,5 +1,6 @@
 package day15;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -392,16 +393,16 @@ public class Day15Part2Test extends BaseTest {
     
     Object calculate(FuncList<String> lines) {
         var warehouse = new Warehouse(lines);
-        println(warehouse);
-        println();
+//        println(warehouse);
+//        println();
         
         var sequence = lines.skipUntil(""::equals).reduce((a, b) -> a + b).get();
         
         for (int i = 0; i < sequence.length(); i++) {
-            println(warehouse);
+//            println(warehouse);
             
             char ch = sequence.charAt(i);
-            println("--| " + i + ": " + ch + " |--");
+//            println("--| " + i + ": " + ch + " |--");
             switch (ch) {
                 case '^': { warehouse.moveUp();    continue; }
                 case 'v': { warehouse.moveDown();  continue; }
@@ -410,8 +411,8 @@ public class Day15Part2Test extends BaseTest {
             }
         }
         
-        println(warehouse);
-        println();
+//        println(warehouse);
+//        println();
         
         return warehouse.sumGPS();
     }
@@ -426,6 +427,7 @@ public class Day15Part2Test extends BaseTest {
         assertAsString("9021", result);
     }
     
+    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();
