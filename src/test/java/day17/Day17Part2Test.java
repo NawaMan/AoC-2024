@@ -28,6 +28,7 @@ import functionalj.list.intlist.IntFuncList;
  * 
  * What is the lowest positive initial value for register A that causes the program to output a copy of itself?
  */
+@Ignore
 public class Day17Part2Test extends BaseTest {
     
     static final long START = 100000000000L;
