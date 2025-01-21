@@ -107,7 +107,7 @@ public class Day10Part2Test extends BaseTest {
         }
     }
     
-    long countTrails(FuncList<String> lines) {
+    long totalTrailRating(FuncList<String> lines) {
         var grid   = new Grid(lines);
         var starts = grid.allPositions((r, c, ch) -> (ch == 0) ? new Position(r, c): null);
         return starts.sumToLong(start -> countTailsAt(grid, start, null, 0));
@@ -127,7 +127,7 @@ public class Day10Part2Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = countTrails(lines);
+        var result = totalTrailRating(lines);
         println("result: " + result);
         assertAsString("81", result);
     }
@@ -135,7 +135,7 @@ public class Day10Part2Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = countTrails(lines);
+        var result = totalTrailRating(lines);
         println("result: " + result);
         assertAsString("928", result);
     }

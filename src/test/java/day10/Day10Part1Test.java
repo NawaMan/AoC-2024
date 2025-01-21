@@ -97,7 +97,7 @@ import functionalj.list.FuncList;
 public class Day10Part1Test extends BaseTest {
     
     static record Position(int row, int col) {
-        Position move(Direction direction) {
+        Position moveBy(Direction direction) {
             return (direction == null) ? this : new Position(row + direction.row, col + direction.col);
         }
     }
@@ -122,14 +122,13 @@ public class Day10Part1Test extends BaseTest {
         FuncList<Position> allPositions(char ch) {
             return range(0, lines.size()).toCache().flatMapToObj(row -> {
                 return range(0, lines.get(0).length())
-                        .toCache ()
                         .filter  (col -> (ch == at(row, col)))
                         .mapToObj(col -> new Position(row, col));
             });
         }
     }
     
-    Object calculate(FuncList<String> lines) {
+    long totalTrailScore(FuncList<String> lines) {
         var grid   = new Grid(lines);
         var starts = grid.allPositions((char)0);
         return starts
@@ -139,12 +138,12 @@ public class Day10Part1Test extends BaseTest {
     }
     
     FuncList<Position> searchForTails(Grid grid, Position prevPosition, Direction currDirection, int exptLevel) {
-        var currPost  = prevPosition.move(currDirection);
-        var currLevel = grid.at(currPost);
-        if (exptLevel != currLevel) return FuncList.empty();
-        if (exptLevel ==         9) return FuncList.of(currPost);
+        var currPosition  = prevPosition.moveBy(currDirection);
+        var currLevel     = grid.at(currPosition);
+        if (currLevel != exptLevel) return FuncList.empty();
+        if (currLevel ==         9) return FuncList.of(currPosition);
         return allDirections
-                .flatMap(dir -> searchForTails(grid, currPost, dir, exptLevel + 1));
+                .flatMap(dir -> searchForTails(grid, currPosition, dir, exptLevel + 1));
     }
     
     //== Test ==
@@ -152,7 +151,7 @@ public class Day10Part1Test extends BaseTest {
     @Test
     public void testExample() {
         var lines  = readAllLines();
-        var result = calculate(lines);
+        var result = totalTrailScore(lines);
         println("result: " + result);
         assertAsString("36", result);
     }
@@ -160,7 +159,7 @@ public class Day10Part1Test extends BaseTest {
     @Test
     public void testProd() {
         var lines  = readAllLines();
-        var result = calculate(lines);
+        var result = totalTrailScore(lines);
         println("result: " + result);
         assertAsString("430", result);
     }
