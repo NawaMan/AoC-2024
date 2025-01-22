@@ -1,7 +1,11 @@
 package day11;
 
+import static java.lang.Math.log10;
+import static java.lang.Math.pow;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.Test;
@@ -86,103 +90,91 @@ public class Day11Part1Test extends BaseTest {
     // Solution -- Dynamic programming.
     // - Use an object to hold already determined -- BlinkChain
     // - The BlinkChain will holder the chain of numbers up until it splitted into two.
-    // - The BlinkChain object is mutable by adding more number in the chain. 
+    // - The BlinkChain object is mutable by adding more number in the chain.
     
-    static final Long _2024 = 2024L;
-    
-    @RequiredArgsConstructor
-    static class BlinkChain {
-        final List<Long> singles = new ArrayList<Long>();
-        final long       end1;
-        final long       end2;
-        int add(long number) {
-            singles.add(number);
-            return (singles.size() - 1);
-        }
-    }
-    
-    // This class can represent a reference to a point in the BlinkChain.
     static record Blink(BlinkChain chain, int index) {
         
-        private static ConcurrentHashMap<Long, Blink> blinks = new ConcurrentHashMap<>();
+        private static final Map<Long, Blink> knownBlinks = new ConcurrentHashMap<>();
         
-        // Create a Blink for a number.
+        @RequiredArgsConstructor
+        private static class BlinkChain {
+            final List<Long> singles = new ArrayList<Long>();
+            final long       end1;
+            final long       end2;
+            int add(long number) {
+                singles.add(number);
+                return (singles.size() - 1);
+            }
+            Blink chain(long nextNumber) {
+                return new Blink(this, add(nextNumber));
+            }
+        }
+        
         static Blink of(long number) {
-            var blink = blinks.get(number);
+            var blink = knownBlinks.get(number);
             if (blink != null)
                 return blink;
             
-            var str = ("" + number);
-            var len = str.length();
-            if ((len % 2) == 0) {
-                // Split --- So the chain ends.
-                var end1  = Long.parseLong(str.substring(0, len / 2));
-                var end2  = Long.parseLong(str.substring(len / 2));
-                var chain = new BlinkChain(end1, end2);
-                var index = chain.add(number);
-                
-                var newBlink = new Blink(chain, index);
-                blinks.put(number, newBlink);
-                return newBlink;
+            if (number == 0L)
+                return register(Blink.of(1L).chain(0L));
+            
+            var digitCount = (int)log10(number) + 1;
+            if ((digitCount % 2) == 0) {
+                var divisor = (long)pow(10, digitCount / 2);
+                var end1    = number / divisor;
+                var end2    = number % divisor;
+                return register(new BlinkChain(end1, end2).chain(number));
             }
             
-            if (number == 0L) {
-                // Case of 0 - Just one of the case which a know next value.
-                var oneBlink  = Blink.of(1L);
-                var oneChain  = oneBlink.chain;
-                var zeroIndex = oneChain.add(0L);
-                
-                var zeroBlink = new Blink(oneChain, zeroIndex);
-                blinks.put(number, zeroBlink);
-                return zeroBlink;
-            }
-            
-            // Other number which will add the the chain.
-            var nextNumber = number * _2024;
-            var nextBlink  = Blink.of(nextNumber);
-            var nextChain  = nextBlink.chain;
-            var thisIndex  = nextChain.add(number);
-            
-            var thisBlink = new Blink(nextChain, thisIndex);
-            blinks.put(number, thisBlink);
-            return thisBlink;
+            return register(Blink.of(number * 2024L).chain(number));
         }
-    }
-    
-    // Memoization of the number to count.
-    private static ConcurrentHashMap<Long, ConcurrentHashMap<Integer, Long>> counts = new ConcurrentHashMap<>();
-    
-    // Determine the count with the memoization.
-    long stoneCount(long number, int times) {
-        var numCounts = counts.computeIfAbsent(number, __ -> new ConcurrentHashMap<>());
-        var numCount  = numCounts.get(times);
-        if (numCount == null) {
-            numCount = determineStoneCount(number, times);
-            numCounts.put(times, numCount);
-        }
-        return numCount;
-    }
-    
-    // Actually determine the count.
-    private long determineStoneCount(long number, int times) {
-        var info  = Blink.of(number);
-        var index = info.index;
-        var chain = info.chain;
-        if (times <= index)
-            return 1L;
-        if (times == (index + 1))
-            return 2L;
         
-        int left   = times - index - 1;
-        var count1 = stoneCount(chain.end1, left);
-        var count2 = stoneCount(chain.end2, left);
-        return count1 + count2;
+        private Blink chain(long nextNumber) {
+            return new Blink(chain, chain.add(nextNumber));
+        }
+        
+        private static Blink register(Blink blink) {
+            knownBlinks.put(blink.chain.singles.get(blink.index), blink);
+            return blink;
+        }
+    }
+    
+    static class StoneCounter {
+        
+        private static record CountKey(long number, int times) {}
+        private static Map<CountKey, Long> knownCounts = new ConcurrentHashMap<>();
+        
+        long count(long number, int times) {
+            var key   = new CountKey(number, times);
+            var count = knownCounts.get(key);
+            if (count == null) {
+                count = determineCount(number, times);
+                knownCounts.put(key, count);
+            }
+            return count;
+        }
+        
+        private long determineCount(long number, int times) {
+            var info  = Blink.of(number);
+            var index = info.index;
+            if (times <= index)
+                return 1L;
+            if (times == (index + 1))
+                return 2L;
+
+            var chain = info.chain;
+            int left  = times - index - 1;
+            return count(chain.end1, left)
+                 + count(chain.end2, left);
+        }
+        
     }
     
     long calculate(FuncList<String> lines, int times) {
+        var stoneCount = new StoneCounter();
         return grab(regex("[0-9]+"), lines.get(0))
                 .map      (Long::parseLong)
-                .sumToLong(num -> stoneCount(num, times));
+                .sumToLong(num -> stoneCount.count(num, times));
     }
     
     //== Test ==
@@ -191,6 +183,7 @@ public class Day11Part1Test extends BaseTest {
     public void testExample() {
         var lines  = readAllLines();
         var result = calculate(lines, 25);
+        println(result);
         assertAsString("55312", result);
     }
     
@@ -198,6 +191,7 @@ public class Day11Part1Test extends BaseTest {
     public void testProd() {
         var lines  = readAllLines();
         var result = calculate(lines, 25);
+        println(result);
         assertAsString("194482", result);
     }
     
