@@ -78,7 +78,7 @@ import functionalj.list.FuncList;
 public class Day10Part2Test extends BaseTest {
     
     record Position(int row, int col) {
-        Position move(Direction direction) {
+        Position moveBy(Direction direction) {
             return (direction == null) ? this : new Position(row + direction.row, col + direction.col);
         }
     }
@@ -114,7 +114,7 @@ public class Day10Part2Test extends BaseTest {
     }
     
     long countTailsAt(Grid grid, Position pos, Direction direction, int nextLevel) {
-        var nextPost = pos.move(direction);
+        var nextPost = pos.moveBy(direction);
         var h = grid.at(nextPost.row, nextPost.col);
         if (nextLevel != h) return 0;
         if (nextLevel == 9) return 1;
