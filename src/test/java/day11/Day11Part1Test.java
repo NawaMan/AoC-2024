@@ -108,10 +108,6 @@ public class Day11Part1Test extends BaseTest {
             Blink chain(long nextNumber) {
                 return new Blink(this, add(nextNumber));
             }
-            @Override
-            public String toString() {
-                return "(%d,%d):%s".formatted(end1, end2, singles);
-            }
         }
         
         static Blink of(long number) {
