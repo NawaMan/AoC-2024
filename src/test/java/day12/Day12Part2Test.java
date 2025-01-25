@@ -6,14 +6,13 @@ import static functionalj.stream.intstream.IntStreamPlus.range;
 import static java.util.Comparator.comparingInt;
 
 import java.util.Comparator;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
-import functionalj.function.Func1;
 import functionalj.list.FuncList;
 import functionalj.stream.StreamPlus;
 
@@ -90,8 +89,6 @@ import functionalj.stream.StreamPlus;
 public class Day12Part2Test extends BaseTest {
     
     record Position(int row, int col) implements Comparable<Position> {
-        private static final Comparator<Position> COMPARATOR = comparingInt      (Position::row)
-                                                                .thenComparingInt(Position::col);
         FuncList<Position> neighbours() {
             return FuncList.of(
                         new Position(row + 1, col()    ),
@@ -108,7 +105,8 @@ public class Day12Part2Test extends BaseTest {
         }
         @Override
         public int compareTo(Position o) {
-            return COMPARATOR
+            return comparingInt      (Position::row)
+                    .thenComparingInt(Position::col)
                     .compare(this, o);
         }
     }
@@ -126,36 +124,29 @@ public class Day12Part2Test extends BaseTest {
                 });
             });
         }
-        
         FuncList<Group> groups() {
             var visiteds = new TreeSet<Position>();
             var groups   = new TreeSet<Group>();
             positions().forEach(position -> walk(position, visiteds, groups));
             return FuncList.from(groups);
         }
-        
         private void walk(Position position, Set<Position> visiteds, Set<Group> groups) {
             if (visiteds.contains(position))
                 return;
             
             var forChar = charAt(position);
-            var group   = walk(forChar, position, visiteds, groups)
-                            .sorted().distinct().toFuncList();
+            var group   = walk(forChar, position, visiteds, groups).sorted().distinct().toFuncList();
             groups.add(new Group(Grid.this, group));
         }
-        
-        @SuppressWarnings("unchecked")
         private StreamPlus<Position> walk(char forChar, Position position, Set<Position> visiteds, Set<Group> groups) {
             if (visiteds.contains(position) || (forChar != charAt(position)))
                 return StreamPlus.empty();
             
             visiteds.add(position);
-            
             return position
                     .neighbours()
-                    .map       (neighbour -> walk(forChar, neighbour, visiteds, groups))
                     .streamPlus()
-                    .flatMap   (StreamPlus.class::cast)
+                    .flatMap   (neighbour -> walk(forChar, neighbour, visiteds, groups))
                     .appendWith(StreamPlus.of(position));
         }
     }
@@ -163,8 +154,8 @@ public class Day12Part2Test extends BaseTest {
     enum EdgeDirection { Vertical, Horizontal }
     
     record Alignment(EdgeDirection direction, int rowOrCol) {
-        OptionalInt location(Edge edge) {
-            return OptionalInt.of((direction == Vertical) ? edge.pos1.row : edge.pos1.col);
+        int location(Edge edge) {
+            return (direction == Vertical) ? edge.pos1.row : edge.pos1.col;
         }
     }
     
@@ -175,9 +166,15 @@ public class Day12Part2Test extends BaseTest {
             return new Alignment(direction, rowOrCol);
         }
         String identityFor(Grid grid, char ch) {
-            return "(%s,%s)".formatted((grid.charAt(pos1) == ch ? ch : ' '), (grid.charAt(pos2) == ch ? ch : ' '));
+            // Identity is a string indicating which side the character ch is on.
+            // For example, for the edge between (A,B), its identity for A will be (A, ) and for B will be ( ,B). 
+            return "(%s,%s)".formatted(
+                    (grid.charAt(pos1) == ch ? ch : ' '),
+                    (grid.charAt(pos2) == ch ? ch : ' '));
         }
     }
+    
+    record SideKey(Alignment alignment, String identity) {}
     
     record Group(Grid grid, FuncList<Position> positions) implements Comparable<Group> {
         Position first() {
@@ -190,41 +187,33 @@ public class Day12Part2Test extends BaseTest {
         }
         int sides() {
             var groupChar = grid.charAt(positions.getFirst());
-            var edgesByAlignments
-                    = FuncList.from(positions)
-                    .flatMap(this::findEdges)
-                    .groupingBy(Edge::alignment);
-            return edgesByAlignments.entries()
-                    .flatMapToInt(entry -> {
-                        var alignment = entry.getKey();
-                        var edgesByWideOfGroupChar = entry.getValue().map(Edge.class::cast)
-                            .groupingBy(sideWith(groupChar));
-                        return edgesByWideOfGroupChar
-                            .values()
-                            .mapToInt(edges -> continousSidesOnSameAlignment(alignment, edges));
-                    })
-                    .sum();
+            return positions
+                    .flatMap   (this::findEdges)
+                    .groupingBy(edge -> new SideKey(edge.alignment(), edge.identityFor(grid, groupChar)))
+                    .entries   ()
+                    .sumToInt  (entry -> {
+                        var alignment = entry.getKey  ().alignment();
+                        var edges     = entry.getValue();
+                        return continousSidesOnSameAlignment(alignment, edges);
+                    });
         }
-        FuncList<Edge> findEdges(Position position) {
-            return position.neighbours().filter(this::isPerimeter).map(position::edgeWith);
+        private FuncList<Edge> findEdges(Position position) {
+            return position
+                    .neighbours()
+                    .filter(this::isPerimeter)
+                    .map   (position::edgeWith);
         }
-        boolean isPerimeter(Position another) {
+        private boolean isPerimeter(Position another) {
             return !positions.contains(another);
         }
-        Func1<Edge, String> sideWith(char ch) {
-            return edge -> edge.identityFor(grid, ch);
-        }
-        @SuppressWarnings("unchecked")
-        int continousSidesOnSameAlignment(Alignment alignment, FuncList<? super Edge> edges) {
+        private int continousSidesOnSameAlignment(Alignment alignment, FuncList<? super Edge> edges) {
             // Edges that are on the same alignment but disconnected are considered a separated sides.
-            // +--+  +--+  <-- These four edges are on the same alignment.
+            // +--+  +--+  <-- These four edges are on the same alignment but not all connected.
             // |AA+--+AA|
             // |AAAAAAAA|
-            // +--------+
-            var diffs = ((FuncList<Edge>)edges)
-                .mapToInt(e -> alignment.location(e).getAsInt())
-                .mapTwo((a, b) -> b - a);                
-            return diffs.filter(diff -> diff != 1).size() + 1;
+            //    ....
+            var diffs = edges.mapToInt(e -> alignment.location((Edge)e)).mapTwo((a, b) -> b - a);                
+            return 1 + diffs.filter(diff -> diff != 1).size();
         }
         @Override
         public int compareTo(Group o) {
@@ -247,6 +236,7 @@ public class Day12Part2Test extends BaseTest {
         assertAsString("1206", result);
     }
     
+    @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();

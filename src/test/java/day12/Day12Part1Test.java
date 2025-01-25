@@ -153,13 +153,12 @@ public class Day12Part1Test extends BaseTest {
                 });
             });
         }
-        
         FuncList<Group> groups() {
             var visiteds = new TreeSet<Position>();
             var groups   = new TreeSet<Group>();
             positions()
-            .exclude(position -> visiteds.contains(position))
-            .forEach(position -> walk(position, visiteds, groups));
+                .exclude(position -> visiteds.contains(position))
+                .forEach(position -> walk(position, visiteds, groups));
             return FuncList.from(groups);
         }
         
@@ -169,18 +168,15 @@ public class Day12Part1Test extends BaseTest {
             groups.add(new Group(Grid.this, group));
         }
         
-        @SuppressWarnings("unchecked")
         private StreamPlus<Position> walk(char forChar, Position position, Set<Position> visiteds, Set<Group> groups) {
             if (visiteds.contains(position) || (forChar != charAt(position)))
                 return StreamPlus.empty();
             
             visiteds.add(position);
-            
             return position
                     .neighbours()
-                    .map       (neighbour -> walk(forChar, neighbour, visiteds, groups))
                     .streamPlus()
-                    .flatMap   (StreamPlus.class::cast)
+                    .flatMap   (neighbour -> walk(forChar, neighbour, visiteds, groups))
                     .appendWith(StreamPlus.of(position));
         }
     }
