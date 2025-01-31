@@ -5,7 +5,6 @@ import static day13.Day13Part1Test.newGame;
 import static functionalj.function.Func.f;
 import static functionalj.stream.intstream.IntStreamPlus.loop;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import common.BaseTest;
@@ -62,15 +61,12 @@ public class Day13Part2Test extends BaseTest {
     
     //== Test ==
     
-    @Ignore
     @Test
     public void testProd() throws Exception {
-        var start = System.currentTimeMillis();
         var lines  = readAllLines();
         var result = calculate(lines);
         println("result: " + result);
         assertAsString("74478585072604", result);
-        println("Run for: " + (System.currentTimeMillis() - start) + "ms");
     }
     
 }

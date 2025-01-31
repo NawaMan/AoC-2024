@@ -1,7 +1,6 @@
 package day13;
 
 import static functionalj.stream.intstream.IntStreamPlus.loop;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import java.util.function.LongUnaryOperator;
@@ -107,42 +106,53 @@ public class Day13Part1Test extends BaseTest {
         XY prize();
         AB cost();
         
-        default long maxA() {
-            return max(prize().x() / buttonA().x(), buttonB().y() / buttonA().y()) + 1L;
-        }
-        default AB guessAB(long a) {
-            return new AB(a, (prize().x() - a*buttonA().x()) / buttonB().x());
-        }
-        default long costOf(AB ab) {
-            return ab.a()*cost().a() + ab.b()*cost().b();
-        }
-        default long minCost1() {
-            var b = (buttonA().y()*prize().x()   - buttonA().x()*prize().y())
-                  / (buttonA().y()*buttonB().x() - buttonA().x()*buttonB().y());
-            var a = (prize().x() - buttonB().x()*b) / buttonA().x();
-            
-            var isValid = isValid(b, a);
-            return isValid ? ((cost().a()*a + cost().b()*b)) : Long.MAX_VALUE;
-        }
-        default long minCost2() {
-            var a = (buttonB().y()*prize().x()   - buttonB().x()*prize().y())
-                  / (buttonA().x()*buttonB().y() - buttonA().y()*buttonB().x());
-            var b = (prize().x() - buttonA().x()*a) / buttonB().x();
-            
-            var isValid = isValid(b, a);
-            return isValid ? ((cost().a()*a + cost().b()*b)) : Long.MAX_VALUE;
-        }
+        // (1) ..... Ax*a + Bx*b = Px
+        // (2) ..... Ay*a + By*b = Py
+        
         default long minCost() {
             var min = min(minCost1(), minCost2());
             return (min == Long.MAX_VALUE) ? 0L : min;
         }
-        default boolean isValid(long b, long a) {
+        default long minCost1() {
+            // We can find b by trying to eliminate a by By*(1) - Bx*(2)
+            // 
+            //    By*Ax*a + By*Bx*b = By*Px
+            //  - Bx*Ay*a + Bx*By*b = Bx*Py
+            //  = (Ax*By - Ay*Bx)*a = By*Px - Bx*Py
+            //
+            //           (By*Px - Bx*Py)
+            //  So   a = ---------------
+            //           (Ax*By - Ay*Bx)
+            // 
+            //  Then b = (Px - Ax*a) / Bx
+             
+            var a = (buttonB().y()*prize().x()   - buttonB().x()*prize().y())
+                  / (buttonA().x()*buttonB().y() - buttonA().y()*buttonB().x());
+            var b = (prize().x() - buttonA().x()*a) / buttonB().x();
+            
+            var isValid = isValid(a, b);
+            return isValid ? costOf(a, b) : Long.MAX_VALUE;
+        }
+        default long minCost2() {
+            // Similar to minCost1() but find b first and then find a.
+            
+            var b = (buttonA().y()*prize().x()   - buttonA().x()*prize().y())
+                  / (buttonA().y()*buttonB().x() - buttonA().x()*buttonB().y());
+            var a = (prize().x() - buttonB().x()*b) / buttonA().x();
+            
+            var isValid = isValid(a, b);
+            return isValid ? costOf(a, b) : Long.MAX_VALUE;
+        }
+        default long costOf(long a, long b) {
+            return cost().a()*a + cost().b()*b;
+        }
+        default boolean isValid(long a, long b) {
             return (buttonA().x()*a + buttonB().x()*b) == prize().x()
                 && (buttonA().y()*a + buttonB().y()*b) == prize().y();
         }
     }
     
-    static Game newGame(FuncList<String> lines, AB cost, long prizeAdjust) {
+    static Game newGame(FuncList<String> lines, AB cost, /* for part 2 */ long prizeAdjust) {
         return new Game(
                     newXY(lines.get(0)),
                     newXY(lines.get(1)),
