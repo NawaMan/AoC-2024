@@ -2,10 +2,9 @@ package day12;
 
 import static day12.Day12Part2Test.EdgeDirection.Horizontal;
 import static day12.Day12Part2Test.EdgeDirection.Vertical;
-import static functionalj.stream.intstream.IntStreamPlus.range;
+import static functionalj.list.intlist.IntFuncList.range;
 import static java.util.Comparator.comparingInt;
 
-import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -14,7 +13,6 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.stream.StreamPlus;
 
 /**
  * --- Part Two ---
@@ -117,7 +115,7 @@ public class Day12Part2Test extends BaseTest {
             if (position.col < 0 || position.col >= lines.get(position.row).length()) return ' ';
             return lines.get(position.row).charAt(position.col);
         }
-        StreamPlus<Position> positions() {
+        FuncList<Position> positions() {
             return range(0, lines.size()).flatMapToObj(row -> {
                 return range(0, lines.get(row).length()).mapToObj(col -> {
                     return new Position(row, col);
@@ -126,34 +124,34 @@ public class Day12Part2Test extends BaseTest {
         }
         FuncList<Group> groups() {
             var visiteds = new TreeSet<Position>();
-            var groups   = new TreeSet<Group>();
-            positions().forEach(position -> walk(position, visiteds, groups));
-            return FuncList.from(groups);
+            return positions()
+                    .exclude(position -> visiteds.contains(position))
+                    .map    (position -> newGroup(position, visiteds));
         }
-        private void walk(Position position, Set<Position> visiteds, Set<Group> groups) {
-            if (visiteds.contains(position))
-                return;
-            
+        private Group newGroup(Position position, Set<Position> visiteds) {
             var forChar = charAt(position);
-            var group   = walk(forChar, position, visiteds, groups).sorted().distinct().toFuncList();
-            groups.add(new Group(Grid.this, group));
+            var members = findGroupMembers(forChar, position, visiteds).sorted().distinct();
+            return new Group(Grid.this, members);
         }
-        private StreamPlus<Position> walk(char forChar, Position position, Set<Position> visiteds, Set<Group> groups) {
-            if (visiteds.contains(position) || (forChar != charAt(position)))
-                return StreamPlus.empty();
-            
+        private FuncList<Position> findGroupMembers(char forChar, Position position, Set<Position> visiteds) {
             visiteds.add(position);
-            return position
-                    .neighbours()
-                    .streamPlus()
-                    .flatMap   (neighbour -> walk(forChar, neighbour, visiteds, groups))
-                    .appendWith(StreamPlus.of(position));
+            var groupMembers = FuncList.<Position>newBuilder();
+            groupMembers.add(position);
+            for (var neighbour : position.neighbours()) {
+                if (!visiteds.contains(neighbour) && (forChar == charAt(neighbour))) {
+                    var members = findGroupMembers(forChar, neighbour, visiteds);
+                    for (var member : members) {
+                        groupMembers.add(member);
+                    }
+                }
+            }
+            return groupMembers.build();
         }
     }
     
     enum EdgeDirection { Vertical, Horizontal }
     
-    record Alignment(EdgeDirection direction, int rowOrCol) {
+    record Alignment(EdgeDirection direction, int position) {
         int location(Edge edge) {
             return (direction == Vertical) ? edge.pos1.row : edge.pos1.col;
         }
@@ -176,10 +174,7 @@ public class Day12Part2Test extends BaseTest {
     
     record SideKey(Alignment alignment, String identity) {}
     
-    record Group(Grid grid, FuncList<Position> positions) implements Comparable<Group> {
-        Position first() {
-            return positions.stream().findFirst().get();
-        }
+    record Group(Grid grid, FuncList<Position> positions) {
         int fencePrice() {
             var area  = positions.size();
             var sides = sides();
@@ -203,7 +198,7 @@ public class Day12Part2Test extends BaseTest {
                     .filter(this::isPerimeter)
                     .map   (position::edgeWith);
         }
-        private boolean isPerimeter(Position another) {
+        boolean isPerimeter(Position another) {
             return !positions.contains(another);
         }
         private int continousSidesOnSameAlignment(Alignment alignment, FuncList<? super Edge> edges) {
@@ -215,15 +210,12 @@ public class Day12Part2Test extends BaseTest {
             var diffs = edges.mapToInt(e -> alignment.location((Edge)e)).mapTwo((a, b) -> b - a);                
             return 1 + diffs.filter(diff -> diff != 1).size();
         }
-        @Override
-        public int compareTo(Group o) {
-            return Comparator.comparing(Group::first).compare(this, o);
-        }
     }
     
     Object calculate(FuncList<String> lines) {
-        var grid = new Grid(lines);
-        return grid.groups().sumToInt(Group::fencePrice);
+        return new Grid(lines)
+                .groups()
+                .sumToInt(Group::fencePrice);
     }
     
     //== Test ==

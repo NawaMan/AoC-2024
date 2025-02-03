@@ -1,7 +1,6 @@
 package day12;
 
-import static functionalj.stream.intstream.IntStreamPlus.range;
-import static java.util.Comparator.comparing;
+import static functionalj.list.intlist.IntFuncList.range;
 import static java.util.Comparator.comparingInt;
 
 import java.util.Set;
@@ -11,7 +10,6 @@ import org.junit.Test;
 
 import common.BaseTest;
 import functionalj.list.FuncList;
-import functionalj.stream.StreamPlus;
 
 /**
  * --- Day 12: Garden Groups ---
@@ -134,7 +132,7 @@ public class Day12Part1Test extends BaseTest {
         }
         @Override
         public int compareTo(Position o) {
-            return comparingInt(Position::row)
+            return comparingInt      (Position::row)
                     .thenComparingInt(Position::col)
                     .compare(this, o);
         }
@@ -146,7 +144,7 @@ public class Day12Part1Test extends BaseTest {
             if (position.col < 0 || position.col >= lines.get(position.row).length()) return ' ';
             return lines.get(position.row).charAt(position.col);
         }
-        StreamPlus<Position> positions() {
+        FuncList<Position> positions() {
             return range(0, lines.size()).flatMapToObj(row -> {
                 return range(0, lines.get(row).length()).mapToObj(col -> {
                     return new Position(row, col);
@@ -155,39 +153,35 @@ public class Day12Part1Test extends BaseTest {
         }
         FuncList<Group> groups() {
             var visiteds = new TreeSet<Position>();
-            var groups   = new TreeSet<Group>();
-            positions()
-                .exclude(position -> visiteds.contains(position))
-                .forEach(position -> walk(position, visiteds, groups));
-            return FuncList.from(groups);
+            return positions()
+                    .exclude(position -> visiteds.contains(position))
+                    .map    (position -> newGroup(position, visiteds));
         }
-        
-        private void walk(Position position, Set<Position> visiteds, Set<Group> groups) {
+        private Group newGroup(Position position, Set<Position> visiteds) {
             var forChar = charAt(position);
-            var group   = walk(forChar, position, visiteds, groups).toFuncList();
-            groups.add(new Group(Grid.this, group));
+            var members = findGroupMembers(forChar, position, visiteds).sorted().distinct();
+            return new Group(Grid.this, members);
         }
-        
-        private StreamPlus<Position> walk(char forChar, Position position, Set<Position> visiteds, Set<Group> groups) {
-            if (visiteds.contains(position) || (forChar != charAt(position)))
-                return StreamPlus.empty();
-            
+        private FuncList<Position> findGroupMembers(char forChar, Position position, Set<Position> visiteds) {
             visiteds.add(position);
-            return position
-                    .neighbours()
-                    .streamPlus()
-                    .flatMap   (neighbour -> walk(forChar, neighbour, visiteds, groups))
-                    .appendWith(StreamPlus.of(position));
+            var groupMembers = FuncList.<Position>newBuilder();
+            groupMembers.add(position);
+            for (var neighbour : position.neighbours()) {
+                if (!visiteds.contains(neighbour) && (forChar == charAt(neighbour))) {
+                    var members = findGroupMembers(forChar, neighbour, visiteds);
+                    for (var member : members) {
+                        groupMembers.add(member);
+                    }
+                }
+            }
+            return groupMembers.build();
         }
     }
     
-    record Group(Grid grid, FuncList<Position> positions) implements Comparable<Group> {
-        Position first() {
-            return positions.stream().findFirst().get();
-        }
+    record Group(Grid grid, FuncList<Position> members) {
         int fencePrice() {
-            var area      = positions.size();
-            var perimeter = positions.sumToInt(this::perimetersAt);
+            var area      = members.size();
+            var perimeter = members.sumToInt(this::perimetersAt);
             return area*perimeter;
         }
         private int perimetersAt(Position position) {
@@ -197,12 +191,7 @@ public class Day12Part1Test extends BaseTest {
                     .size();
         }
         boolean isPerimeter(Position another) {
-            return !positions.contains(another);
-        }
-        @Override
-        public int compareTo(Group o) {
-            return comparing(Group::first)
-                    .compare(this, o);
+            return !members.contains(another);
         }
     }
     
