@@ -160,40 +160,21 @@ public class Day14Part1Test extends BaseTest {
     
     Object calculate(FuncList<String> lines, int wide, int tall, int step) {
         var robots = moveRobots(lines, wide, tall, step);
-//        draw(wide, tall, robots);
         return robots
-                .filter(robot -> (robot.x != (wide / 2)) && (robot.y != (tall / 2)))
-                .groupingBy(robot -> ("(" + (robot.x < wide / 2) + "," + (robot.y < tall / 2) + ")"))
-                .mapValue(FuncList::size)
-                .values()
-                .mapToInt(i -> i)
-                .product()
-                .getAsInt();
+                .filter    (robot -> (robot.x != (wide / 2)) && (robot.y != (tall / 2)))
+                .groupingBy(robot -> ("(%s,%s)".formatted((robot.x < wide / 2), (robot.y < tall / 2))))
+                .mapValue  (FuncList::size)
+                .values    ()
+                .mapToInt  (i -> i)
+                .product   ()
+                .getAsInt  ();
     }
     
     FuncList<Robot> moveRobots(FuncList<String> lines, int wide, int tall, int step) {
         return lines
-                .map  (line  -> grab(regex("-?[0-9]+"), line).map(parseInt))
-                .map  (list  -> new Robot(list.get(0), list.get(1), list.get(2), list.get(3)))
-                .map  (robot -> robot.move(step, wide, tall))
-                .cache();
-    }
-    
-    void draw(int wide, int tall, FuncList<Robot> robots) {
-        for (int j = 0; j < tall; j++) {
-            for (int i = 0; i < wide; i++) {
-                if ((i == (wide / 2)) || (j == (tall / 2))) {
-                    System.out.print(" ");
-                    continue;
-                }
-                
-                int I = i;
-                int J = j;
-                int size = robots.filter(robot -> (robot.x + "," + robot.y).equals(I + "," + J)).size();
-                System.out.print(size);
-            }
-            System.out.println();
-        }
+                .map(line  -> grab(regex("-?[0-9]+"), line).map(parseInt))
+                .map(list  -> new Robot(list.get(0), list.get(1), list.get(2), list.get(3)))
+                .map(robot -> robot.move(step, wide, tall));
     }
     
     //== Test ==

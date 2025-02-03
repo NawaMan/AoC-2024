@@ -56,7 +56,7 @@ public class Day14Part2Test extends BaseTest {
         int tall = 103;
         
         var lines  = readAllLines();
-        for (int i = 7753; i < 7754; i++) {
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
             var robots = moveRobots(lines, wide, tall, i);
             
             var hasLine
@@ -67,6 +67,7 @@ public class Day14Part2Test extends BaseTest {
                 draw(wide, tall, robots);
                 println("-----------------------------------------------------------------------------------------------------------");
                 println();
+                break;
             }
         }
     }
