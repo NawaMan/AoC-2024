@@ -161,13 +161,21 @@ public class Day14Part1Test extends BaseTest {
     Object calculate(FuncList<String> lines, int wide, int tall, int step) {
         var robots = moveRobots(lines, wide, tall, step);
         return robots
-                .filter    (robot -> (robot.x != (wide / 2)) && (robot.y != (tall / 2)))
-                .groupingBy(robot -> ("(%s,%s)".formatted((robot.x < wide / 2), (robot.y < tall / 2))))
+                .exclude   (robot -> isCenter(wide, tall, robot))
+                .groupingBy(robot -> quadrant(wide, tall, robot))
                 .mapValue  (FuncList::size)
                 .values    ()
                 .mapToInt  (i -> i)
                 .product   ()
                 .getAsInt  ();
+    }
+
+    private boolean isCenter(int wide, int tall, Robot robot) {
+        return (robot.x == (wide / 2)) || (robot.y == (tall / 2));
+    }
+
+    private String quadrant(int wide, int tall, Robot robot) {
+        return "(%s,%s)".formatted((robot.x < wide / 2), (robot.y < tall / 2));
     }
     
     FuncList<Robot> moveRobots(FuncList<String> lines, int wide, int tall, int step) {

@@ -42,7 +42,7 @@ public class Day14Part2Test extends BaseTest {
                 int I = i;
                 int J = j;
                 int size = robots.filter(robot -> (robot.x + "," + robot.y).equals(I + "," + J)).size();
-                System.out.print(size);
+                System.out.print(size == 0 ? '.' : '#');
             }
             System.out.println();
         }
