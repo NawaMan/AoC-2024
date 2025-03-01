@@ -1,5 +1,8 @@
 package day15;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -262,8 +265,14 @@ public class Day15Part2Test extends BaseTest {
         }
         
         public String toString() {
+            return toString(true);
+        }
+        
+        public String toString(boolean isShort) {
             var str = new StringBuilder();
-            for (int r = 0; r < height; r++) {
+            var startR = isShort ? max(robot.r - 10,      0) :      0;
+            var endR   = isShort ? min(robot.r + 4, height) : height;
+            for (int r = startR; r < endR; r++) {
                 var row   = r;
                 var chars = grid.lines.get(r).toCharArray();
                 goods
@@ -281,9 +290,11 @@ public class Day15Part2Test extends BaseTest {
                 if (!str.isEmpty()) {
                     str.append("\n");
                 }
-                str.append(line);
+                var startC = isShort ? max(robot.c - 4,     0) :     0;
+                var endC   = isShort ? min(robot.c + 5, width) : width;
+                str.append(line.subSequence(startC, endC));
             }
-            return str.toString();
+            return str.toString() + "\n";
         }
         
         boolean moveLeft(Position good) {
@@ -393,26 +404,35 @@ public class Day15Part2Test extends BaseTest {
     
     Object calculate(FuncList<String> lines) {
         var warehouse = new Warehouse(lines);
-//        println(warehouse);
-//        println();
+        println(warehouse);
+        println();
         
         var sequence = lines.skipUntil(""::equals).reduce((a, b) -> a + b).get();
         
         for (int i = 0; i < sequence.length(); i++) {
-//            println(warehouse);
-            
             char ch = sequence.charAt(i);
-//            println("--| " + i + ": " + ch + " |--");
-            switch (ch) {
-                case '^': { warehouse.moveUp();    continue; }
-                case 'v': { warehouse.moveDown();  continue; }
-                case '>': { warehouse.moveRight(); continue; }
-                case '<': { warehouse.moveLeft();  continue; }
+            if (ch == '^') {
+                println("--| " + i + ": " + ch + " |--");
+                println(warehouse);
+            }
+            try {
+                switch (ch) {
+                    case '^': { warehouse.moveUp();    continue; }
+                    case 'v': { warehouse.moveDown();  continue; }
+                    case '>': { warehouse.moveRight(); continue; }
+                    case '<': { warehouse.moveLeft();  continue; }
+                }
+            } finally {
+                if (ch == '^') {
+                    println(warehouse);
+                    println();
+                    println();
+                }
             }
         }
         
-//        println(warehouse);
-//        println();
+        println(warehouse);
+        println();
         
         return warehouse.sumGPS();
     }
@@ -426,14 +446,14 @@ public class Day15Part2Test extends BaseTest {
         println("result: " + result);
         assertAsString("9021", result);
     }
-    
+
     @Ignore
     @Test
     public void testProd() {
         var lines  = readAllLines();
         var result = calculate(lines);
         println("result: " + result);
-        assertAsString("", result);
+        assertAsString("1490258", result);  // 1490258 is too high.
     }
     
 }
